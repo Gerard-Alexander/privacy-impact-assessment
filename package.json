@@ -1,0 +1,29 @@
+{
+  "name": "privacy-impact-assessment",
+  "version": "1.0.0",
+  "description": "To make it easy for you to get started with GitLab, here's a list of recommended next steps.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/2215699/privacy-impact-assessment.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://gitlab.com/2215699/privacy-impact-assessment/issues"
+  },
+  "homepage": "https://gitlab.com/2215699/privacy-impact-assessment#readme",
+  "dependencies": {
+    "@prisma/client": "^7.7.0",
+    "ejs": "^5.0.1",
+    "express": "^5.2.1",
+    "mysql2": "^3.21.1",
+    "nodemon": "^3.1.14",
+    "prisma": "^7.7.0"
+  }
+}
