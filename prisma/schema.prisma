@@ -1,5 +1,5 @@
 // This is your Prisma schema file,
- // learn more about it in the docs: https://pris.ly/d/prisma-schema
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
@@ -12,6 +12,7 @@ datasource db {
   provider = "mysql"
 }
 
+// --- USERS TABLE --- //
 enum Role {
   ADMIN
   USER
@@ -19,14 +20,97 @@ enum Role {
 }
 
 model User {
-  id    Int @id @default(autoincrement())
-  firstName String @db.VarChar(255)
-  lastName String @db.VarChar(255)
-  userName String @db.VarChar(255) @unique
-  password String 
-  role Role @default(USER)
-  rememberToken String? @db.Text
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int      @id @default(autoincrement())
+  firstName     String   @db.VarChar(255)
+  lastName      String   @db.VarChar(255)
+  userName      String   @unique @db.VarChar(255)
+  password      String
+  role          Role     @default(USER)
+  rememberToken String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
+// --- AUTHORIZED PARTIES TABLE --- //
+enum AuthorizedPartyType {
+  HEAD_OFFICE
+  COMPLIANCE_OFFICER
+  REVIEWER
+  APPROVED_BY
+}
+
+model AuthortizedParties {
+  id         Int                 @id @default(autoincrement())
+  name       String              @db.VarChar(255)
+  position   String              @db.VarChar(255)
+  email      String              @db.VarChar(255)
+  usetType   AuthorizedPartyType
+  signature  String?             @db.Text
+  dateSigned DateTime?
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+}
+
+// --- PROCESS DATA LIFE CYCLE TABLE --- //
+enum DisposalMethod {
+  // Add more values incase there are more data subjects that will be collected from the supervisor
+  SHREDDING
+  DELETION
+  SOAKING_WITH_WATER
+}
+
+model PDLC {
+  id              Int       @id @default(autoincrement())
+  stakeholderName String    @db.VarChar(255)
+  dateCollected   DateTime
+  collection      String    @db.VarChar(255)
+  useOfData       String    @db.VarChar(255)
+  process         String    @db.VarChar(255)
+  retentionPeriod Int
+  retentionDate   DateTime?
+  dataSharing     String    @db.VarChar(255)
+  sharedTo        String    @db.VarChar(255)
+  disposalMethod  String    @db.VarChar(255)
+  dlcDiagram      String?   @db.Text
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// --- PERSONAL INFORMATION INVENTORY TABLE --- //
+enum DataProcessing {
+  ELECRONIC
+  PAPER_BASED
+  BOTH
+}
+
+enum DataSubjects {
+  // Add more values incase there are more data subjects that will be collected from the supervisor
+  EMPLOYEES
+  CUSTOMERS
+  CLIENTS
+  SUPPLIERS
+}
+
+model PII {
+  id             Int            @id @default(autoincrement())
+  formNo         Int
+  formName       String         @db.VarChar(255)
+  dataProcessing DataProcessing
+  dataSubjects   DataSubjects
+
+  // FK to DataSubjectInfo
+  dataSubjectID  Int 
+  dataSubject DataSubjectInfo @relation(fields: [dataSubjectID], references: [id])
+  @@index([dataSubjectID])
+}
+
+// --- DATA SUB INFO TABLE / PERSONAL INFO OF DATA SUBJECTS --- //
+model DataSubjectInfo {
+  id           Int    @id @default(autoincrement())
+  name         String @db.VarChar(255)
+  email        String @db.VarChar(255)
+  mobileNumber String @db.VarChar(255)
+
+  // Reverse relation (one DataSubjectInfo to many PII)
+  pii PII[]
+}
