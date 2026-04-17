@@ -23,3 +23,10 @@ Other Tools: Nodemon (development)
 8. npx prisma migrate dev
 9. Start the server:
 10. npm run dev
+
+
+# Commands
+    prisma migrate dev = npm run migrate:dev -- --name "create_answers_table" 
+    prisma migrate reset = npm run migrate:reset
+    prisma migrate reset = npm run migrate:fresh
+    prisma generate = npm run generate

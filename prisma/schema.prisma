@@ -32,13 +32,6 @@ model User {
 }
 
 // --- AUTHORIZED PARTIES TABLE --- //
-enum AuthorizedPartyType {
-  HEAD_OFFICE
-  COMPLIANCE_OFFICER
-  REVIEWER
-  APPROVED_BY
-}
-
 model AuthortizedParties {
   id         Int                 @id @default(autoincrement())
   name       String              @db.VarChar(255)
@@ -51,14 +44,15 @@ model AuthortizedParties {
   updatedAt  DateTime            @updatedAt
 }
 
-// --- PROCESS DATA LIFE CYCLE TABLE --- //
-enum DisposalMethod {
-  // Add more values incase there are more data subjects that will be collected from the supervisor
-  SHREDDING
-  DELETION
-  SOAKING_WITH_WATER
+enum AuthorizedPartyType {
+  HEAD_OFFICE
+  COMPLIANCE_OFFICER
+  REVIEWER
+  APPROVED_BY
 }
 
+//***************************************//
+// --- A. PROCESS DATA LIFE CYCLE TABLE --- //
 model PDLC {
   id              Int       @id @default(autoincrement())
   stakeholderName String    @db.VarChar(255)
@@ -74,16 +68,51 @@ model PDLC {
   dlcDiagram      String?   @db.Text
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+
+  
+  threatsAndControll ThreatsAndControll[]   // Used as FK to Threats and Control 
 }
 
-// --- PERSONAL INFORMATION INVENTORY TABLE --- //
+enum DisposalMethod {
+  // Add more values incase there are more data subjects that will be collected from the supervisor
+  SHREDDING
+  DELETION
+  SOAKING_WITH_WATER
+}
+
+//***********************************************//
+// ---B. PERSONAL INFORMATION INVENTORY TABLE --- //
+
+// --- PII Table --- //
+model PII {
+  id             Int            @id @default(autoincrement())
+  formNo         Int
+  formName       String         @db.VarChar(255)
+  dataProcessing DataProcessing
+
+  // FK to DataSubjectType
+  dataSubjectsType_id  Int
+  DataSubjectType DataSubjectTypes @relation(fields: [dataSubjectsType_id], references: [id])
+  @@index([dataSubjectsType_id])
+
+  // FK to DataSubjectInfo
+  dataSubject_id  Int 
+  dataSubject DataSubjectInfo @relation(fields: [dataSubject_id], references: [id])
+  @@index([dataSubject_id])
+
+  processBasis ProcessingBasis[]    //Used as FK to Processing Basis
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+}
+
 enum DataProcessing {
   ELECRONIC
   PAPER_BASED
   BOTH
 }
 
-enum DataSubjects {
+enum DataSubjectsTypes {
   // Add more values incase there are more data subjects that will be collected from the supervisor
   EMPLOYEES
   CUSTOMERS
@@ -91,26 +120,135 @@ enum DataSubjects {
   SUPPLIERS
 }
 
-model PII {
-  id             Int            @id @default(autoincrement())
-  formNo         Int
-  formName       String         @db.VarChar(255)
-  dataProcessing DataProcessing
-  dataSubjects   DataSubjects
-
-  // FK to DataSubjectInfo
-  dataSubjectID  Int 
-  dataSubject DataSubjectInfo @relation(fields: [dataSubjectID], references: [id])
-  @@index([dataSubjectID])
+// --- Data Subject Types Table --- //
+model DataSubjectTypes {
+  id           Int    @id @default(autoincrement())
+  dataSubjectType datasubject
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  pii PII[]     // Used as FK to PII
 }
 
-// --- DATA SUB INFO TABLE / PERSONAL INFO OF DATA SUBJECTS --- //
-model DataSubjectInfo {
-  id           Int    @id @default(autoincrement())
-  name         String @db.VarChar(255)
-  email        String @db.VarChar(255)
-  mobileNumber String @db.VarChar(255)
+enum datasubject {
+  EMPLOYEES
+  CUSTOMERS
+  CLIENTS
+  SUPPLIERS
+}
 
-  // Reverse relation (one DataSubjectInfo to many PII)
-  pii PII[]
+// --- Data Subjec Info / Personal Info Of DataSubject Table--- //
+model DataSubjectInfo {
+  id              Int    @id @default(autoincrement())
+  name            String @db.VarChar(255)
+  email           String @db.VarChar(255)
+  mobileNumber    String @db.VarChar(255)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  
+  pii PII[]     // Used as FK to PII
+  threatsAndControll ThreatsAndControll[]   // Used as FK to Threats and Control
+}
+
+// --- Processing Basis Table --- //
+model ProcessingBasis {
+  id           Int           @id @default(autoincrement())
+  processingType ProcessingType
+  basisNum  Basis
+  pii_ID         Int
+  pii            PII           @relation(fields: [pii_ID], references: [id])    
+  @@index([pii_ID])
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+enum ProcessingType {
+    PI
+    SPI
+}
+
+enum Basis {
+    TYPE_1
+    TYPE_2
+    TYPE_3
+    TYPE_4
+    TYPE_5
+    TYPE_6
+ }
+
+//**********************************************//
+// --- C. THREATS AND CONTROL MEASURES TABLE --- //
+model ThreatsAndControll {
+  id           Int    @id @default(autoincrement())
+
+  // FK to DataSubjectInfo
+  dataSubject_id Int
+  dataSubjects DataSubjectInfo @relation(fields: [dataSubject_id], references :[id])
+  @@index ([dataSubject_id])
+
+  // FK to PLDC
+  pdlc_id Int
+  pdlc PDLC @relation(fields : [pdlc_id], references :[id])
+  @@index ([pdlc_id])
+  threats_possibleConsequences String @db.VarChar(255)
+  typeOfThreats String @db.Char(255)
+  severtyLevel  SeverityLevel
+  likelihoodLevel LikeliHoodLevel
+  riskRating Int @db.Int
+  proposedControl String @db.VarChar(255)
+  createdAt       DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+enum SeverityLevel {
+    NEGLIGIBLE_1
+    LIMITED_2
+    SIGNIFICANT_3
+    EXTREME_4
+}
+
+enum LikeliHoodLevel {
+    UNLIKELY_1
+    POSSIBLE_2
+    LIKELY_3
+    ALMOST_CERTAIN_4
+}
+
+//***********************************************/
+// --- D. SECURITY MEASURES TABLE --- //
+
+// --- Security Measures Table --- //
+model SecurityMeasures {
+    id Int @id @default(autoincrement())
+    securityType SecurityType
+    description String @db.VarChar(255)
+    createdAt       DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+}
+
+enum SecurityType {
+    TECHNICAL
+    ORGANIZATIONAL
+    PHYSICAL
+}
+ 
+// --- Questions Table --- //
+model Questions {
+    id Int @id @default(autoincrement())
+    question String @db.VarChar(255)
+    questionAnswers Answers[] // Used as FK to Answers Table    
+    createdAt       DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
+
+}
+
+// --- Answers Table --- //
+model Answers {
+    id Int @id @default(autoincrement())
+    answer String @db.VarChar(255)
+    question_Id Int
+    question Questions @relation(fields: [question_Id], references: [id])
+    @@index ([question_Id])
+    createdAt       DateTime  @default(now())
+    updatedAt      DateTime  @updatedAt
 }
