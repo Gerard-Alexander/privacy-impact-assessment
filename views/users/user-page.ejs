@@ -1,0 +1,38 @@
+<%- include('../layouts/head', { title: title }) %>
+<%- include('../layouts/topbar', { title: title, user: user }) %>
+<%- include('../layouts/sidebar', { activePage: activePage }) %>
+<main class="container-fluid py-4">
+	<section class="w-100">
+		<div class="card border-0 shadow-sm mb-4">
+			<div class="card-body p-4">
+				<h2 class="h5 mb-3">Welcome, <%= user && user.username ? user.username : 'User' %></h2>
+				<p class="text-muted mb-0">You are now logged in. This page is the temporary post-login destination.</p>
+			</div>
+		</div>
+
+		<div class="row g-3">
+			<div class="col-12 col-md-6">
+				<div class="card h-100">
+					<div class="card-body">
+						<h3 class="h6">Account Summary</h3>
+						<p class="mb-1"><strong>Role:</strong> <%= user && user.role ? user.role : 'staff' %></p>
+						<p class="mb-0"><strong>Name:</strong> <%= user && user.fullName ? user.fullName : 'Not provided' %></p>
+					</div>
+				</div>
+			</div>
+			<div class="col-12 col-md-6">
+				<div class="card h-100">
+					<div class="card-body">
+						<h3 class="h6">Next Step</h3>
+						<p class="text-muted mb-3">Proceed to your main dashboard when it is ready.</p>
+						<a href="/" class="btn btn-outline-primary btn-sm">Go to Home</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
