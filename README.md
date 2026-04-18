@@ -30,3 +30,4 @@ Other Tools: Nodemon (development)
     prisma migrate reset = npm run migrate:reset
     prisma migrate reset = npm run migrate:fresh
     prisma generate = npm run generate
+    prisma db seed = npm run seed
