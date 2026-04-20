@@ -9,7 +9,8 @@
     "migrate:reset": "prisma migrate reset",
     "migrate:fresh": "prisma migrate reset",
     "generate": "prisma generate",
-    "seed": "prisma db seed"
+    "seed": "prisma db seed",
+    "dev": "nodemon server.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
@@ -33,10 +34,14 @@
     "docx": "^9.6.1",
     "ejs": "^5.0.1",
     "express": "^5.2.1",
+    "express-ejs-layouts": "^2.5.1",
     "express-session": "^1.19.0",
     "helmet": "^8.1.0",
     "mysql2": "^3.21.1",
-    "nodemon": "^3.1.14",
     "prisma": "^7.7.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.14"
   }
 }

@@ -19,15 +19,24 @@ Other Tools: Nodemon (development)
 4. npm install
 5. Setup environment variables:
 6. DATABASE_URL="mysql://root:password@localhost:3306/pia_db"
-7. Run Prisma migrations:
-8. npx prisma migrate dev
-9. Start the server:
-10. npm run dev
+7. Generate Prisma Client: npm run generate
+8. Run Prisma migrations:
+9. npx prisma migrate dev
+10. Start the server: npm run dev
+11. 
 
 
 # Commands
-    prisma migrate dev = npm run migrate:dev -- --name "create_answers_table" 
-    prisma migrate reset = npm run migrate:reset
-    prisma migrate reset = npm run migrate:fresh
-    prisma generate = npm run generate
-    prisma db seed = npm run seed
+    When Editing the Schema of the database:
+      1. prisma migrate reset = npm run migrate:reset || npm run migrate:fresh 
+      2. prisma migrate dev = npm run migrate:dev -- --name "create_answers_table"
+      3. prisma generate = npm run generate
+
+    When resetting your db
+      prisma migrate reset = npm run migrate:reset || npm run migrate:fresh 
+
+    Command to create your Prisma Client:
+      prisma generate = npm run generate
+
+    Command for running seeds:
+      prisma db seed = npm run seed

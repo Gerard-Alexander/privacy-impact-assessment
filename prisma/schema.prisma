@@ -24,6 +24,7 @@ model User {
   firstName     String   @db.VarChar(255)
   lastName      String   @db.VarChar(255)
   userName      String   @unique @db.VarChar(255)
+  emailAddress  String   @unique @db.VarChar(255)
   password      String
   role          Role     @default(USER)
   rememberToken String?  @db.Text
@@ -31,17 +32,87 @@ model User {
   updatedAt     DateTime @updatedAt
 }
 
+// --- ROOT TABLE: PIA ASSESSMENT --- //
+// This acts as the umbrella for a single submitted PIA form
+model PiaAssessment {
+  id                          Int      @id @default(autoincrement())
+  dpsName                     String   @db.VarChar(255)
+  mandate                     String   @db.Text
+  dpsModality                 Modality 
+  processingRole              RoleType 
+  isOutsourced                Boolean
+  piaStartDate                DateTime
+  piaEndDate                  DateTime
+
+  // Privacy Notice Agreement
+  privacyNoticeAcknowledged   Boolean  @default(false) 
+
+  // Static Form Questions (from the final page checklist)
+  isDataTransferredOutsidePh  Boolean?
+  hasDataSharingAgreement     Boolean?
+  pipName                     String?  @db.VarChar(255)
+  isPublicFacing              PublicFacing?
+  hasAutomatedDecisionMaking  Boolean?
+  hasProfiling                Boolean?
+  legalBasis                  String?  @db.VarChar(255)
+  otherLegalBasisInfo         String?  @db.Text
+  isConsentUsed               Boolean?
+  consentProof                ConsentProof?
+
+  // Relationships tying the whole form together
+  authorizedParties           AuthorizedParties[]
+  pdlc                        PDLC[]
+  pii                         PII[]
+  threatsAndControls          ThreatsAndControl[]
+  securityMeasures            SecurityMeasures[]
+
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+}
+
+enum Modality {
+  MANUAL
+  ELECTRONIC
+  BOTH
+}
+
+enum RoleType {
+  PIC
+  PIP
+}
+
+enum PublicFacing {
+  EXTERNAL
+  INTERNAL
+  BOTH
+}
+
+enum ConsentProof {
+  CONSENT_FORM
+  OTHER_PROOF
+  BOTH
+}
+
 // --- AUTHORIZED PARTIES TABLE --- //
-model AuthortizedParties {
-  id         Int                 @id @default(autoincrement())
-  name       String              @db.VarChar(255)
-  position   String              @db.VarChar(255)
-  email      String              @db.VarChar(255)
-  usetType   AuthorizedPartyType
-  signature  String?             @db.Text
-  dateSigned DateTime?
-  createdAt  DateTime            @default(now())
-  updatedAt  DateTime            @updatedAt
+model AuthorizedParties {
+  id               Int                 @id @default(autoincrement())
+  
+  // FK to PiaAssessment
+  piaAssessment_id Int
+  piaAssessment    PiaAssessment       @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
+  
+  name             String              @db.VarChar(255)
+  position         String              @db.VarChar(255)
+  officeUnit       String              @db.VarChar(255) 
+  email            String              @db.VarChar(255)
+  userType         AuthorizedPartyType 
+  signature        String?             @db.Text
+  dateSigned       DateTime?
+  
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([piaAssessment_id])
 }
 
 enum AuthorizedPartyType {
@@ -54,79 +125,84 @@ enum AuthorizedPartyType {
 //***************************************//
 // --- A. PROCESS DATA LIFE CYCLE TABLE --- //
 model PDLC {
-  id              Int       @id @default(autoincrement())
-  stakeholderName String    @db.VarChar(255)
-  dateCollected   DateTime
-  collection      String    @db.VarChar(255)
-  useOfData       String    @db.VarChar(255)
-  process         String    @db.VarChar(255)
-  retentionPeriod Int
-  retentionDate   DateTime?
-  dataSharing     String    @db.VarChar(255)
-  sharedTo        String    @db.VarChar(255)
-  disposalMethod  String    @db.VarChar(255)
-  dlcDiagram      String?   @db.Text
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
+  id               Int           @id @default(autoincrement())
   
-  threatsAndControll ThreatsAndControll[]   // Used as FK to Threats and Control 
+  // FK to PiaAssessment
+  piaAssessment_id Int
+  piaAssessment    PiaAssessment @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
+  
+  stakeholderName  String        @db.VarChar(255)
+  dateCollected    String        @db.VarChar(255) 
+  collection       String        @db.VarChar(255)
+  useOfData        String        @db.VarChar(255)
+  process          String        @db.VarChar(255)
+  retentionPeriod  String        @db.VarChar(255) 
+  retentionDate    DateTime?
+  dataSharing      String        @db.VarChar(255)
+  sharedTo         String        @db.VarChar(255)
+  disposalMethod   String        @db.VarChar(255) 
+  dlcDiagram       String?       @db.Text
+  
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  threatsAndControls ThreatsAndControl[] 
+  
+  @@index([piaAssessment_id])
 }
 
 enum DisposalMethod {
-  // Add more values incase there are more data subjects that will be collected from the supervisor
   SHREDDING
   DELETION
   SOAKING_WITH_WATER
 }
 
 //***********************************************//
-// ---B. PERSONAL INFORMATION INVENTORY TABLE --- //
-
-// --- PII Table --- //
+// --- B. PERSONAL INFORMATION INVENTORY TABLE --- //
 model PII {
-  id             Int            @id @default(autoincrement())
-  formNo         Int
-  formName       String         @db.VarChar(255)
-  dataProcessing DataProcessing
+  id                  Int              @id @default(autoincrement())
+  
+  // FK to PiaAssessment
+  piaAssessment_id    Int
+  piaAssessment       PiaAssessment    @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
+  
+  formNo              Int
+  formName            String           @db.VarChar(255)
+  dataProcessing      DataProcessing
 
   // FK to DataSubjectType
-  dataSubjectsType_id  Int
-  DataSubjectType DataSubjectTypes @relation(fields: [dataSubjectsType_id], references: [id])
-  @@index([dataSubjectsType_id])
-
+  dataSubjectsType_id Int
+  DataSubjectType     DataSubjectTypes @relation(fields: [dataSubjectsType_id], references: [id])
+  
   // FK to DataSubjectInfo
-  dataSubject_id  Int 
-  dataSubject DataSubjectInfo @relation(fields: [dataSubject_id], references: [id])
+  dataSubject_id      Int 
+  dataSubject         DataSubjectInfo  @relation(fields: [dataSubject_id], references: [id])
+  
+  recipientsUsers     String           @db.VarChar(255) 
+  purposeOfProcessing String           @db.Text         
+  
+  processBasis        ProcessingBasis[]
+  
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([piaAssessment_id])
+  @@index([dataSubjectsType_id])
   @@index([dataSubject_id])
-
-  processBasis ProcessingBasis[]    //Used as FK to Processing Basis
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
 }
 
 enum DataProcessing {
-  ELECRONIC
+  ELECTRONIC 
   PAPER_BASED
   BOTH
 }
 
-enum DataSubjectsTypes {
-  // Add more values incase there are more data subjects that will be collected from the supervisor
-  EMPLOYEES
-  CUSTOMERS
-  CLIENTS
-  SUPPLIERS
-}
-
-// --- Data Subject Types Table --- //
 model DataSubjectTypes {
-  id           Int    @id @default(autoincrement())
+  id              Int         @id @default(autoincrement())
   dataSubjectType datasubject
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  pii PII[]     // Used as FK to PII
+  pii             PII[]     
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 enum datasubject {
@@ -136,30 +212,30 @@ enum datasubject {
   SUPPLIERS
 }
 
-// --- Data Subjec Info / Personal Info Of DataSubject Table--- //
 model DataSubjectInfo {
-  id              Int    @id @default(autoincrement())
-  name            String @db.VarChar(255)
-  email           String @db.VarChar(255)
-  mobileNumber    String @db.VarChar(255)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-
+  id                 Int                 @id @default(autoincrement())
+  name               String              @db.VarChar(255)
+  email              String              @db.VarChar(255)
+  mobileNumber       String              @db.VarChar(255)
   
-  pii PII[]     // Used as FK to PII
-  threatsAndControll ThreatsAndControll[]   // Used as FK to Threats and Control
+  pii                PII[]
+  threatsAndControls ThreatsAndControl[]
+  
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
 }
 
-// --- Processing Basis Table --- //
 model ProcessingBasis {
-  id           Int           @id @default(autoincrement())
+  id             Int            @id @default(autoincrement())
   processingType ProcessingType
-  basisNum  Basis
+  basisNum       Basis
   pii_ID         Int
-  pii            PII           @relation(fields: [pii_ID], references: [id])    
+  pii            PII            @relation(fields: [pii_ID], references: [id], onDelete: Cascade)    
+  
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
   @@index([pii_ID])
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
 }
 
 enum ProcessingType {
@@ -174,30 +250,44 @@ enum Basis {
     TYPE_4
     TYPE_5
     TYPE_6
- }
+}
 
 //**********************************************//
 // --- C. THREATS AND CONTROL MEASURES TABLE --- //
-model ThreatsAndControll {
-  id           Int    @id @default(autoincrement())
+model ThreatsAndControl { 
+  id                           Int             @id @default(autoincrement())
+  
+  // FK to PiaAssessment
+  piaAssessment_id             Int
+  piaAssessment                PiaAssessment   @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
 
   // FK to DataSubjectInfo
-  dataSubject_id Int
-  dataSubjects DataSubjectInfo @relation(fields: [dataSubject_id], references :[id])
-  @@index ([dataSubject_id])
+  dataSubject_id               Int
+  dataSubjects                 DataSubjectInfo @relation(fields: [dataSubject_id], references :[id])
 
-  // FK to PLDC
-  pdlc_id Int
-  pdlc PDLC @relation(fields : [pdlc_id], references :[id])
+  // FK to PDLC
+  pdlc_id                      Int
+  pdlc                         PDLC            @relation(fields : [pdlc_id], references :[id])
+
+  threats_possibleConsequences String          @db.VarChar(255)
+  
+  // String to allow multi-select (e.g., "CONFIDENTIALITY, INTEGRITY")
+  typeOfThreats                String          @db.VarChar(255) 
+  
+  severityLevel                SeverityLevel   
+  likelihoodLevel              LikelihoodLevel 
+  riskRating                   Int             @db.Int
+  proposedControl              String          @db.VarChar(255)
+  
+  // String to allow multi-select (e.g., "PHYSICAL, TECHNICAL")
+  typeOfMeasure                String          @db.VarChar(255) 
+  
+  createdAt                    DateTime        @default(now())
+  updatedAt                    DateTime        @updatedAt
+
+  @@index ([piaAssessment_id])
+  @@index ([dataSubject_id])
   @@index ([pdlc_id])
-  threats_possibleConsequences String @db.VarChar(255)
-  typeOfThreats String @db.Char(255)
-  severtyLevel  SeverityLevel
-  likelihoodLevel LikeliHoodLevel
-  riskRating Int @db.Int
-  proposedControl String @db.VarChar(255)
-  createdAt       DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
 }
 
 enum SeverityLevel {
@@ -207,7 +297,7 @@ enum SeverityLevel {
     EXTREME_4
 }
 
-enum LikeliHoodLevel {
+enum LikelihoodLevel {
     UNLIKELY_1
     POSSIBLE_2
     LIKELY_3
@@ -216,39 +306,24 @@ enum LikeliHoodLevel {
 
 //***********************************************/
 // --- D. SECURITY MEASURES TABLE --- //
-
-// --- Security Measures Table --- //
 model SecurityMeasures {
-    id Int @id @default(autoincrement())
-    securityType SecurityType
-    description String @db.VarChar(255)
-    createdAt       DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
+    id               Int           @id @default(autoincrement())
+    
+    // FK to PiaAssessment
+    piaAssessment_id Int
+    piaAssessment    PiaAssessment @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
+    
+    securityType     SecurityType
+    description      String        @db.VarChar(255)
+   
+    createdAt        DateTime      @default(now())
+    updatedAt        DateTime      @updatedAt
+
+    @@index([piaAssessment_id])
 }
 
 enum SecurityType {
     TECHNICAL
     ORGANIZATIONAL
     PHYSICAL
-}
- 
-// --- Questions Table --- //
-model Questions {
-    id Int @id @default(autoincrement())
-  question String @unique @db.VarChar(255)
-    questionAnswers Answers[] // Used as FK to Answers Table    
-    createdAt       DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
-
-}
-
-// --- Answers Table --- //
-model Answers {
-    id Int @id @default(autoincrement())
-    answer String @db.VarChar(255)
-    question_Id Int
-    question Questions @relation(fields: [question_Id], references: [id])
-    @@index ([question_Id])
-    createdAt       DateTime  @default(now())
-    updatedAt      DateTime  @updatedAt
 }

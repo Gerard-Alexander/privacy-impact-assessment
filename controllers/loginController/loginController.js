@@ -26,7 +26,8 @@ const loginSubmit = async (req, res) => {
     req.session.user = {
       username: user.userName,
       role: user.role,
-      fullName: `${user.firstName} ${user.lastName}`.trim()
+      fullName: `${user.firstName} ${user.lastName}`.trim(),
+      emailAddress: user.emailAddress
     };
 
     return res.redirect('/user-profile');

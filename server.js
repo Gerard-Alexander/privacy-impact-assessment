@@ -3,12 +3,14 @@ require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
 const path = require('path');
+const expressLayouts = require('express-ejs-layouts');
 
 // Import Middleware and Import Routes
 const { securityHeaders, corsProtection } = require('./middleware/security');
 const indexRoutes = require('./routes/index');
 const loginRoutes = require('./routes/login');
 const userProfileRoutes = require('./routes/userProfile');
+const dashboardRoutes = require('./routes/dashboard');
 
 
 const app = express();
@@ -53,6 +55,7 @@ app.use(session({
 app.use('/', indexRoutes); // Main Index Page
 app.use('/login', loginRoutes); // Login Routes
 app.use('/user-profile', userProfileRoutes); // User Profile Routes
+app.use('/dashboard', dashboardRoutes); // Dashboard Routes
 
 // ===== ERROR HANDLING =====
 app.use((err, req, res, next) => {

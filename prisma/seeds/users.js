@@ -10,6 +10,7 @@ async function seedUsers(prisma) {
                 firstName: "Admin",
                 lastName: "Admin",
                 userName: "admin",
+                emailAddress: "admin@.slu.edu.ph",
                 password: hashedAdminPassword,
                 role: "ADMIN",
             },
@@ -17,6 +18,7 @@ async function seedUsers(prisma) {
                 firstName: "User",
                 lastName: "User",
                 userName: "user",
+                emailAddress: "user@.slu.edu.ph",
                 password: hashedUserPassword,
                 role: "USER",
             }
