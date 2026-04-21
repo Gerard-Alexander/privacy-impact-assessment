@@ -18,9 +18,9 @@ Other Tools: Nodemon (development)
 # Install dependencies:
 4. npm install
 5. Setup environment variables:
-6. DATABASE_URL="mysql://root:password@localhost:3306/pia_db"
+6. DATABASE_URL="mysql://root@localhost:3306/pia_db"
 7. Generate Prisma Client: npm run generate
-8. Run Prisma migrations:
+8. Run Prisma migrations: npm run migrate:reset || npm run migrate:fresh
 9. npx prisma migrate dev
 10. Start the server: npm run dev
 11. 

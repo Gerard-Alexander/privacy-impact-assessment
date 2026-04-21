@@ -1,0 +1,19 @@
+<%- include('layouts/head', { title: title }) %>
+<div class="d-flex">
+	<%- include('layouts/sidebar', { activePage: activePage }) %>
+	<div class="flex-grow-1">
+		<%- include('layouts/topbar', { title: title, user: user }) %>
+		<main class="container-fluid py-4">
+			<div class="card border-0 shadow-sm">
+				<div class="card-body">
+					<h2 class="h5 mb-2">Welcome to your dashboard</h2>
+					<p class="mb-0 text-muted">Use the sidebar to start a new assessment or navigate your PIA workspace.</p>
+				</div>
+			</div>
+		</main>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
