@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `piaassessment` ADD COLUMN `status` ENUM('DRAFT', 'COMPLETED') NOT NULL DEFAULT 'DRAFT';

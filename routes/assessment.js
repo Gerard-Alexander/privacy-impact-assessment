@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const dpsNameController = require('../controllers/assessmentController/dpsNameController');
+const authorizedPArtiesController = require('../controllers/assessmentController/authorizedPartiesController');
 const { requireAuth } = require('../middleware/auth');
 
 // Routes for Assessment Step 1 (DPS Information)

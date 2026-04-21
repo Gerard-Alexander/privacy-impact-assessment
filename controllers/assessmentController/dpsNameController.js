@@ -1,7 +1,8 @@
 const prisma = require('../../store/prisma');
 
 const dpsName = (req, res) => {
-  res.locals.dpsTitle = 'Data Processing System';
+res.locals.dpsTitle = 'Data Processing System';
+  res.locals.authParties = 'Authorized Parties';
 
   return res.render('assessment/dpsname-page', {
     title: res.locals.dpsTitle,
@@ -31,6 +32,23 @@ const saveDpsName = async (req, res) => {
       });
     }
 
+		const existingAssessment = await prisma.piaAssessment.findFirst({
+      where: {
+        dpsName: systemName
+      }
+    });
+
+    if (existingAssessment) {
+      return res.render('assessment/dpsname-page', {
+        title: 'Data Processing System',
+        activePage: 'dpsname-page',
+        user: req.session.user,
+        error: 'An assessment with this DPS name already exists.',
+        success: null
+      });
+    }
+
+
     const newAssessment = await prisma.piaAssessment.create({
       data: {
         dpsName: systemName,
@@ -47,11 +65,11 @@ const saveDpsName = async (req, res) => {
     req.session.currentAssessmentId = newAssessment.id;
 
     // Let the user know it succeeded and would ideally direct to step 2 next.
-    return res.render('assessment/dpsname-page', {
-        title: 'Data Processing System',
-        activePage: 'dpsname-page',
-        user: req.session.user,
-        error: null,
+    return res.render('assessment/authorizedparties-page', {
+      title: res.locals.authParties,
+      activePage: 'authorizedparties-page',
+      user: req.session.user,
+      error: null,
         success: 'Section A saved successfully! In the future, this will redirect to Step 2.'
     });
 

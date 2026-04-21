@@ -1,0 +1,51 @@
+<%- include('../layouts/head', { title: title }) %>
+	<div class="d-flex">
+		<%- include('../layouts/sidebar', { activePage: activePage }) %>
+		<div class="flex-grow-1">
+		<%- include('../layouts/topbar', { title: title, user: user }) %>
+			
+			<main class="container-fluid py-4 px-4">
+				<%- include('../layouts/stepper', { currentStep: 2, 
+					dpsTitle: 'Data Processing System', authParties: 'Authorized Parties', 
+					user: user 
+				}) %>
+				
+				<!-- Privacy Notice -->
+				<div class="card mb-3 d-none" style="max-width: 1000px;">
+					<div class="card-header">Privacy Notice</div>
+					<div class="card-body">
+						<div class="privacy-notice">
+							By submitting this privacy impact assessment, I hereby give my consent to USLT for the collection, processing, and storage of my personal information. This information will be used solely for legitimate educational, research, and institutional purposes, in accordance with University policies and the Republic Act No. 10173, also known as the Data Privacy Act of 2012. I understand that my personal data will be kept confidential and will not be disclosed with unauthorized parties, except as required by law, court order, or with my explicit consent. I acknowledge my rights under the Data Privacy Act, including the right to access, correct, and request the deletion of my personal data, subject to applicable regulations.
+						</div>
+					</div>
+				</div>
+
+				<div class="mx-auto" style="max-width: 1000px;">
+					<div class="card shadow-sm border-0 mb-4">
+						<div class="card-header text-white" style="background-color: #0f235d;">
+							<h5 class="mb-0">Section B - Authorized Parties</h5>
+						</div>
+
+						<div class="card-body text-black shadow-sm" style="background-color: #c8ddf7;">
+							<div class="row text-center align-items-center">
+								<div class="col-md-6 border-end border-dark border-opacity-25">
+									<h6 class="mb-0">Head Office / Process Owner</h6>
+								</div>
+								<div class="col-md-6">
+									<h6 class="mb-0">Head Office / Process Owner</h6>
+								</div>
+
+							</div>
+						</div>
+
+
+					</div>
+				</div>
+      </main>
+    </div>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
