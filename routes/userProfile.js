@@ -5,6 +5,6 @@ const { requireAuth } = require('../middleware/auth');
 
 // Routes for User Profile Page
 router.get('/', requireAuth, userProfileController.profile);
-router.get('/logout-page', requireAuth, userProfileController.logout);
+// Removed unused /logout-page (use /logout instead)
 
 module.exports = router;

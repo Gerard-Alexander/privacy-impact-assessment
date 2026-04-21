@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const dpsNameController = require('../controllers/assessmentController/dpsnameController');
+const dpsNameController = require('../controllers/assessmentController/dpsNameController');
 const { requireAuth } = require('../middleware/auth');
 
 // Routes for User Profile Page

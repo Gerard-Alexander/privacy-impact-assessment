@@ -8,4 +8,8 @@ router.get('/login-page', indexController.loginPage);
 router.get('/register-page', indexController.registerPage);
 router.post('/register-page', indexController.registerSubmit);
 
+router.get('/index', (req, res) => {
+  res.redirect('/');
+});
+
 module.exports = router;
