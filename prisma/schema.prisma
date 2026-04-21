@@ -43,6 +43,7 @@ model PiaAssessment {
   isOutsourced                Boolean
   piaStartDate                DateTime
   piaEndDate                  DateTime
+  status                      Status    @default(DRAFT)
 
   // Privacy Notice Agreement
   privacyNoticeAcknowledged   Boolean  @default(false) 
@@ -79,6 +80,10 @@ enum Modality {
 enum RoleType {
   PIC
   PIP
+}
+enum Status {
+  DRAFT
+  COMPLETED
 }
 
 enum PublicFacing {
