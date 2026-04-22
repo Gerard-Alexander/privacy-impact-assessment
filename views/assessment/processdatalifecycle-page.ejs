@@ -4,9 +4,7 @@
 		<div class="flex-grow-1 main-content-offset">
 		<%- include('../layouts/topbar', { title: title, user: user }) %>		
 			<main class="container-fluid py-4 px-4">
-				<%- include('../layouts/stepper', { currentStep: 3, dpsTitle: 'Data Processing System', authParties: 'Authorized Parties', processData : 'Process Data Lifecycle', user: user }) %> 
-					user: user 
-				}) %>
+				<%- include('../layouts/stepper', { currentStep: 3, dpsTitle: 'Data Processing System', authParties: 'Authorized Parties', processDataCycle: 'Process Data LifeCycle', user: user }) %>
 				<% if (error) { %>
 					<div class="alert alert-danger mx-auto" style="max-width: 1000px;"><%= error %></div>
 				<% } %>
@@ -15,10 +13,10 @@
 				<% } %>
 				<div class="mx-auto" style="max-width: 1000px;">
 					<div class="d-flex justify-content-between align-items-center mt-4">
-						<a href="/assessment?id=<%= piaAssessmentId %>" class="btn btn-danger btn-sm px-4 shadow-sm">
+						<a href="/assessment/authorizedparties?id=<%= piaAssessmentId %>" class="btn btn-danger btn-sm px-4 shadow-sm">
 							Previous Page
 						</a>
-						<div>2 of 5</div>
+						<div>3 of 5</div>
 						<button type="submit" form="authorizedForm" class="btn btn-primary btn-sm px-4 shadow-sm">
 							Save and Continue
 						</button>

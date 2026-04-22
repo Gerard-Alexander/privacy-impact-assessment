@@ -13,7 +13,7 @@ router.post('/dpsname', requireAuth, dpsNameController.saveDpsName);
 router.get('/authorizedparties', requireAuth, authorizedPartiesController.authorizedParties);
 router.post('/authorizedparties', requireAuth, authorizedPartiesController.saveAuthorizedParties);
 
-// Routes for Assessment Step 3 (Process Data Lifecycle)
+// Routes for Assessment Step 3 (Process Data Cycle)
 router.get('/processdatalifecycle', requireAuth, processDataLifeCycleController.processDataLifeCycle);
 router.post('/processdatalifecycle', requireAuth, processDataLifeCycleController.saveProcessDataLifeCycle);
 

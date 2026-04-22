@@ -69,10 +69,11 @@
 </style>
 
 <div class="custom-stepper px-3">
+  <% const processDataLabel = typeof processDataCycle !== 'undefined' ? processDataCycle : 'Process Data LifeCycle'; %>
     <% const steps = [
     { title: dpsTitle, user: user },
     { title: authParties, user: user },
-    { title: processData, user: user },
+  	{ title: processDataLabel, user: user },
     { title: 'Information Inventory' },
     { title: 'Threats & Controls' },
     { title: 'Security Measures' }

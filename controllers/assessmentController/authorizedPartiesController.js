@@ -1,6 +1,8 @@
 const prisma = require('../../store/prisma');
 
-const authorizedParties = (req, res) => {
+const formatDateForInput = (value) => (value ? value.toISOString().slice(0, 10) : '');
+
+const authorizedParties = async (req, res) => {
   res.locals.authParties = 'Authorized Parties';
   
   const piaAssessmentId = req.query.id || req.session.currentAssessmentId;
@@ -9,11 +11,70 @@ const authorizedParties = (req, res) => {
   if (!piaAssessmentId) {
     return res.redirect('/assessment');
   }
+  const piaAssessment_id = Number.parseInt(piaAssessmentId, 10);
+  const rawPartyData = await prisma.authorizedParties.findMany({ where: { piaAssessment_id } });
+  const partyDefinitions = [
+    {
+      firstNameField: 'headFirstName',
+      lastNameField: 'headLastName',
+      positionField: 'headPosition',
+      officeField: 'headOfficeUnit',
+      emailField: '',
+      signatureField: 'headSignature',
+      dateField: 'headDateSigned',
+      userType: 'HEAD_OFFICE'
+    },
+    {
+      firstNameField: 'compName',
+      lastNameField: 'compLastName',
+      positionField: 'compPosition',
+      officeField: '',
+      emailField: 'compEmail',
+      signatureField: 'compSignature',
+      dateField: 'compDateSigned',
+      userType: 'COMPLIANCE_OFFICER'
+    },
+    {
+      firstNameField: 'reviewFirstName',
+      lastNameField: 'reviewLastName',
+      positionField: 'reviewPosition',
+      officeField: '',
+      emailField: '',
+      signatureField: 'reviewSignature',
+      dateField: 'reviewDateSigned',
+      userType: 'REVIEWER'
+    },
+    {
+      firstNameField: 'approveFirstName',
+      lastNameField: 'approveLastName',
+      positionField: 'approvePosition',
+      officeField: '',
+      emailField: '',
+      signatureField: 'approveSignature',
+      dateField: 'approveDateSigned',
+      userType: 'APPROVED_BY'
+    }
+  ];
+  const formData = {};
+  partyDefinitions.forEach(({userType, firstNameField, lastNameField, positionField, officeField, emailField, signatureField, dateField}) => {
+    const party = rawPartyData.find(p => p.userType === userType);
+    if (party) {
+      const nameParts = party.name.trim().split(/\s+/);
+      formData[firstNameField] = nameParts[0] || '';
+      formData[lastNameField] = nameParts.slice(1).join(' ') || '';
+      formData[positionField] = party.position || '';
+      if (officeField) formData[officeField] = party.officeUnit || '';
+      if (emailField) formData[emailField] = party.email || '';
+      formData[signatureField] = party.signature || '';
+      formData[dateField] = formatDateForInput(party.dateSigned);
+    }
+  });
   return res.render('assessment/authorizedparties-page', {
     title: res.locals.authParties,
     activePage: 'authorizedparties-page',
     user: req.session.user,
     piaAssessmentId,
+    authorizedPartiesData: formData,
     error: null,
     success
   });
@@ -44,6 +105,7 @@ const saveAuthorizedParties = async (req, res) => {
         officeField: 'headOfficeUnit',
         emailField: '',
         signatureField: 'headSignature',
+        dateField: 'headDateSigned',
         userType: 'HEAD_OFFICE'
       },
       {
@@ -53,6 +115,7 @@ const saveAuthorizedParties = async (req, res) => {
         officeField: '',
         emailField: 'compEmail',
         signatureField: 'compSignature',
+        dateField: 'compDateSigned',
         userType: 'COMPLIANCE_OFFICER'
       },
       {
@@ -62,6 +125,7 @@ const saveAuthorizedParties = async (req, res) => {
         officeField: '',
         emailField: '',
         signatureField: 'reviewSignature',
+        dateField: 'reviewDateSigned',
         userType: 'REVIEWER'
       },
       {
@@ -71,20 +135,22 @@ const saveAuthorizedParties = async (req, res) => {
         officeField: '',
         emailField: '',
         signatureField: 'approveSignature',
+        dateField: 'approveDateSigned',
         userType: 'APPROVED_BY'
       }
     ];
 
     const partyData = partyDefinitions
       .filter(({ firstNameField, positionField }) => body[firstNameField] || body[positionField])
-      .map(({ firstNameField, lastNameField, positionField, officeField, emailField, signatureField, userType }) => ({
+      .map(({ firstNameField, lastNameField, positionField, officeField, emailField, signatureField, dateField, userType }) => ({
         piaAssessment_id,
         name: `${getFieldValue(body[firstNameField])} ${getFieldValue(body[lastNameField])}`.replace(/\s+/g, ' ').trim(),
         position: getFieldValue(body[positionField]),
         officeUnit: getFieldValue(body[officeField]),
         email: getFieldValue(body[emailField]),
         userType,
-        signature: getFieldValue(body[signatureField])
+        signature: getFieldValue(body[signatureField]),
+        dateSigned: body[dateField] ? new Date(body[dateField]) : null
       }));
 
     if (!partyData.length) {
@@ -104,7 +170,7 @@ const saveAuthorizedParties = async (req, res) => {
     ]);
 
     req.session.currentAssessmentId = piaAssessment_id;
-    return res.redirect(`/assessment/authorizedparties?id=${piaAssessment_id}&saved=1`);
+    return res.redirect(`/assessment/processdatalifecycle?id=${piaAssessment_id}`);
   } catch (error) {
     console.error('Error saving authorized parties:', error);
     return res.render('assessment/authorizedparties-page', {

@@ -49,6 +49,7 @@
 				</div>
 
 				<div class="mx-auto" style="max-width: 1000px;">
+					<% const formData = authorizedPartiesData || {}; %>
 					<form id="authorizedForm" action="/assessment/authorizedparties" method="POST">
 						<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
 						<div class="card shadow-sm border-0 mb-4">
@@ -79,27 +80,27 @@
 									<div class="d-flex gap-3 mb-3">
 										<div class="w-100">
 											<label class="form-label">First Name</label>
-											<input type="text" name="headFirstName" class="form-control" required>
+											<input type="text" name="headFirstName" class="form-control" required value="<%= formData.headFirstName || '' %>">
 										</div>
 										<div class="w-100">
 											<label class="form-label">Last Name</label>
-											<input type="text" name="headLastName" class="form-control" required>
+											<input type="text" name="headLastName" class="form-control" required value="<%= formData.headLastName || '' %>">
 										</div>
 									</div>
 									<!-- Position -->
 									<div class="mb-3">
 										<label class="form-label">Position</label>
-										<input type="text" name="headPosition" class="form-control" required>
+										<input type="text" name="headPosition" class="form-control" required value="<%= formData.headPosition || '' %>">
 									</div>
 									<!-- Office -->
 									<div class="mb-3">
 										<label class="form-label">Office / Unit</label>
-										<input type="text" name="headOfficeUnit" class="form-control" required>
+										<input type="text" name="headOfficeUnit" class="form-control" required value="<%= formData.headOfficeUnit || '' %>">
 									</div>
 									<!-- Signature Text -->
 									<div class="mb-3">
 										<label class="form-label">Signature</label>
-										<input type="text" name="headSignature" class="form-control" required>
+										<input type="text" name="headSignature" class="form-control" required value="<%= formData.headSignature || '' %>">
 									</div>
 									<!-- Upload Box -->
 									<div class="mb-3">
@@ -119,8 +120,8 @@
 									</div>
 									<!-- Date -->
 									<div>
-										<label class="form-label fw-bold">PIA Starting Date:</label>
-										<input type="date" name="piaStartDate" class="form-control form-control-sm">
+										<label class="form-label fw-bold">Date Signed:</label>
+										<input type="date" name="headDateSigned" class="form-control form-control-sm" value="<%= formData.headDateSigned || '' %>">
 									</div>
 								</div>
 
@@ -130,27 +131,27 @@
 									<div class="d-flex gap-3 mb-3">
 										<div class="w-100">
 											<label class="form-label">First Name</label>
-											<input type="text" name="compName" class="form-control" required>
+											<input type="text" name="compName" class="form-control" required value="<%= formData.compName || '' %>">
 										</div>
 										<div class="w-100">
 											<label class="form-label">Last Name</label>
-											<input type="text" name="compLastName" class="form-control" required>
+											<input type="text" name="compLastName" class="form-control" required value="<%= formData.compLastName || '' %>">
 										</div>
 									</div>
 									<!-- Position -->
 									<div class="mb-3">
 										<label class="form-label">Position</label>
-										<input type="text" name="compPosition" class="form-control" required>
+										<input type="text" name="compPosition" class="form-control" required value="<%= formData.compPosition || '' %>">
 									</div>
 									<!-- Email -->
 									<div class="mb-3">
 										<label class="form-label">Email</label>
-										<input type="email" name="compEmail" class="form-control" required>
+										<input type="email" name="compEmail" class="form-control" required value="<%= formData.compEmail || '' %>">
 									</div>
 									<!-- Signature Text -->
 									<div class="mb-3">
 										<label class="form-label">Signature</label>
-										<input type="text" name="compSignature" class="form-control" required>
+										<input type="text" name="compSignature" class="form-control" required value="<%= formData.compSignature || '' %>">
 									</div>
 									<!-- Upload Box -->
 									<div class="mb-3">
@@ -170,8 +171,8 @@
 									</div>
 									<!-- Date -->
 									<div>
-										<label class="form-label fw-bold">PIA Starting Date:</label>
-										<input type="date" name="piaStartDate" class="form-control form-control-sm">
+										<label class="form-label fw-bold">Date Signed:</label>
+										<input type="date" name="compDateSigned" class="form-control form-control-sm" value="<%= formData.compDateSigned || '' %>">
 									</div>
 								</div>
 							</div>
@@ -200,22 +201,22 @@
 									<div class="d-flex gap-3 mb-3">
 										<div class="w-100">
 											<label class="form-label">First Name</label>
-											<input type="text" name="reviewFirstName" class="form-control" required>
+											<input type="text" name="reviewFirstName" class="form-control" required value="<%= formData.reviewFirstName || '' %>">
 										</div>
 										<div class="w-100">
 											<label class="form-label">Last Name</label>
-											<input type="text" name="reviewLastName" class="form-control" required>
+											<input type="text" name="reviewLastName" class="form-control" required value="<%= formData.reviewLastName || '' %>">
 										</div>
 									</div>
 									<!-- Position -->
 									<div class="mb-3">
 										<label class="form-label">Position</label>
-										<input type="text" name="reviewPosition" class="form-control" required>
+										<input type="text" name="reviewPosition" class="form-control" required value="<%= formData.reviewPosition || '' %>">
 									</div>
 									<!-- Signature Text -->
 									<div class="mb-3">
 										<label class="form-label">Signature</label>
-										<input type="text" name="reviewSignature" class="form-control" required>
+										<input type="text" name="reviewSignature" class="form-control" required value="<%= formData.reviewSignature || '' %>">
 									</div>
 									<!-- Upload Box -->
 									<div class="mb-3">
@@ -235,8 +236,8 @@
 									</div>
 									<!-- Date -->
 									<div>
-										<label class="form-label fw-bold">PIA Starting Date:</label>
-										<input type="date" name="piaStartDate" class="form-control form-control-sm">
+										<label class="form-label fw-bold">Date Signed:</label>
+										<input type="date" name="reviewDateSigned" class="form-control form-control-sm" value="<%= formData.reviewDateSigned || '' %>">
 									</div>
 								</div>
 
@@ -246,22 +247,22 @@
 									<div class="d-flex gap-3 mb-3">
 										<div class="w-100">
 											<label class="form-label">First Name</label>
-											<input type="text" name="approveFirstName" class="form-control" required>
+											<input type="text" name="approveFirstName" class="form-control" required value="<%= formData.approveFirstName || '' %>">
 										</div>
 										<div class="w-100">
 											<label class="form-label">Last Name</label>
-											<input type="text" name="approveLastName" class="form-control" required>
+											<input type="text" name="approveLastName" class="form-control" required value="<%= formData.approveLastName || '' %>">
 										</div>
 									</div>
 									<!-- Position -->
 									<div class="mb-3">
 										<label class="form-label">Position</label>
-										<input type="text" name="approvePosition" class="form-control" required>
+										<input type="text" name="approvePosition" class="form-control" required value="<%= formData.approvePosition || '' %>">
 									</div>
 									<!-- Signature Text -->
 									<div class="mb-3">
 										<label class="form-label">Signature</label>
-										<input type="text" name="approveSignature" class="form-control" required>
+										<input type="text" name="approveSignature" class="form-control" required value="<%= formData.approveSignature || '' %>">
 									</div>
 									<!-- Upload Box -->
 									<div class="mb-3">
@@ -281,8 +282,8 @@
 									</div>
 									<!-- Date -->
 									<div>
-										<label class="form-label fw-bold">PIA Starting Date:</label>
-										<input type="date" name="piaStartDate" class="form-control form-control-sm">
+										<label class="form-label fw-bold">Date Signed:</label>
+										<input type="date" name="approveDateSigned" class="form-control form-control-sm" value="<%= formData.approveDateSigned || '' %>">
 									</div>
 								</div>
 							</div>
