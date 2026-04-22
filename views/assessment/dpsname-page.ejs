@@ -1,8 +1,9 @@
 <%- include('../layouts/head', { title: title }) %>
 	<div class="d-flex">
 		<%- include('../layouts/sidebar', { activePage: activePage }) %>
-		<div class="flex-grow-1">
+		<div class="flex-grow-1 main-content-offset">
 		<%- include('../layouts/topbar', { title: title, user: user }) %>
+
 			
 			<main class="container-fluid py-4 px-4">
 				<%- include('../layouts/stepper', { currentStep: 1, 
@@ -17,7 +18,15 @@
 						</div>
 
 						<div class="card-body">
-							<form action="/assessment" method="POST">
+							<form action="/assessment/dpsname" method="POST">
+								<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId || '' %>">
+								<% const selectedAssessment = assessment || {}; %>
+								<% if (error) { %>
+									<div class="alert alert-danger mb-3" role="alert"><%= error %></div>
+								<% } %>
+								<% if (success) { %>
+									<div class="alert alert-success mb-3" role="alert"><%= success %></div>
+								<% } %>
 								<div class="row g-4">
 
 									<!-- LEFT COLUMN -->
@@ -29,7 +38,7 @@
 											<span class="text-danger">*</span>
 											</label>
 											<input type="text" name="systemName" class="form-control form-control-sm"
-											placeholder="e.g. Student Enrollment Management System" required>
+											placeholder="e.g. Student Enrollment Management System" value="<%= selectedAssessment.dpsName || '' %>" required>
 										</div>
 
 										<!-- Mandate -->
@@ -39,34 +48,32 @@
 											<span class="text-danger">*</span>
 											</label>
 											<textarea name="mandate" class="form-control form-control-sm" rows="3"
-											placeholder="Describe the mandate or purpose..." required></textarea>
+											placeholder="Describe the mandate or purpose..." required><%= selectedAssessment.mandate || '' %></textarea>
 										</div>
 
 										<!-- Dates -->
 										<div class="row g-3">
 											<div class="col-md-6">
 											<label class="form-label fw-bold">PIA Starting Date:</label>
-											<input type="date" name="piaStartDate" class="form-control form-control-sm">
+											<input type="date" name="piaStartDate" class="form-control form-control-sm" value="<%= selectedAssessment.piaStartDate || '' %>" required>
 											</div>
 											<div class="col-md-6">
 											<label class="form-label fw-bold">PIA Ending Date:</label>
-											<input type="date" name="piaEndDate" class="form-control form-control-sm">
+											<input type="date" name="piaEndDate" class="form-control form-control-sm" value="<%= selectedAssessment.piaEndDate || '' %>" required>
 											</div>
 										</div>
-
 									</div>
 
 									<!-- RIGHT COLUMN (30%) -->
 									<div class="col-md-4 d-flex flex-column gap-3">
-
 										<!-- DPS Modality -->
 										<div>
 											<label class="form-label fw-bold">DPS Modality:</label>
 											<select name="dpsModality" class="form-select form-select-sm">
-												<option value="">Select...</option>
-												<option value="ELECTRONIC">Electronic</option>
-												<option value="MANUAL">Paper-based</option>
-												<option value="BOTH">Both</option>
+												<option value="" <%= !selectedAssessment.dpsModality ? 'selected' : '' %>>Select...</option>
+												<option value="ELECTRONIC" <%= selectedAssessment.dpsModality === 'ELECTRONIC' ? 'selected' : '' %>>Electronic</option>
+												<option value="MANUAL" <%= selectedAssessment.dpsModality === 'MANUAL' ? 'selected' : '' %>>Paper-based</option>
+												<option value="BOTH" <%= selectedAssessment.dpsModality === 'BOTH' ? 'selected' : '' %>>Both</option>
 											</select>
 										</div>
 
@@ -74,9 +81,9 @@
 										<div>
 											<label class="form-label fw-bold">Processing Role / Entity:</label>
 											<select name="processingRole" class="form-select form-select-sm">
-												<option value="">Select...</option>
-												<option value="PIC">Personal Information Controller (PIC)</option>
-												<option value="PIP">Personal Information Processor (PIP)</option>
+												<option value="" <%= !selectedAssessment.processingRole ? 'selected' : '' %>>Select...</option>
+												<option value="PIC" <%= selectedAssessment.processingRole === 'PIC' ? 'selected' : '' %>>Personal Information Controller (PIC)</option>
+												<option value="PIP" <%= selectedAssessment.processingRole === 'PIP' ? 'selected' : '' %>>Personal Information Processor (PIP)</option>
 											</select>
 										</div>
 
@@ -85,11 +92,11 @@
 											<label class="form-label fw-bold">Outsourced/Subcontracted?</label>
 												<div class="d-flex gap-3">
 													<div class="form-check">
-														<input class="form-check-input" type="radio" name="isOutsourced" value="1">
+														<input class="form-check-input" type="radio" name="isOutsourced" value="1" <%= selectedAssessment.isOutsourced === '1' ? 'checked' : '' %>>
 														<label class="form-check-label small">Yes</label>
 													</div>
 													<div class="form-check">
-														<input class="form-check-input" type="radio" name="isOutsourced" value="0" checked>
+														<input class="form-check-input" type="radio" name="isOutsourced" value="0" <%= selectedAssessment.isOutsourced === '1' ? '' : 'checked' %>>
 														<label class="form-check-label small">No</label>
 													</div>
 												</div>
@@ -98,15 +105,15 @@
 								</div>
 
 								<!-- Submit -->
-								<div class="d-flex justify-content-end mt-4">
-									<button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm">
-									Save and Continue
+								<div class="position-relative mt-4 text-center">
+									<div>1 of 5</div>
+									<button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm position-absolute end-0 top-50 translate-middle-y">
+										Save and Continue
 									</button>
 								</div>
 							</form>
 						</div>
 					</div>
-
 				</div>
 			</main>
 		</div>
