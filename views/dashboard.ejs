@@ -1,4 +1,28 @@
 <%- include('layouts/head', { title: title }) %>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .dash { background: #eef1f5; padding: 20px; min-height: 500px; }
+  .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .stat-card { background: #fff; border-radius: 6px; padding: 18px 20px; border-left: 5px solid; }
+  .stat-card.blue  { border-color: #1a3a6b; }
+  .stat-card.amber { border-color: #e6a817; }
+  .stat-card.green { border-color: #2e9e50; }
+  .stat-card.red   { border-color: #c0392b; }
+  .stat-label { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; color: #444; text-transform: uppercase; margin-bottom: 8px; }
+  .stat-value { font-size: 32px; font-weight: 700; color: #1a3a6b; }
+  .table-section { background: #fff; border-radius: 6px; overflow: hidden; }
+  .table-header { background: #1a3a6b; display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; }
+  .table-title { color: #fff; font-size: 13px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .btn-create { background: #2d4e8a; color: #fff; border: none; padding: 8px 16px; font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; cursor: pointer; border-radius: 3px; }
+  .col-headers { display: grid; grid-template-columns: 2fr 2fr 2fr 1.5fr 1.5fr; background: #d6e4f0; padding: 10px 20px; }
+  .col-h { font-size: 11px; font-weight: 700; color: #1a3a6b; letter-spacing: 0.06em; text-transform: uppercase; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; gap: 12px; }
+  .empty-icon { width: 40px; height: 50px; }
+  .empty-text { font-size: 14px; color: #888; }
+  .table-footer { border-top: 1px solid #e0e0e0; padding: 14px 20px; text-align: center; }
+  .view-all { font-size: 13px; font-weight: 700; color: #1a3a6b; text-decoration: none; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+</style>
 
 <div class="d-flex">
 	<%- include('layouts/sidebar', { activePage: activePage }) %>
@@ -7,41 +31,58 @@
 		<%- include('layouts/topbar', { title: title, user: user }) %>
 
 		<main class="container-fluid py-4">
-			<!-- <div class="card border-0 shadow-sm">
+			<div class="card border-0 shadow-sm">
 				<div class="card-body">
-					<h2 class="h5 mb-2">Welcome to your dashboard</h2>
-					<p class="mb-0 text-muted">Use the sidebar to start a new assessment or navigate your PIA workspace.</p>
-				</div>
-			</div> -->
-			
-			
-			<!-- Privacy Notice -->
-			<div class="card mb-3 d-none" style="max-width: 1000px;">
-				<div class="card-header">Privacy Notice</div>
-				<div class="card-body">
-					<div class="privacy-notice">
-						By submitting this privacy impact assessment, I hereby give my consent to USLT for the collection, processing, and storage of my personal information. This information will be used solely for legitimate educational, research, and institutional purposes, in accordance with University policies and the Republic Act No. 10173, also known as the Data Privacy Act of 2012. I understand that my personal data will be kept confidential and will not be disclosed with unauthorized parties, except as required by law, court order, or with my explicit consent. I acknowledge my rights under the Data Privacy Act, including the right to access, correct, and request the deletion of my personal data, subject to applicable regulations.
+					<div class="stat-grid">
+						<div class="stat-card blue">
+						<div class="stat-label">Total Assessments</div>
+						<div class="stat-value">0</div>
+						</div>
+						<div class="stat-card amber">
+						<div class="stat-label">Draft Flows</div>
+						<div class="stat-value">0</div>
+						</div>
+						<div class="stat-card green">
+						<div class="stat-label">Submitted</div>
+						<div class="stat-value">0</div>
+						</div>
+						<div class="stat-card red">
+						<div class="stat-label">Approved</div>
+						<div class="stat-value">0</div>
+						</div>
+					</div>
+
+					<div class="table-section">
+						<div class="table-header">
+							<span class="table-title">Recent Privacy Impact Assessments</span>
+							<button class="btn-create">Create New</button>
+						</div>
+						<div class="col-headers">
+							<span class="col-h">DPS Name</span>
+							<span class="col-h">Office / Owner</span>
+							<span class="col-h">Last Updated</span>
+							<span class="col-h">Status</span>
+							<span class="col-h" style="text-align:right">Actions</span>
+						</div>
+						<div class="empty-state">
+							<svg class="empty-icon" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<rect x="2" y="2" width="28" height="36" rx="2" fill="#e0e0e0" stroke="#bbb" stroke-width="1.5"/>
+								<rect x="8" y="8" width="16" height="2" rx="1" fill="#bbb"/>
+								<rect x="8" y="13" width="12" height="2" rx="1" fill="#bbb"/>
+								<rect x="8" y="18" width="14" height="2" rx="1" fill="#bbb"/>
+								<rect x="6" y="10" width="28" height="36" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="1.5"/>
+								<rect x="12" y="18" width="16" height="2" rx="1" fill="#ccc"/>
+								<rect x="12" y="23" width="12" height="2" rx="1" fill="#ccc"/>
+								<rect x="12" y="28" width="14" height="2" rx="1" fill="#ccc"/>
+							</svg>
+							<span class="empty-text">No assessments found. Start a new one to see it here.</span>
+						</div>
+						<div class="table-footer">
+							<a class="view-all">View All Records →</a>
+						</div>
 					</div>
 				</div>
 			</div>
-
-			<div class="mx-auto" style="max-width: 1000px;">
-				<div class="card shadow-sm border-0 mb-4">
-					<div class="card-header bg-primary text-white">
-						<h5 class="mb-0">Section B - Authorized Parties</h5>
-					</div>
-					<div class="card-body d-flex justify-content-between bg-primary align items-center text-center">
-						<div class="row text-white text-center align-items-center">
-							<h6 class="mb-0">Head Office / Process Owner</h6>
-						</div>
-						<div class="row text-white text-center align-items-center">
-							<h6 class="mb-0">Head Office / Process Owner</h6>
-						</div>
-					</div>
-				</div>
-			</div>
-
-
 		</main>
 	</div>
 </div>
