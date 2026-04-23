@@ -3,18 +3,23 @@ const router = express.Router();
 const dpsNameController = require('../controllers/assessmentController/dpsNameController');
 const authorizedPartiesController = require('../controllers/assessmentController/authorizedPartiesController');
 const processDataLifeCycleController = require('../controllers/assessmentController/processDataLifeCycleController');
+const personalInfoInventoryController = require('../controllers/assessmentController/personalInfoInventoryController');
 const { requireAuth } = require('../middleware/auth');
 
 // Routes for Assessment Step 1 (DPS Information)
 router.get('/', requireAuth, dpsNameController.dpsName);
 router.post('/dpsname', requireAuth, dpsNameController.saveDpsName);
 
-// Routes for Assessment Step 2 (Authorized Parties)
+// Routes for Assessment Step 2 (Authorized Parties) - Step 2
 router.get('/authorizedparties', requireAuth, authorizedPartiesController.authorizedParties);
 router.post('/authorizedparties', requireAuth, authorizedPartiesController.saveAuthorizedParties);
 
-// Routes for Assessment Step 3 (Process Data Cycle)
+// Routes for Assessment Step 3 (Process Data Cycle) - Step 3
 router.get('/processdatalifecycle', requireAuth, processDataLifeCycleController.processDataLifeCycle);
 router.post('/processdatalifecycle', requireAuth, processDataLifeCycleController.saveProcessDataLifeCycle);
+
+// Router for Personal Information Inventory (PII) - Step 4
+router.get('/personalinfoinventory', requireAuth, personalInfoInventoryController.personalInfoInventory);
+router.post('/personalinfoinventory', requireAuth, personalInfoInventoryController.savePersonalInfoInventory);
 
 module.exports = router;

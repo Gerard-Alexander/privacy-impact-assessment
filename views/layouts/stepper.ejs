@@ -69,12 +69,15 @@
 </style>
 
 <div class="custom-stepper px-3">
+  <% const dpsLabel = typeof dpsTitle !== 'undefined' ? dpsTitle : 'Data Processing System'; %>
+  <% const authPartiesLabel = typeof authParties !== 'undefined' ? authParties : 'Authorized Parties'; %>
   <% const processDataLabel = typeof processDataCycle !== 'undefined' ? processDataCycle : 'Process Data LifeCycle'; %>
-    <% const steps = [
-    { title: dpsTitle, user: user },
-    { title: authParties, user: user },
-  	{ title: processDataLabel, user: user },
-    { title: 'Information Inventory' },
+  <% const personalInfoLabel = typeof personalInfoInventory !== 'undefined' ? personalInfoInventory : 'Personal Information Inventory'; %>
+  <% const steps = [
+    { title: dpsLabel, user: user },
+    { title: authPartiesLabel, user: user },
+	{ title: processDataLabel, user: user },
+    { title: personalInfoLabel, user: user },
     { title: 'Threats & Controls' },
     { title: 'Security Measures' }
     ]; %>

@@ -1,0 +1,39 @@
+<%- include('../layouts/head', { title: title }) %>
+<div class="d-flex">
+	<%- include('../layouts/sidebar', { activePage: activePage }) %>
+		<div class="flex-grow-1 main-content-offset">
+			<%- include('../layouts/topbar', { title: title, user: user }) %>
+				<main class="container-fluid py-4 px-4">
+					<%- include('../layouts/stepper', { currentStep: 4, dpsTitle: 'Data Processing System' ,
+						authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
+					}) %>
+					
+					<% if (error) { %>
+						<div class="alert alert-danger mx-auto" style="max-width: 1000px;">
+							<%= error %>
+						</div>
+						<% } %>
+						<% if (success) { %>
+						<div class="alert alert-success mx-auto" style="max-width: 1000px;">
+							<%= success %>
+						</div>
+					<% } %>
+					<div class="mx-auto" style="max-width: 1000px;">
+						<form id="piiForm" action="/assessment/personalinfoinventory"
+							method="POST">
+							<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
+					</div>
+					<div class="d-flex justify-content-between align-items-center mt-4">
+						<a href="/assessment/authorizedparties?id=<%= piaAssessmentId %>"
+							class="btn btn-danger btn-sm px-4 shadow-sm">
+							Previous Page
+						</a>
+						<div>4 of 5</div>
+						<button type="submit" form="piiForm"
+							class="btn btn-primary btn-sm px-4 shadow-sm">
+							Next Page
+						</button>
+					</div>
+				</main>
+		</div>
+</div>
