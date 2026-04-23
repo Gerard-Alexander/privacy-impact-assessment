@@ -1,27 +1,344 @@
 <%- include('../layouts/head', { title: title }) %>
 	<div class="d-flex">
 		<%- include('../layouts/sidebar', { activePage: activePage }) %>
-		<div class="flex-grow-1 main-content-offset">
-		<%- include('../layouts/topbar', { title: title, user: user }) %>		
-			<main class="container-fluid py-4 px-4">
-				<%- include('../layouts/stepper', { currentStep: 3, dpsTitle: 'Data Processing System', authParties: 'Authorized Parties', processDataCycle: 'Process Data LifeCycle', user: user }) %>
-				<% if (error) { %>
-					<div class="alert alert-danger mx-auto" style="max-width: 1000px;"><%= error %></div>
-				<% } %>
-				<% if (success) { %>
-					<div class="alert alert-success mx-auto" style="max-width: 1000px;"><%= success %></div>
-				<% } %>
-				<div class="mx-auto" style="max-width: 1000px;">
-					<div class="d-flex justify-content-between align-items-center mt-4">
-						<a href="/assessment/authorizedparties?id=<%= piaAssessmentId %>" class="btn btn-danger btn-sm px-4 shadow-sm">
-							Previous Page
-						</a>
-						<div>3 of 5</div>
-						<button type="submit" form="authorizedForm" class="btn btn-primary btn-sm px-4 shadow-sm">
-							Save and Continue
-						</button>
-					</div>
-				</div>
-			</main>
-		</div>
+			<div class="flex-grow-1 main-content-offset">
+				<%- include('../layouts/topbar', { title: title, user: user }) %>
+					<main class="container-fluid py-4 px-4">
+						<%- include('../layouts/stepper', { currentStep: 3, dpsTitle: 'Data Processing System' ,
+							authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , user: user
+							}) %>
+							<% if (error) { %>
+								<div class="alert alert-danger mx-auto" style="max-width: 1000px;">
+									<%= error %>
+								</div>
+								<% } %>
+									<% if (success) { %>
+										<div class="alert alert-success mx-auto" style="max-width: 1000px;">
+											<%= success %>
+										</div>
+										<% } %>
+
+											<div class="mx-auto" style="max-width: 1000px;">
+												<form id="pdlcForm" action="/assessment/processdatalifecycle"
+													method="POST">
+													<input type="hidden" name="piaAssessment_id"
+														value="<%= piaAssessmentId %>">
+
+													<div id="pdlcRowsContainer">
+														<% if (typeof pdlcData !=='undefined' && pdlcData &&
+															pdlcData.length> 0) { %>
+															<% pdlcData.forEach(function(pdlc, index) { %>
+																<!-- Single Row Template (Populated) -->
+																<div class="pdlc-row card shadow-sm border-0 mb-4">
+																	<% if (index === 0) { %>
+																	<!-- Header (First Row Only) -->
+																	<div class="card-header pdlc-main-header text-white d-flex justify-content-between align-items-center py-3"
+																		style="background-color: #0f235d;">
+																		<h5 class="mb-0">Section A - Process Data Life Cycle</h5>
+																		<button type="button" id="addRowBtn"
+																			class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+																			<i class="bi bi-plus-circle me-1"></i> Add Row
+																		</button>
+																	</div>
+																	<% } %>
+
+																	<!-- Sub-header -->
+																	<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
+																		style="background-color: #c8ddf7;">
+																		<h6 class="fw-bold mb-0">Lifecycle Cycle
+																			<span class="row-number">
+																				<%= index + 1 %>
+																			</span></h6>
+																		<button type="button"
+																			class="btn btn-danger btn-sm py-1 remove-row-btn <%= index === 0 ? 'd-none' : '' %>">
+																			<i class="bi bi-trash me-1"></i> Remove
+																		</button>
+																	</div>
+
+																	<div class="card-body bg-white pb-4">
+																		<div class="row g-4">
+																			<!-- Card 1 -->
+																			<div class="col-12 col-md-6 col-lg-4">
+																				<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																					<div class="mb-2">
+																						<div class="fw-bold text-dark m-0">Stakeholders / Parties Involved</div>
+																					</div>
+																					<div class="small text-muted mb-3 d-block">Who is involved in this process?</div>
+																					<textarea name="stakeholderName[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required><%= pdlc.stakeholderName || '' %></textarea>
+																				</div>
+																			</div>
+																			<!-- Card 2 -->
+																			<div class="col-12 col-md-6 col-lg-4">
+																				<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																					<div class="mb-2">
+																						<div class="fw-bold text-dark m-0">Collection & Creation</div>
+																					</div>
+																					<div class="small text-muted mb-2 d-block">How is data collected or created?</div>
+																					<textarea name="collection[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required><%= pdlc.collection || '' %></textarea>
+																					
+																					<div class="fw-bold text-dark small mb-1">Indicate Date</div>
+																					<input type="date" name="dateCollected[]" class="form-control form-control-sm" placeholder="e.g. Upon submission of form" value="<%= pdlc.dateCollected || '' %>" required>
+																				</div>
+																			</div>
+																			<!-- Card 3 -->
+																			<div class="col-12 col-md-6 col-lg-4">
+																				<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																					<div class="mb-2">
+																						<div class="fw-bold text-dark m-0">Use / Processing</div>
+																					</div>
+																					<div class="small text-muted mb-3 d-block">How is the data used and processed?</div>
+																					<textarea name="useOfData[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required><%= pdlc.useOfData || '' %></textarea>
+																				</div>
+																			</div>
+																			<!-- Card 4 -->
+																			<div class="col-12 col-md-6 col-lg-4">
+																				<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																					<div class="mb-2">
+																						<div class="fw-bold text-dark m-0">Storage & Transmission</div>
+																					</div>
+																					<div class="small text-muted mb-2 d-block">Where is it stored? How is it transmitted?</div>
+																					<textarea name="process[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required><%= pdlc.process || '' %></textarea>
+																					
+																					<div class="fw-bold text-dark small mb-1">Retention Period</div>
+																					<input type="text" name="retentionPeriod[]" class="form-control form-control-sm mb-3" placeholder="e.g. 2 years after collection" value="<%= pdlc.retentionPeriod || '' %>" required>
+																					
+																					<div class="fw-bold text-dark small mb-1">Indicate Date</div>
+																					<input type="date" name="retentionDate[]" class="form-control form-control-sm" value="<%= pdlc.retentionDate ? new Date(pdlc.retentionDate).toISOString().split('T')[0] : '' %>" required>
+																				</div>
+																			</div>
+																			<!-- Card 5 -->
+																			<div class="col-12 col-md-6 col-lg-4">
+																				<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																					<div class="mb-2">
+																						<div class="fw-bold text-dark m-0">Sharing</div>
+																					</div>
+																					<div class="small text-muted mb-3 d-block">How is the data being shared?</div>
+																					<textarea name="dataSharing[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= pdlc.dataSharing || '' %></textarea>
+																					<div class="small text-muted mb-3 d-block">Who is it shared?</div>
+																					<textarea name="sharedTo[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= pdlc.sharedTo || '' %></textarea>
+																				</div>
+																			</div>
+																			<!-- Card 6 -->
+																			<div class="col-12 col-md-6 col-lg-4">
+																				<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																					<div class="mb-2">
+																						<div class="fw-bold text-dark m-0">Disposal & Destruction</div>
+																					</div>
+																					<div class="small text-muted mb-2 d-block">How and when is the data destroyed?</div>
+																					<textarea name="disposalMethod[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required><%= pdlc.disposalMethod || '' %></textarea>
+																					
+																					<div class="mb-3">
+																						<label class="fw-bold text-dark m-0 form-label">Upload DLC Diagram</label>
+																						<label class="border border-2 border-dashed rounded p-4 text-center w-100 bg-light position-relative" style="cursor: pointer;">
+																							<input type="file" class="d-none"
+																										name="dlcDiagram"
+																										accept=".jpg,.png,.jpeg,.gif,.pdf"
+																										onchange="previewSig(this,'head-preview')">
+																										<div class="text-muted">
+																											<i class="bi bi-cloud-upload fs-3 d-block mb-2"></i>
+																											<span class="fw-semibold">Click to upload</span><br>
+																											<small>PNG, JPG, PDF allowed</small>
+																										</div>
+																							<img id="head-preview" class="img-fluid mt-3 rounded d-none">
+																						</label>
+																					</div>																				</div>
+																			</div>
+																		</div>
+																	</div>
+																</div>
+																<% }); %>
+																	<% } else { %>
+																		<!-- Single Row Template (Empty) -->
+																		<div class="pdlc-row card shadow-sm border-0 mb-4">
+																			<!-- Header (First Row Only) -->
+																			<div class="card-header pdlc-main-header text-white d-flex justify-content-between align-items-center py-3"
+																				style="background-color: #0f235d;">
+																				<h5 class="mb-0">Section A - Process Data Life Cycle</h5>
+																				<button type="button" id="addRowBtn"
+																					class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+																					<i class="bi bi-plus-circle me-1"></i> Add Row
+																				</button>
+																			</div>
+																			<!-- Sub-header -->
+																			<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
+																				style="background-color: #c8ddf7;">
+																				<h6 class="fw-bold mb-0">Lifecycle
+																					Cycle <span
+																						class="row-number">1</span>
+																				</h6>
+																				<button type="button"
+																					class="btn btn-danger btn-sm py-1 remove-row-btn d-none">
+																					<i class="bi bi-trash me-1"></i>
+																					Remove
+																				</button>
+																			</div>
+																			<div class="card-body bg-white pb-4">
+																				<div class="row g-4">
+																					<!-- Card 1 -->
+																					<div class="col-12 col-md-6 col-lg-4">
+																						<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																							<div class="mb-2">
+																								<div class="fw-bold text-dark m-0">Stakeholders / Parties Involved</div>
+																							</div>
+																							<div class="small text-muted mb-3 d-block">Who is involved in this process?</div>
+																							<textarea name="stakeholderName[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required></textarea>
+																						</div>
+																					</div>
+																					<!-- Card 2 -->
+																					<div class="col-12 col-md-6 col-lg-4">
+																						<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																							<div class="mb-2">
+																								<div class="fw-bold text-dark m-0">Collection & Creation</div>
+																							</div>
+																							<div class="small text-muted mb-2 d-block">How is data collected or created?</div>
+																							<textarea name="collection[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required></textarea>
+																							
+																							<div class="fw-bold text-dark small mb-1">Indicate Date / Timing</div>
+																							<input type="date" name="dateCollected[]" class="form-control form-control-sm" placeholder="e.g. Upon submission of form" required>
+																						</div>
+																					</div>
+																					<!-- Card 3 -->
+																					<div class="col-12 col-md-6 col-lg-4">
+																						<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																							<div class="mb-2">
+																								<div class="fw-bold text-dark m-0">Use / Processing</div>
+																							</div>
+																							<div class="small text-muted mb-3 d-block">How is the data used and processed?</div>
+																							<textarea name="useOfData[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required></textarea>
+																						</div>
+																					</div>
+																					<!-- Card 4 -->
+																					<div class="col-12 col-md-6 col-lg-4">
+																						<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																							<div class="mb-2">
+																								<div class="fw-bold text-dark m-0">Storage & Transmission</div>
+																							</div>
+																							<div class="small text-muted mb-2 d-block">Where is it stored? How is it transmitted?</div>
+																							<textarea name="process[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required></textarea>
+																							
+																							<div class="fw-bold text-dark small mb-1">Retention Period</div>
+																							<input type="text" name="retentionPeriod[]" class="form-control form-control-sm mb-3" placeholder="e.g. 2 years after collection" required>
+																							
+																							<div class="fw-bold text-dark small mb-1">Indicate Date</div>
+																							<input type="date" name="retentionDate[]" class="form-control form-control-sm" required>
+																						</div>
+																					</div>
+																					<!-- Card 5 -->
+																					<div class="col-12 col-md-6 col-lg-4">
+																						<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																							<div class="mb-2">
+																								<div class="fw-bold text-dark m-0">Sharing</div>
+																							</div>
+																							<div class="small text-muted mb-3 d-block">How is the data being shared?</div>
+																							<textarea name="dataSharing[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
+																							<div class="small text-muted mb-3 d-block">Who is it shared?</div>
+																							<textarea name="sharedTo[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
+																						</div>
+																					</div>
+																					<!-- Card 6 -->
+																					<div class="col-12 col-md-6 col-lg-4">
+																						<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+																							<div class="mb-2">
+																								<div class="fw-bold text-dark m-0">Disposal & Destruction</div>
+																							</div>
+																							<div class="small text-muted mb-2 d-block">How and when is the data destroyed?</div>
+																							<textarea name="disposalMethod[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required></textarea>
+																							
+																							<div class="fw-bold text-dark small mb-1">Upload DLC Diagram</div>
+																							<input type="file" name="dlcDiagram[]" class="form-control form-control-sm" accept="image/*">
+																						</div>
+																					</div>
+																				</div>
+																			</div>
+																		</div>
+																		<% } %>
+													</div>
+												</form>
+
+												<script>
+													document.addEventListener('DOMContentLoaded', function () {
+														var container = document.getElementById('pdlcRowsContainer');
+
+														function updateRowNumbers() {
+															var rows = container.querySelectorAll('.pdlc-row');
+															for (var i = 0; i < rows.length; i++) {
+																var row = rows[i];
+																var numSpan = row.querySelector('.row-number');
+																if (numSpan) {
+																	numSpan.textContent = i + 1;
+																}
+
+																var removeBtn = row.querySelector('.remove-row-btn');
+																if (removeBtn) {
+																	// Never allow deleting the very first row
+																	if (i > 0) {
+																		removeBtn.classList.remove('d-none');
+																		removeBtn.style.display = '';
+																	} else {
+																		removeBtn.classList.add('d-none');
+																		removeBtn.style.display = 'none';
+																	}
+																}
+															}
+														}
+
+														// Attach listener safely by delegating to container just in case it takes time to render
+														document.addEventListener('click', function (e) {
+															if (e.target.closest('#addRowBtn')) {
+																var rows = container.querySelectorAll('.pdlc-row');
+																if (rows.length === 0) return;
+
+																var firstRow = rows[0];
+																var newRow = firstRow.cloneNode(true);
+
+																// Delete the dark blue main header from the cloned row
+																var mainHeader = newRow.querySelector('.pdlc-main-header');
+																if (mainHeader) mainHeader.remove();
+
+																// Clear textareas robustly
+																var textareas = newRow.querySelectorAll('textarea');
+																for (var j = 0; j < textareas.length; j++) {
+																	textareas[j].value = '';
+																}
+																
+																var inputs = newRow.querySelectorAll('input[type="text"], input[type="date"], input[type="file"]');
+																for (var k = 0; k < inputs.length; k++) {
+																	inputs[k].value = '';
+																}
+
+																container.appendChild(newRow);
+																updateRowNumbers();
+															}
+														});
+
+														container.addEventListener('click', function (e) {
+															var removeBtn = e.target.closest('.remove-row-btn');
+															if (removeBtn) {
+																var row = removeBtn.closest('.pdlc-row');
+																if (row) {
+																	row.parentNode.removeChild(row);
+																	updateRowNumbers();
+																}
+															}
+														});
+
+														// Run on initial load to ensure state is correct
+														updateRowNumbers();
+													});
+												</script>
+
+												<div class="d-flex justify-content-between align-items-center mt-4">
+													<a href="/assessment/authorizedparties?id=<%= piaAssessmentId %>"
+														class="btn btn-danger btn-sm px-4 shadow-sm">
+														Previous Page
+													</a>
+													<div>3 of 5</div>
+													<button type="submit" form="pdlcForm"
+														class="btn btn-primary btn-sm px-4 shadow-sm">
+														Save and Continue
+													</button>
+												</div>
+											</div>
+					</main>
+			</div>
 	</div>
