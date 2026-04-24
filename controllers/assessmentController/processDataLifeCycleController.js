@@ -89,7 +89,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
       }
     }
 
-    return res.redirect(`/assessment/processdatalifecycle?id=${piaAssessmentId}&saved=1`);
+    return res.redirect(`/assessment/personalinfoinventory?id=${piaAssessmentId}`);
   } catch (error) {
     console.error('Error saving PDLC:', error);
     return res.render('assessment/processdatalifecycle-page', {

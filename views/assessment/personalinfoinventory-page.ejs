@@ -4,6 +4,14 @@
 		<div class="flex-grow-1 main-content-offset">
 			<%- include('../layouts/topbar', { title: title, user: user }) %>
 				<main class="container-fluid py-4 px-4">
+					<%
+						const piiRows = Array.isArray(piiData) ? piiData : (Array.isArray(pdlcData) ? pdlcData : []);
+						const dataSubjectTypeOptions = Array.isArray(dataSubjectTypes) ? dataSubjectTypes : [];
+						const dataProcessingOptions = ['ELECTRONIC', 'PAPER_BASED', 'BOTH'];
+						const processingTypeOptions = ['PI', 'SPI'];
+						const basisOptions = ['TYPE_1', 'TYPE_2', 'TYPE_3', 'TYPE_4', 'TYPE_5', 'TYPE_6'];
+						const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : (typeof piiAssessmentId !== 'undefined' ? piiAssessmentId : '');
+					%>
 					<%- include('../layouts/stepper', { currentStep: 4, dpsTitle: 'Data Processing System' ,
 						authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
 					}) %>
@@ -21,19 +29,338 @@
 					<div class="mx-auto" style="max-width: 1000px;">
 						<form id="piiForm" action="/assessment/personalinfoinventory"
 							method="POST">
-							<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
+							<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
+
+						<div id="pdlcRowsContainer">
+							<% if (piiRows.length > 0) { %>
+								<% piiRows.forEach(function(pii, index) { %>
+									<!-- Single Row Template (Populated) -->
+									<div class="pdlc-row card shadow-sm border-0 mb-4">
+										<% if (index === 0) { %>
+										<!-- Header (First Row Only) -->
+										<div class="card-header pdlc-main-header text-white d-flex justify-content-between align-items-center py-3"
+											style="background-color: #0f235d;">
+											<h5 class="mb-0">Section D - Personal Information Inventory</h5>
+											<button type="button" id="addRowBtn"
+												class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+												<i class="bi bi-plus-circle me-1"></i> Add Row
+											</button>
+										</div>
+										<% } %>
+
+										<!-- Sub-header -->
+										<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
+											style="background-color: #c8ddf7;">
+											<h6 class="fw-bold mb-0">Personal Information
+												<span class="row-number">
+													<%= index + 1 %>
+												</span></h6>
+											<button type="button"
+												class="btn btn-danger btn-sm py-1 remove-row-btn <%= index === 0 ? 'd-none' : '' %>">
+												<i class="bi bi-trash me-1"></i> Remove
+											</button>
+										</div>
+
+										<div class="card-body bg-white pb-4">
+											<div class="row g-4">
+												<!-- Card 1 -->
+												<div class="col-12 col-md-6 col-lg-4">
+													<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+														<div class="mb-2">
+															<div class="fw-bold text-dark m-0">Data Capture Form and Processing</div>
+														</div>
+														<div class="small text-muted mb-3 d-block">What is the name of this Data Capture?</div>
+														<input type="text" name="formName[]" class="form-control form-control-sm mb-3" value="<%= pii.formName || '' %>" required>
+														<div class="small text-muted mb-3 d-block">What is the number of this Data Capture?</div>
+														<input type="text" name="formNo[]" class="form-control form-control-sm mb-3" value="<%= pii.formNo || '' %>" required>
+														
+														<div>
+															<label class="form-label fw-bold">Data Processing</label>
+															<select name="dataProcessing[]" class="form-select form-select-sm">
+																<option value="" <%= !pii.dataProcessingValue ? 'selected' : '' %>>Select...</option>
+																<% dataProcessingOptions.forEach(function(option) { %>
+																	<option value="<%= option %>" <%= pii.dataProcessingValue === option ? 'selected' : '' %>><%= option.replace('_', ' ') %></option>
+																<% }); %>
+															</select>
+														</div>
+													</div>
+
+												</div>
+												<!-- Card 2 -->
+												<div class="col-12 col-md-6 col-lg-4">
+													<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+														<div class="mb-2">
+															<div class="fw-bold text-dark m-0">Data Subjects</div>
+														</div>
+														<div class="small text-muted mb-2 d-block">Data subjects Information:</div>
+														<div>
+															<label for="dataSubjectType">Type:</label>
+															<select id="dataSubjectType" name="dataSubjectTypeId[]" class="form-select form-select-sm mb-3" required>
+																<option value="" <%= !pii.dataSubjectsType_id ? 'selected' : '' %>>Select...</option>
+																<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
+																	<option value="<%= typeOption.id %>" <%= Number(pii.dataSubjectsType_id) === Number(typeOption.id) ? 'selected' : '' %>><%= typeOption.dataSubjectType %></option>
+																<% }); %>
+															</select>
+														</div>														
+														<div>
+															<label for="dataSubjectName">Name:</label>
+															<input type="text" id="dataSubjectName" name="dataSubjectName[]" class="form-control form-control-sm mb-3" value="<%= pii.dataSubjectName || '' %>" required>
+														</div>
+														<div>
+															<label for="dataSubjectEmail">Email:</label>
+															<input type="email" id="dataSubjectEmail" name="dataSubjectEmail[]" class="form-control form-control-sm mb-3" value="<%= pii.dataSubjectEmail || '' %>" required>
+														</div>
+														<div>
+															<label for="dataSubjectPhone">Phone:</label>
+															<input type="tel" id="dataSubjectPhone" name="dataSubjectPhone[]" class="form-control form-control-sm mb-3" value="<%= pii.dataSubjectPhone || '' %>" required>
+														</div>
+													</div>
+												</div>
+												<!-- Card 3 -->
+												<div class="col-12 col-md-6 col-lg-4">
+													<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+														<div class="mb-2">
+															<div class="fw-bold text-dark m-0">Reccipient Users</div>
+														</div>
+														<div class="small text-muted mb-3 d-block">Who are the recipient Users?</div>
+														<input type="text" name="recipientsUsers[]" class="form-control form-control-sm mb-3" value="<%= pii.recipientsUsers || '' %>" required>
+													</div>
+												</div>
+												<!-- Card 4 -->
+												<div class="col-12 col-md-6 col-lg-4">
+													<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+														<div>
+															<label class="form-label fw-bold">Processing Basis</label>
+															<select name="processingType[]" class="form-select form-select-sm">
+																<option value="" <%= !pii.processingTypeValue ? 'selected' : '' %>>Select...</option>
+																<% processingTypeOptions.forEach(function(option) { %>
+																	<option value="<%= option %>" <%= pii.processingTypeValue === option ? 'selected' : '' %>><%= option %></option>
+																<% }); %>
+															</select>
+														</div>
+													<div class="fw-bold text-dark small mb-1">What is the number of processing bases used</div>
+													<select name="basisNum[]" class="form-select form-select-sm mb-3" required>
+														<option value="" <%= !pii.basisNumValue ? 'selected' : '' %>>Select...</option>
+														<% basisOptions.forEach(function(option) { %>
+															<option value="<%= option %>" <%= pii.basisNumValue === option ? 'selected' : '' %>><%= option %></option>
+														<% }); %>
+													</select>
+													</div>
+												</div>
+											<!-- Card 5 -->
+												<div class="col-12 col-md-6 col-lg-4">
+													<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+														<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Purpose of Processing</div>
+														</div>
+													<textarea name="purposeOfProcessing[]" class="form-control" style="min-height: 100px; resize: vertical;" required><%= pii.purposeOfProcessing || '' %></textarea>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div>
+									<% }); %>
+									<% } else { %>
+									<!-- Single Row Template (Empty) -->
+									<div class="pdlc-row card shadow-sm border-0 mb-4">
+										<!-- Header (First Row Only) -->
+										<div class="card-header pdlc-main-header text-white d-flex justify-content-between align-items-center py-3"
+											style="background-color: #0f235d;">
+											<h5 class="mb-0">Section D - Personal Information Inventory</h5>
+											<button type="button" id="addRowBtn"
+												class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+												<i class="bi bi-plus-circle me-1"></i> Add Row
+											</button>
+										</div>
+										<!-- Sub-header -->
+										<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
+											style="background-color: #c8ddf7;">
+											<h6 class="fw-bold mb-0">Personal Information<span class="row-number">1</span></h6>
+											<button type="button" class="btn btn-danger btn-sm py-1 remove-row-btn d-none">
+												<i class="bi bi-trash me-1"></i> Remove
+											</button>
+										</div>
+										<div class="card-body bg-white pb-4">
+										<div class="row g-4">
+											<!-- Card 1 -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Data Capture Form and Processing</div>
+													</div>
+													<div class="small text-muted mb-3 d-block">What is the name of this Data Capture?</div>
+													<input type="text" name="formName[]" class="form-control form-control-sm mb-3" required>
+													<div class="small text-muted mb-3 d-block">What is the number of this Data Capture?</div>
+													<input type="text" name="formNo[]" class="form-control form-control-sm mb-3" required>
+													
+													<div>
+														<label class="form-label fw-bold">Data Processing</label>
+														<select name="dataProcessing[]" class="form-select form-select-sm">
+															<option value="">Select...</option>
+															<% dataProcessingOptions.forEach(function(option) { %>
+																<option value="<%= option %>"><%= option.replace('_', ' ') %></option>
+															<% }); %>
+														</select>
+													</div>
+												</div>
+
+											</div>
+											<!-- Card 2 -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Data Subjects</div>
+													</div>
+													<div class="small text-muted mb-2 d-block">Data subjects Information:</div>
+													<div>
+														<label class="form-label fw-bold">Data Subject Type:</label>
+														<select name="dataSubjectTypeId[]" class="form-select form-select-sm">
+															<option value="">Select...</option>
+															<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
+																<option value="<%= typeOption.id %>"><%= typeOption.dataSubjectType %></option>
+															<% }); %>
+														</select>
+													</div>														
+													<div>
+														<label for="dataSubjectName">Name:</label>
+														<input type="text" id="dataSubjectName" name="dataSubjectName[]" class="form-control form-control-sm mb-3" required>
+													</div>
+													<div>
+														<label for="dataSubjectEmail">Email:</label>
+														<input type="email" id="dataSubjectEmail" name="dataSubjectEmail[]" class="form-control form-control-sm mb-3" required>
+													</div>
+													<div>
+														<label for="dataSubjectPhone">Phone:</label>
+														<input type="tel" id="dataSubjectPhone" name="dataSubjectPhone[]" class="form-control form-control-sm mb-3" required>
+													</div>
+												</div>
+											</div>
+											<!-- Card 3 -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Reccipient Users</div>
+													</div>
+													<div class="small text-muted mb-3 d-block">Who are the recipient Users?</div>
+													<input type="text" name="recipientsUsers[]" class="form-control form-control-sm mb-3" required>
+												</div>
+											</div>
+											<!-- Card 4 -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div>
+														<label class="form-label fw-bold">Processing Basis</label>
+															<select name="processingType[]" class="form-select form-select-sm">
+																<option value="">Select...</option>
+																<% processingTypeOptions.forEach(function(option) { %>
+																	<option value="<%= option %>"><%= option %></option>
+																<% }); %>
+															</select>
+													</div>
+													<div class="fw-bold text-dark small mb-1">What is the number of processing bases used</div>
+													<select name="basisNum[]" class="form-select form-select-sm mb-3" required>
+														<option value="">Select...</option>
+														<% basisOptions.forEach(function(option) { %>
+															<option value="<%= option %>"><%= option %></option>
+														<% }); %>
+													</select>
+												</div>
+											</div>
+											<!-- Card 5 -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Purpose of Processing</div>
+													</div>
+													<textarea name="purposeOfProcessing[]" class="form-control mb-3" style="min-height: 100px; resize: vertical;" required></textarea>
+												</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								<% } %>
+						</div>
 					</div>
 					<div class="d-flex justify-content-between align-items-center mt-4">
-						<a href="/assessment/authorizedparties?id=<%= piaAssessmentId %>"
+							<a href="/assessment/authorizedparties?id=<%= assessmentId %>"
 							class="btn btn-danger btn-sm px-4 shadow-sm">
 							Previous Page
 						</a>
-						<div>4 of 5</div>
+						<div>4 of 4</div>
 						<button type="submit" form="piiForm"
 							class="btn btn-primary btn-sm px-4 shadow-sm">
-							Next Page
+							Save & Stay
 						</button>
 					</div>
 				</main>
 		</div>
 </div>
+
+<script>
+	(function () {
+		const container = document.getElementById('pdlcRowsContainer');
+		if (!container) {
+			return;
+		}
+
+		const createBlankValue = (element) => {
+			if (element.tagName === 'SELECT') {
+				element.selectedIndex = 0;
+				return;
+			}
+
+			if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
+				element.value = '';
+			}
+		};
+
+		const updateRowNumbers = () => {
+			const rows = container.querySelectorAll('.pdlc-row');
+			rows.forEach((row, index) => {
+				const rowNumber = row.querySelector('.row-number');
+				if (rowNumber) {
+					rowNumber.textContent = String(index + 1);
+				}
+
+				const removeButton = row.querySelector('.remove-row-btn');
+				if (removeButton) {
+					removeButton.classList.toggle('d-none', rows.length === 1 && index === 0);
+				}
+			});
+		};
+
+		document.addEventListener('click', function (event) {
+			if (event.target.closest('#addRowBtn')) {
+				event.preventDefault();
+
+				const firstRow = container.querySelector('.pdlc-row');
+				if (!firstRow) {
+					return;
+				}
+
+				const newRow = firstRow.cloneNode(true);
+				newRow.querySelectorAll('input, select, textarea').forEach(createBlankValue);
+				const removeButton = newRow.querySelector('.remove-row-btn');
+				if (removeButton) {
+					removeButton.classList.remove('d-none');
+				}
+
+				container.appendChild(newRow);
+				updateRowNumbers();
+			}
+
+			const removeButton = event.target.closest('.remove-row-btn');
+			if (removeButton) {
+				event.preventDefault();
+
+				const row = removeButton.closest('.pdlc-row');
+				if (row) {
+					row.remove();
+					updateRowNumbers();
+				}
+			}
+		});
+
+		updateRowNumbers();
+	})();
+</script>
