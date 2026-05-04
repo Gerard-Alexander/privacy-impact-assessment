@@ -39,10 +39,10 @@ const saveProcessDataLifeCycle = async (req, res) => {
   try {
     req.session.currentAssessmentId = piaAssessmentId;
 
-    // Delete existing records to overwrite with the new ones
-    await prisma.pDLC.deleteMany({
-      where: { piaAssessment_id: piaAssessmentId }
-    });
+    // Delete dependent ThreatsAndControl records first to avoid FK violations,
+    // then delete PDLC records to overwrite with new ones
+    await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
+    await prisma.pDLC.deleteMany({ where: { piaAssessment_id: piaAssessmentId } });
 
     // Check if there's any data to save
     if (req.body.stakeholderName) {

@@ -51,7 +51,6 @@ const toArray = (value) => {
   return [value];
 };
 
-
 const personalInfoInventory = async (req, res) => {
   res.locals.personalInfoInventory = 'Personal Information Inventory';
 
@@ -98,14 +97,12 @@ const personalInfoInventory = async (req, res) => {
   }
 };
 
-
 const savePersonalInfoInventory = async (req, res) => {
   const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
   if (!Number.isInteger(piaAssessmentId)) {
     return res.redirect('/assessment');
   }
-
   try {
     req.session.currentAssessmentId = piaAssessmentId;
 
@@ -189,6 +186,9 @@ const savePersonalInfoInventory = async (req, res) => {
       });
     }
 
+    // Delete dependent ThreatsAndControl records first to avoid FK violations
+    await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
+
     const existingPii = await prisma.pII.findMany({
       where: { piaAssessment_id: piaAssessmentId },
       select: { dataSubject_id: true }
@@ -239,7 +239,7 @@ const savePersonalInfoInventory = async (req, res) => {
       });
     }
 
-    return res.redirect(`/assessment/personalinfoinventory?id=${piaAssessmentId}&saved=1`);
+    return res.redirect(`/assessment/threatsandcontrols?id=${piaAssessmentId}`);
   } catch (error) {
     console.error('Error saving PII:', error);
     const dataSubjectTypes = await prisma.dataSubjectTypes.findMany({

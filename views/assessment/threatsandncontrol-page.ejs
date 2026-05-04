@@ -1,0 +1,490 @@
+<%- include('../layouts/head', { title: title }) %>
+<div class="d-flex">
+	<%- include('../layouts/sidebar', { activePage: activePage }) %>
+	<div class="flex-grow-1 main-content-offset">
+		<%- include('../layouts/topbar', { title: title, user: user }) %>
+		<main class="container-fluid py-4 px-4">
+			<%
+				const threatRows = Array.isArray(threatsData) ? threatsData : [];
+				const dataSubjectOptions = Array.isArray(dataSubjects) ? dataSubjects : [];
+				const threatTypeOpts = typeof threatTypeOptions !== 'undefined' ? threatTypeOptions : ['CONFIDENTIALITY', 'INTEGRITY', 'AVAILABILITY', 'AUTHENTICITY', 'NON_REPUDIATION'];
+				const measureTypeOpts = typeof measureTypeOptions !== 'undefined' ? measureTypeOptions : ['PHYSICAL', 'TECHNICAL', 'ORGANIZATIONAL'];
+				const severityOpts = typeof severityOptions !== 'undefined' ? severityOptions : ['NEGLIGIBLE_1', 'LIMITED_2', 'SIGNIFICANT_3', 'EXTREME_4'];
+				const likelihoodOpts = typeof likelihoodOptions !== 'undefined' ? likelihoodOptions : ['UNLIKELY_1', 'POSSIBLE_2', 'LIKELY_3', 'ALMOST_CERTAIN_4'];
+				const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : '';
+			%>
+			<%- include('../layouts/stepper', { currentStep: 5, dpsTitle: 'Data Processing System' ,
+				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
+			}) %>
+			
+			<% if (error) { %>
+				<div class="alert alert-danger mx-auto" style="max-width: 1000px;">
+					<%= error %>
+				</div>
+			<% } %>
+			<% if (success) { %>
+				<div class="alert alert-success mx-auto" style="max-width: 1000px;">
+					<%= success %>
+				</div>
+			<% } %>
+			<div class="mx-auto" style="max-width: 1000px;">
+				<form id="threatsForm" action="/assessment/threatsandcontrols" method="POST">
+					<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
+
+					<div id="threatsRowsContainer">
+						<% if (threatRows.length > 0) { %>
+							<% threatRows.forEach(function(threat, index) { %>
+								<!-- Single Row Template (Populated) -->
+								<div class="threats-row card shadow-sm border-0 mb-4">
+									<% if (index === 0) { %>
+									<!-- Header (First Row Only) -->
+									<div class="card-header threats-main-header text-white d-flex justify-content-between align-items-center py-3"
+										style="background-color: #0f235d;">
+										<h5 class="mb-0">Section E - Threats and Controls</h5>
+										<button type="button" id="addRowBtn"
+											class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+											<i class="bi bi-plus-circle me-1"></i> Add Row
+										</button>
+									</div>
+									<% } %>
+
+									<!-- Sub-header -->
+									<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
+										style="background-color: #c8ddf7;">
+										<h6 class="fw-bold mb-0">Threat Assessment
+											<span class="row-number">
+												<%= index + 1 %>
+											</span></h6>
+										<button type="button"
+											class="btn btn-danger btn-sm py-1 remove-row-btn <%= index === 0 ? 'd-none' : '' %>">
+											<i class="bi bi-trash me-1"></i> Remove
+										</button>
+									</div>
+
+									<div class="card-body bg-white pb-4">
+										<div class="row g-4">
+											<!-- Card 1 - Data Subject + Threat Description (combined) -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Data Subject & Threat Description</div>
+													</div>
+													<div class="small text-muted mb-2 d-block">Who are the impacted data subject?</div>
+													<select name="dataSubjectId[]" class="form-select form-select-sm mb-3" required>
+														<option value="" <%= !threat.dataSubject_id ? 'selected' : '' %>>Select...</option>
+														<% dataSubjectOptions.forEach(function(subject) { %>
+															<option value="<%= subject.id %>" <%= threat.dataSubject_id === subject.id ? 'selected' : '' %>><%= subject.name %></option>
+														<% }); %>
+													</select>
+													<div class="small text-muted mb-3 d-block">What is the threat and its possible consequences?</div>
+													<textarea name="threatDescription[]" class="form-control form-control-sm" style="min-height: 140px; resize: vertical;" required><%= threat.threats_possibleConsequences || '' %></textarea>
+												</div>
+											</div>
+
+											<!-- Card 3 - Type of Threat -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Type of Threat</div>
+													</div>
+													<div class="small text-muted mb-3 d-block">Select threat category (select all that apply):</div>
+													<div class="d-flex flex-column gap-2">
+														<% threatTypeOpts.forEach(function(threatType) { %>
+															<div class="form-check">
+																<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_<%= index %>_<%= threatType %>"
+																	<% if (threat.typeOfThreatsArray && threat.typeOfThreatsArray.includes(threatType)) { %>checked<% } %>>
+																<label class="form-check-label" for="threatType_<%= index %>_<%= threatType %>">
+																	<%= threatType.replace(/_/g, ' ') %>
+																</label>
+															</div>
+														<% }); %>
+													</div>
+													<input type="hidden" name="threatType[]" class="threat-type-hidden" value="">
+												</div>
+											</div>
+
+											<!-- Card 4 - Severity & Likelihood -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Risk Assessment</div>
+													</div>
+													<div class="small text-muted mb-2 d-block">Severity Level:</div>
+													<select name="severityLevel[]" class="form-select form-select-sm mb-3" required>
+														<option value="" <%= !threat.severityLevel ? 'selected' : '' %>>Select...</option>
+												<% severityOpts.forEach(function(option) { %>
+															<option value="<%= option %>" <%= threat.severityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+														<% }); %>
+													</select>
+													<div class="small text-muted mb-2 d-block">Likelihood Level:</div>
+													<select name="likelihoodLevel[]" class="form-select form-select-sm" required>
+														<option value="" <%= !threat.likelihoodLevel ? 'selected' : '' %>>Select...</option>
+												<% likelihoodOpts.forEach(function(option) { %>
+															<option value="<%= option %>" <%= threat.likelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+														<% }); %>
+													</select>
+												</div>
+											</div>
+
+											<!-- Card 5 - Risk Rating (computed) -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Risk Rating</div>
+													</div>
+													<div class="small text-muted mb-3 d-block">Severity x Likelihood</div>
+													<div class="d-flex align-items-center gap-2">
+														<div class="badge bg-light text-dark risk-rating-display"><%= threat.riskRating || '' %></div>
+														<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
+													</div>
+												</div>
+											</div>
+
+											<!-- Card 6 - Proposed Control -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Proposed Control Measure</div>
+													</div>
+													<div class="small text-muted mb-3 d-block">What control measures are proposed?</div>
+													<textarea name="proposedControl[]" class="form-control form-control-sm" style="min-height: 100px; resize: vertical;" required><%= threat.proposedControl || '' %></textarea>
+												</div>
+											</div>
+
+											<!-- Card 7 - Type of Measure -->
+											<div class="col-12 col-md-6 col-lg-4">
+												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+													<div class="mb-2">
+														<div class="fw-bold text-dark m-0">Type of Measure</div>
+													</div>
+													<div class="small text-muted mb-3 d-block">Select measure categories (select all that apply):</div>
+													<div class="d-flex flex-column gap-2">
+														<% measureTypeOpts.forEach(function(measureType) { %>
+															<div class="form-check">
+																<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" id="measureType_<%= index %>_<%= measureType %>"
+																	<% if (threat.typeOfMeasureArray && threat.typeOfMeasureArray.includes(measureType)) { %>checked<% } %>>
+																<label class="form-check-label" for="measureType_<%= index %>_<%= measureType %>">
+																	<%= measureType.replace(/_/g, ' ') %>
+																</label>
+															</div>
+														<% }); %>
+													</div>
+													<input type="hidden" name="measureType[]" class="measure-type-hidden" value="">
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<% }); %>
+						<% } else { %>
+							<!-- Single Row Template (Empty) -->
+							<div class="threats-row card shadow-sm border-0 mb-4">
+								<!-- Header (First Row Only) -->
+								<div class="card-header threats-main-header text-white d-flex justify-content-between align-items-center py-3"
+									style="background-color: #0f235d;">
+									<h5 class="mb-0">Section E - Threats and Controls</h5>
+									<button type="button" id="addRowBtn"
+										class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+										<i class="bi bi-plus-circle me-1"></i> Add Row
+									</button>
+								</div>
+								<!-- Sub-header -->
+								<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
+									style="background-color: #c8ddf7;">
+									<h6 class="fw-bold mb-0">Threat Assessment<span class="row-number">1</span></h6>
+									<button type="button" class="btn btn-danger btn-sm py-1 remove-row-btn d-none">
+										<i class="bi bi-trash me-1"></i> Remove
+									</button>
+								</div>
+								<div class="card-body bg-white pb-4">
+									<div class="row g-4">
+										<!-- Card 1 - Data Subject + Threat Description (combined) -->
+										<div class="col-12 col-md-6 col-lg-4">
+											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+												<div class="mb-2">
+													<div class="fw-bold text-dark m-0">Context & Threat Description</div>
+												</div>
+												<div class="small text-muted mb-2 d-block">Related to which data subject?</div>
+												<select name="dataSubjectId[]" class="form-select form-select-sm mb-3" required>
+													<option value="">Select...</option>
+													<% dataSubjectOptions.forEach(function(subject) { %>
+														<option value="<%= subject.id %>"><%= subject.name %></option>
+													<% }); %>
+												</select>
+												<div class="small text-muted mb-3 d-block">What is the threat and its possible consequences?</div>
+												<textarea name="threatDescription[]" class="form-control form-control-sm" style="min-height: 140px; resize: vertical;" required></textarea>
+											</div>
+										</div>
+
+										<!-- Card 3 - Type of Threat -->
+										<div class="col-12 col-md-6 col-lg-4">
+											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+												<div class="mb-2">
+													<div class="fw-bold text-dark m-0">Type of Threat</div>
+												</div>
+												<div class="small text-muted mb-3 d-block">Select threat category (select all that apply):</div>
+												<div class="d-flex flex-column gap-2">
+											<% threatTypeOpts.forEach(function(threatType) { %>
+														<div class="form-check">
+															<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_0_<%= threatType %>">
+															<label class="form-check-label" for="threatType_0_<%= threatType %>">
+																<%= threatType.replace(/_/g, ' ') %>
+															</label>
+														</div>
+													<% }); %>
+												</div>
+												<input type="hidden" name="threatType[]" class="threat-type-hidden" value="">
+											</div>
+										</div>
+
+										<!-- Card 4 - Severity & Likelihood -->
+										<div class="col-12 col-md-6 col-lg-4">
+											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+												<div class="mb-2">
+													<div class="fw-bold text-dark m-0">Risk Assessment</div>
+												</div>
+												<div class="small text-muted mb-2 d-block">Severity Level:</div>
+												<select name="severityLevel[]" class="form-select form-select-sm mb-3" required>
+													<option value="">Select...</option>
+												<% severityOpts.forEach(function(option) { %>
+														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
+													<% }); %>
+												</select>
+												<div class="small text-muted mb-2 d-block">Likelihood Level:</div>
+												<select name="likelihoodLevel[]" class="form-select form-select-sm" required>
+													<option value="">Select...</option>
+												<% likelihoodOpts.forEach(function(option) { %>
+														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
+													<% }); %>
+												</select>
+											</div>
+										</div>
+
+										<!-- Card 5 - Risk Rating (computed) -->
+										<div class="col-12 col-md-6 col-lg-4">
+											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+												<div class="mb-2">
+													<div class="fw-bold text-dark m-0">Risk Rating</div>
+												</div>
+												<div class="small text-muted mb-3 d-block">Severity x Likelihood</div>
+												<div class="d-flex align-items-center gap-2">
+													<div class="badge bg-light text-dark risk-rating-display"> </div>
+													<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="">
+												</div>
+											</div>
+										</div>
+
+										<!-- Card 6 - Proposed Control -->
+										<div class="col-12 col-md-6 col-lg-4">
+											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+												<div class="mb-2">
+													<div class="fw-bold text-dark m-0">Proposed Control</div>
+												</div>
+												<div class="small text-muted mb-3 d-block">What control measures are proposed?</div>
+												<textarea name="proposedControl[]" class="form-control form-control-sm" style="min-height: 100px; resize: vertical;" required></textarea>
+											</div>
+										</div>
+
+										<!-- Card 7 - Type of Measure -->
+										<div class="col-12 col-md-6 col-lg-4">
+											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
+												<div class="mb-2">
+													<div class="fw-bold text-dark m-0">Type of Measure</div>
+												</div>
+												<div class="small text-muted mb-3 d-block">Select measure categories (select all that apply):</div>
+												<div class="d-flex flex-column gap-2">
+												<% measureTypeOpts.forEach(function(measureType) { %>
+														<div class="form-check">
+															<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" id="measureType_0_<%= measureType %>">
+															<label class="form-check-label" for="measureType_0_<%= measureType %>">
+																<%= measureType.replace(/_/g, ' ') %>
+															</label>
+														</div>
+													<% }); %>
+												</div>
+												<input type="hidden" name="measureType[]" class="measure-type-hidden" value="">
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						<% } %>
+					</div>
+				</form>
+			</div>
+			<div class="d-flex justify-content-between align-items-center mt-4 mx-auto" style="max-width: 1000px;">
+				<a href="/assessment/personalinfoinventory?id=<%= assessmentId %>"
+					class="btn btn-danger btn-sm px-4 shadow-sm">
+					Previous Page
+				</a>
+				<div>5 of 5</div>
+				<button type="submit" form="threatsForm"
+					class="btn btn-primary btn-sm px-4 shadow-sm">
+					Save & Stay
+				</button>
+			</div>
+		</main>
+	</div>
+</div>
+
+<script>
+	(function () {
+		const container = document.getElementById('threatsRowsContainer');
+		if (!container) {
+			return;
+		}
+
+		const createBlankValue = (element) => {
+			if (element.tagName === 'SELECT') {
+				element.selectedIndex = 0;
+				return;
+			}
+
+			if (element.tagName === 'TEXTAREA' || element.tagName === 'INPUT') {
+				if (element.type === 'checkbox') {
+					element.checked = false;
+				} else {
+					element.value = '';
+				}
+			}
+		};
+
+		const updateRowNumbers = () => {
+			const rows = container.querySelectorAll('.threats-row');
+			rows.forEach((row, index) => {
+				const rowNumber = row.querySelector('.row-number');
+				if (rowNumber) {
+					rowNumber.textContent = String(index + 1);
+				}
+
+				const removeButton = row.querySelector('.remove-row-btn');
+				if (removeButton) {
+					removeButton.classList.toggle('d-none', rows.length === 1 && index === 0);
+				}
+			});
+		};
+
+		const syncCheckboxes = (row) => {
+			const threatCheckboxes = row.querySelectorAll('.threat-type-checkbox');
+			const threatHidden = row.querySelector('.threat-type-hidden');
+			const selectedThreats = Array.from(threatCheckboxes)
+				.filter(cb => cb.checked)
+				.map(cb => cb.value)
+				.join(', ');
+			threatHidden.value = selectedThreats;
+
+			const measureCheckboxes = row.querySelectorAll('.measure-type-checkbox');
+			const measureHidden = row.querySelector('.measure-type-hidden');
+			const selectedMeasures = Array.from(measureCheckboxes)
+				.filter(cb => cb.checked)
+				.map(cb => cb.value)
+				.join(', ');
+			measureHidden.value = selectedMeasures;
+		};
+
+		const computeRiskForRow = (row) => {
+			const severitySelect = row.querySelector('select[name="severityLevel[]"]');
+			const likelihoodSelect = row.querySelector('select[name="likelihoodLevel[]"]');
+			const display = row.querySelector('.risk-rating-display');
+			const hidden = row.querySelector('.risk-rating-hidden');
+
+			let sevVal = severitySelect ? severitySelect.value : '';
+			let likVal = likelihoodSelect ? likelihoodSelect.value : '';
+
+			const parseNumber = (val) => {
+				const m = String(val).match(/_(\d+)$/);
+				return m ? Number.parseInt(m[1], 10) : 0;
+			};
+
+			const sevNum = parseNumber(sevVal);
+			const likNum = parseNumber(likVal);
+			const product = (sevNum && likNum) ? (sevNum * likNum) : '';
+
+			if (display) display.textContent = product;
+			if (hidden) hidden.value = product;
+		};
+
+		document.addEventListener('change', function (event) {
+			if (event.target.classList.contains('threat-type-checkbox') || event.target.classList.contains('measure-type-checkbox')) {
+				const row = event.target.closest('.threats-row');
+				if (row) {
+					syncCheckboxes(row);
+				}
+			}
+
+			// Recompute risk rating when severity or likelihood changes
+			if (event.target && (event.target.name === 'severityLevel[]' || event.target.name === 'likelihoodLevel[]')) {
+				const row = event.target.closest('.threats-row');
+				if (row) computeRiskForRow(row);
+			}
+		});
+
+		document.addEventListener('click', function (event) {
+			if (event.target.closest('#addRowBtn')) {
+				event.preventDefault();
+
+				const firstRow = container.querySelector('.threats-row');
+				if (!firstRow) {
+					return;
+				}
+
+				const newRow = firstRow.cloneNode(true);
+				newRow.querySelectorAll('input, select, textarea').forEach(createBlankValue);
+				// clear computed displays for risk rating
+				const display = newRow.querySelector('.risk-rating-display');
+				const hidden = newRow.querySelector('.risk-rating-hidden');
+				if (display) display.textContent = '';
+				if (hidden) hidden.value = '';
+				const removeButton = newRow.querySelector('.remove-row-btn');
+				if (removeButton) {
+					removeButton.classList.remove('d-none');
+				}
+
+				// Update indices for cloned checkboxes
+				const rowIndex = container.querySelectorAll('.threats-row').length;
+				newRow.querySelectorAll('[id^="threatType_"], [id^="measureType_"]').forEach(element => {
+					const parts = element.id.split('_');
+					element.id = parts[0] + '_' + rowIndex + '_' + parts[2];
+					const label = newRow.querySelector(`label[for="${parts[0]}_${parts[1]}_${parts[2]}"]`);
+					if (label) {
+						label.setAttribute('for', element.id);
+					}
+				});
+
+				container.appendChild(newRow);
+				updateRowNumbers();
+				syncCheckboxes(newRow);
+				computeRiskForRow(newRow);
+			}
+
+			const removeButton = event.target.closest('.remove-row-btn');
+			if (removeButton) {
+				event.preventDefault();
+
+				const row = removeButton.closest('.threats-row');
+				if (row) {
+					row.remove();
+					updateRowNumbers();
+				}
+			}
+		});
+
+		// Initialize checkboxes on page load
+		container.querySelectorAll('.threats-row').forEach(row => {
+			syncCheckboxes(row);
+			computeRiskForRow(row);
+		});
+
+		// Sync all rows before form submission
+		const form = document.getElementById('threatsForm');
+		if (form) {
+			form.addEventListener('submit', function (e) {
+				container.querySelectorAll('.threats-row').forEach(row => {
+					syncCheckboxes(row);
+				});
+			});
+		}
+
+		updateRowNumbers();
+	})();
+</script>
