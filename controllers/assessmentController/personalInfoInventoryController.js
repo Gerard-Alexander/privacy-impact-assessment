@@ -120,6 +120,11 @@ const savePersonalInfoInventory = async (req, res) => {
     const basisNums = toArray(req.body.basisNum);
     const purposes = toArray(req.body.purposeOfProcessing);
 
+    const defaultDataSubjectType = await prisma.dataSubjectTypes.findFirst({
+      orderBy: { id: 'asc' },
+      select: { id: true }
+    });
+
     const rowCount = Math.max(
       formNames.length,
       formNos.length,
@@ -139,6 +144,8 @@ const savePersonalInfoInventory = async (req, res) => {
     }
 
     const validatedRows = [];
+    const submittedRows = [];
+    const defaultDataSubjectTypeId = defaultDataSubjectType?.id || 1;
 
     for (let index = 0; index < rowCount; index += 1) {
       const formName = formNames[index] || '';
@@ -153,36 +160,49 @@ const savePersonalInfoInventory = async (req, res) => {
       const basisNum = basisNums[index] || '';
       const purposeOfProcessing = purposes[index] || '';
 
-      if (!Number.isInteger(formNo) || !Number.isInteger(dataSubjectTypeId) || !formName || !dataSubjectName || !dataSubjectEmail || !dataSubjectPhone || !recipientsUser || !dataProcessing || !processingType || !basisNum || !purposeOfProcessing) {
-        const dataSubjectTypes = await prisma.dataSubjectTypes.findMany({
-          orderBy: { id: 'asc' }
-        });
+      const normalizedRow = {
+        formNo: formNo,
+        formName: formName,
+        dataProcessing: dataProcessing,
+        dataSubjectTypeId: Number.isInteger(dataSubjectTypeId) ? dataSubjectTypeId : defaultDataSubjectTypeId,
+        dataSubjectName: dataSubjectName,
+        dataSubjectEmail: dataSubjectEmail,
+        dataSubjectPhone: dataSubjectPhone,
+        recipientsUser: recipientsUser,
+        processingType: processingType,
+        basisNum: basisNum,
+        purposeOfProcessing: purposeOfProcessing
+      };
 
-        return res.render('assessment/personalinfoinventory-page', {
-          title: res.locals.personalInfoInventory,
-          activePage: 'personalinfoinventory-page',
-          user: req.session.user,
-          piaAssessmentId,
-          piiData: null,
-          pdlcData: null,
-          dataSubjectTypes,
-          error: 'Please complete every Personal Information Inventory row before continuing.',
-          success: null
-        });
-      }
-
-      validatedRows.push({
-        formNo,
+      // Store submitted row for re-rendering if validation fails
+      submittedRows.push({
+        formNo: formNos[index] || '',
         formName,
-        dataProcessing,
-        dataSubjectTypeId,
+        dataProcessingValue: dataProcessing,
+        dataSubjectsType_id: dataSubjectTypeId,
+        dataSubjectTypeLabel: '',
+        dataSubjectId: '',
         dataSubjectName,
         dataSubjectEmail,
         dataSubjectPhone,
-        recipientsUser,
-        processingType,
-        basisNum,
-        purposeOfProcessing
+        processingTypeValue: processingType,
+        basisNumValue: basisNum,
+        purposeOfProcessing,
+        recipientsUsers: recipientsUser
+      });
+
+      validatedRows.push({
+        formNo: normalizedRow.formNo,
+        formName: normalizedRow.formName,
+        dataProcessing: normalizedRow.dataProcessing,
+        dataSubjectTypeId: normalizedRow.dataSubjectTypeId,
+        dataSubjectName: normalizedRow.dataSubjectName,
+        dataSubjectEmail: normalizedRow.dataSubjectEmail,
+        dataSubjectPhone: normalizedRow.dataSubjectPhone,
+        recipientsUser: normalizedRow.recipientsUser,
+        processingType: normalizedRow.processingType,
+        basisNum: normalizedRow.basisNum,
+        purposeOfProcessing: normalizedRow.purposeOfProcessing
       });
     }
 

@@ -76,7 +76,7 @@
 														
 														<div>
 															<label class="form-label fw-bold">Data Processing</label>
-															<select name="dataProcessing[]" class="form-select form-select-sm">
+															<select name="dataProcessing[]" class="form-select form-select-sm" required>
 																<option value="" <%= !pii.dataProcessingValue ? 'selected' : '' %>>Select...</option>
 																<% dataProcessingOptions.forEach(function(option) { %>
 																	<option value="<%= option %>" <%= pii.dataProcessingValue === option ? 'selected' : '' %>><%= option.replace('_', ' ') %></option>
@@ -131,7 +131,7 @@
 													<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
 														<div>
 															<label class="form-label fw-bold">Processing Basis</label>
-															<select name="processingType[]" class="form-select form-select-sm">
+															<select name="processingType[]" class="form-select form-select-sm" required>
 																<option value="" <%= !pii.processingTypeValue ? 'selected' : '' %>>Select...</option>
 																<% processingTypeOptions.forEach(function(option) { %>
 																	<option value="<%= option %>" <%= pii.processingTypeValue === option ? 'selected' : '' %>><%= option %></option>
@@ -195,7 +195,7 @@
 													
 													<div>
 														<label class="form-label fw-bold">Data Processing</label>
-														<select name="dataProcessing[]" class="form-select form-select-sm">
+														<select name="dataProcessing[]" class="form-select form-select-sm" required>
 															<option value="">Select...</option>
 															<% dataProcessingOptions.forEach(function(option) { %>
 																<option value="<%= option %>"><%= option.replace('_', ' ') %></option>
@@ -214,7 +214,7 @@
 													<div class="small text-muted mb-2 d-block">Data subjects Information:</div>
 													<div>
 														<label class="form-label fw-bold">Data Subject Type:</label>
-														<select name="dataSubjectTypeId[]" class="form-select form-select-sm">
+														<select name="dataSubjectTypeId[]" class="form-select form-select-sm" required>
 															<option value="">Select...</option>
 															<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
 																<option value="<%= typeOption.id %>"><%= typeOption.dataSubjectType %></option>
@@ -250,7 +250,7 @@
 												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
 													<div>
 														<label class="form-label fw-bold">Processing Basis</label>
-															<select name="processingType[]" class="form-select form-select-sm">
+															<select name="processingType[]" class="form-select form-select-sm" required>
 																<option value="">Select...</option>
 																<% processingTypeOptions.forEach(function(option) { %>
 																	<option value="<%= option %>"><%= option %></option>
@@ -329,6 +329,16 @@
 			});
 		};
 
+		const validateRow = (row) => {
+			const inputs = row.querySelectorAll('input, select, textarea');
+			for (const input of inputs) {
+				if (!input.value || input.value.trim() === '') {
+					return false;
+				}
+			}
+			return true;
+		};
+
 		document.addEventListener('click', function (event) {
 			if (event.target.closest('#addRowBtn')) {
 				event.preventDefault();
@@ -360,6 +370,20 @@
 				}
 			}
 		});
+
+		const piiForm = document.getElementById('piiForm');
+		if (piiForm) {
+			piiForm.addEventListener('submit', function (e) {
+				const rows = container.querySelectorAll('.pdlc-row');
+				for (let i = 0; i < rows.length; i++) {
+					if (!validateRow(rows[i])) {
+						e.preventDefault();
+						alert('Please complete all fields in every row before submitting.');
+						return;
+					}
+				}
+			});
+		}
 
 		updateRowNumbers();
 	})();
