@@ -1,0 +1,384 @@
+<%- include('../layouts/head', { title: title }) %>
+<div class="d-flex">
+	<%- include('../layouts/sidebar', { activePage: activePage }) %>
+	<div class="flex-grow-1 main-content-offset">
+		<%- include('../layouts/topbar', { title: title, user: user }) %>
+		<main class="container-fluid py-4 px-4">
+			<%
+				const securityRows = Array.isArray(securityData) ? securityData : [];
+				const typeOptions = typeof securityTypeOptions !== 'undefined' ? securityTypeOptions : ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];
+				const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : '';
+			%>
+			<%- include('../layouts/stepper', { currentStep: 6, dpsTitle: 'Data Processing System' ,
+				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
+			}) %>
+			
+			<% if (error) { %>
+				<div class="alert alert-danger mx-auto" style="max-width: 1000px;">
+					<%= error %>
+				</div>
+			<% } %>
+			<% if (success) { %>
+				<div class="alert alert-success mx-auto" style="max-width: 1000px;">
+					<%= success %>
+				</div>
+			<% } %>
+<style>
+	.cursor-pointer { cursor: pointer; }
+	.transition-all { transition: all 0.2s ease-in-out; }
+	.toggle-circle {
+		width: 28px;
+		height: 28px;
+		border-radius: 50%;
+		border: 2px solid #dee2e6;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background-color: white;
+		transition: all 0.2s;
+	}
+	.toggle-circle i {
+		opacity: 0;
+		font-size: 1.2rem;
+	}
+	.btn-check:checked + .toggle-card {
+		border-color: #0d6efd !important;
+		background-color: #f8fbff;
+		box-shadow: 0 0.125rem 0.25rem rgba(13, 110, 253, 0.15);
+	}
+	.btn-check:checked + .toggle-card .toggle-circle {
+		background-color: #0d6efd;
+		border-color: #0d6efd;
+	}
+	.btn-check:checked + .toggle-card .toggle-circle i {
+		opacity: 1;
+	}
+	.security-panel {
+		animation: fadeIn 0.3s ease-in-out;
+	}
+	@keyframes fadeIn {
+		from { opacity: 0; transform: translateY(-5px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+</style>
+			<div class="mx-auto" style="max-width: 1100px;">
+				<form id="securityForm" action="/assessment/securitymeasures" method="POST">
+					<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
+
+					<div class="card shadow-sm border-0 mb-4 overflow-hidden">
+						<div class="card-header text-white py-3" style="background-color: #0f235d;">
+							<h5 class="mb-0">Section F - Security Measures</h5>
+						</div>
+						<div class="card-body p-0" style="background-color: #f8f9fa;">
+							<div class="row g-0">
+								
+								<!-- Left Column: Controls -->
+								<div class="col-12 col-md-5 col-lg-4 border-end bg-white">
+									<div class="p-4 h-100">
+										<h6 class="fw-bold mb-4 text-dark"><i class="bi bi-list-check me-2 text-primary"></i>Select Security Types</h6>
+										<div class="d-flex flex-column gap-3">
+											
+											<% 
+												const orgMeasure = securityRows.find(m => m.securityType === 'ORGANIZATIONAL');
+												const physMeasure = securityRows.find(m => m.securityType === 'PHYSICAL');
+												const techMeasure = securityRows.find(m => m.securityType === 'TECHNICAL');
+											%>
+
+											<!-- Organizational Toggle -->
+											<label class="cursor-pointer d-block m-0">
+												<input type="checkbox" class="btn-check security-toggle" id="toggle-org" data-target="panel-org" autocomplete="off" <%= orgMeasure ? 'checked' : '' %>>
+												<div class="card border rounded-3 p-3 toggle-card transition-all h-100">
+													<div class="d-flex align-items-center mb-2">
+														<div class="toggle-circle me-3 flex-shrink-0">
+															<i class="bi bi-check text-white"></i>
+														</div>
+														<h6 class="fw-bold mb-0 text-dark">Organizational</h6>
+													</div>
+													<div class="small text-muted ps-5 lh-sm">ex. registration of DPO & DPS, conduct of PIA, ISO certification...</div>
+												</div>
+											</label>
+
+											<!-- Physical Toggle -->
+											<label class="cursor-pointer d-block m-0">
+												<input type="checkbox" class="btn-check security-toggle" id="toggle-phys" data-target="panel-phys" autocomplete="off" <%= physMeasure ? 'checked' : '' %>>
+												<div class="card border rounded-3 p-3 toggle-card transition-all h-100">
+													<div class="d-flex align-items-center mb-2">
+														<div class="toggle-circle me-3 flex-shrink-0">
+															<i class="bi bi-check text-white"></i>
+														</div>
+														<h6 class="fw-bold mb-0 text-dark">Physical</h6>
+													</div>
+													<div class="small text-muted ps-5 lh-sm">ex. CCTV, intrusion detection, biometric access, etc.</div>
+												</div>
+											</label>
+
+											<!-- Technical Toggle -->
+											<label class="cursor-pointer d-block m-0">
+												<input type="checkbox" class="btn-check security-toggle" id="toggle-tech" data-target="panel-tech" autocomplete="off" <%= techMeasure ? 'checked' : '' %>>
+												<div class="card border rounded-3 p-3 toggle-card transition-all h-100">
+													<div class="d-flex align-items-center mb-2">
+														<div class="toggle-circle me-3 flex-shrink-0">
+															<i class="bi bi-check text-white"></i>
+														</div>
+														<h6 class="fw-bold mb-0 text-dark">Technical</h6>
+													</div>
+													<div class="small text-muted ps-5 lh-sm">ex. antivirus, firewalls, encryption, passwords, etc.</div>
+												</div>
+											</label>
+
+										</div>
+									</div>
+								</div>
+
+								<!-- Right Column: Textareas -->
+								<div class="col-12 col-md-7 col-lg-8">
+									<div class="p-4 h-100 d-flex flex-column" id="descriptions-container">
+										<h6 class="fw-bold mb-4 text-dark"><i class="bi bi-card-text me-2 text-primary"></i>Measure Descriptions</h6>
+										
+										<!-- Placeholder when nothing is selected -->
+										<div id="no-selection-placeholder" class="text-center text-muted my-auto py-5">
+											<i class="bi bi-shield-lock fs-1 d-block mb-3" style="color: #cbd5e1;"></i>
+											Select a security type on the left to add its description.
+										</div>
+
+										<div class="d-flex flex-column gap-4 flex-grow-1">
+											<!-- Org Panel -->
+											<div id="panel-org" class="security-panel <%= orgMeasure ? '' : 'd-none' %>">
+												<div class="card bg-white border border-primary border-opacity-25 shadow-sm">
+													<div class="card-body p-3">
+														<div class="d-flex align-items-center mb-2">
+															<div class="bg-primary rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+															<h6 class="fw-bold text-primary mb-0">Organizational Measures</h6>
+														</div>
+														<input type="hidden" name="securityType[]" value="ORGANIZATIONAL" class="type-input" <%= orgMeasure ? '' : 'disabled' %>>
+														<textarea name="description[]" class="form-control desc-input border-0 bg-light p-3 rounded-3" style="min-height: 110px; resize: vertical;" placeholder="Describe the organizational security measures implemented..." <%= orgMeasure ? '' : 'disabled' %>><%= orgMeasure ? orgMeasure.description : '' %></textarea>
+													</div>
+												</div>
+											</div>
+
+											<!-- Phys Panel -->
+											<div id="panel-phys" class="security-panel <%= physMeasure ? '' : 'd-none' %>">
+												<div class="card bg-white border border-success border-opacity-25 shadow-sm">
+													<div class="card-body p-3">
+														<div class="d-flex align-items-center mb-2">
+															<div class="bg-success rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+															<h6 class="fw-bold text-success mb-0">Physical Measures</h6>
+														</div>
+														<input type="hidden" name="securityType[]" value="PHYSICAL" class="type-input" <%= physMeasure ? '' : 'disabled' %>>
+														<textarea name="description[]" class="form-control desc-input border-0 bg-light p-3 rounded-3" style="min-height: 110px; resize: vertical;" placeholder="Describe the physical security measures implemented..." <%= physMeasure ? '' : 'disabled' %>><%= physMeasure ? physMeasure.description : '' %></textarea>
+													</div>
+												</div>
+											</div>
+
+											<!-- Tech Panel -->
+											<div id="panel-tech" class="security-panel <%= techMeasure ? '' : 'd-none' %>">
+												<div class="card bg-white border border-info border-opacity-25 shadow-sm">
+													<div class="card-body p-3">
+														<div class="d-flex align-items-center mb-2">
+															<div class="bg-info rounded-circle me-2" style="width: 10px; height: 10px;"></div>
+															<h6 class="fw-bold text-info mb-0">Technical Measures</h6>
+														</div>
+														<input type="hidden" name="securityType[]" value="TECHNICAL" class="type-input" <%= techMeasure ? '' : 'disabled' %>>
+														<textarea name="description[]" class="form-control desc-input border-0 bg-light p-3 rounded-3" style="min-height: 110px; resize: vertical;" placeholder="Describe the technical security measures implemented..." <%= techMeasure ? '' : 'disabled' %>><%= techMeasure ? techMeasure.description : '' %></textarea>
+													</div>
+												</div>
+											</div>
+										</div>
+
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+					
+					<!-- General Assessment Questionnaire -->
+					<div class="card shadow-sm border-0 mt-5 mb-4">
+						<div class="card-header text-white py-3" style="background-color: #0f235d;">
+							<h5 class="mb-0">General Assessment Questionnaire</h5>
+						</div>
+						<div class="card-body" style="background-color: #f8f9fa;">
+							<div class="row g-4">
+								
+								<!-- Data Transfer & Sharing -->
+								<div class="col-12 col-lg-6">
+									<div class="card bg-white border rounded-3 shadow-sm h-100 p-4">
+										<h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Data Transfer & Sharing</h6>
+										
+										<div class="mb-4">
+											<label class="form-label d-block text-dark fw-semibold mb-2">Is personal data transferred outside of the Philippines?</label>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="radio" name="isDataTransferredOutsidePh" id="transferYes" value="true" <%= typeof assessment !== 'undefined' && assessment && assessment.isDataTransferredOutsidePh === true ? 'checked' : '' %>>
+												<label class="form-check-label" for="transferYes">Yes</label>
+											</div>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="radio" name="isDataTransferredOutsidePh" id="transferNo" value="false" <%= typeof assessment !== 'undefined' && assessment && assessment.isDataTransferredOutsidePh === false ? 'checked' : '' %>>
+												<label class="form-check-label" for="transferNo">No</label>
+											</div>
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label d-block text-dark fw-semibold mb-2">Is there any Data Sharing Agreements with other parties?</label>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="radio" name="hasDataSharingAgreement" id="dsaYes" value="true" <%= typeof assessment !== 'undefined' && assessment && assessment.hasDataSharingAgreement === true ? 'checked' : '' %>>
+												<label class="form-check-label" for="dsaYes">Yes</label>
+											</div>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="radio" name="hasDataSharingAgreement" id="dsaNo" value="false" <%= typeof assessment !== 'undefined' && assessment && assessment.hasDataSharingAgreement === false ? 'checked' : '' %>>
+												<label class="form-check-label" for="dsaNo">No</label>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- System Specifications -->
+								<div class="col-12 col-lg-6">
+									<div class="card bg-white border rounded-3 shadow-sm h-100 p-4">
+										<h6 class="fw-bold mb-3 text-primary border-bottom pb-2">System Specifications</h6>
+										
+										<div class="mb-4">
+											<label class="form-label text-dark fw-semibold mb-2">What is the name of the PIP?</label>
+											<input type="text" name="pipName" class="form-control" value="<%= typeof assessment !== 'undefined' && assessment && assessment.pipName ? assessment.pipName : '' %>" placeholder="Enter PIP Name">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label d-block text-dark fw-semibold mb-2">Is the system a publicly facing online website or web-based application?</label>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="isPublicFacing" id="facingExternal" value="EXTERNAL" <%= typeof assessment !== 'undefined' && assessment && assessment.isPublicFacing === 'EXTERNAL' ? 'checked' : '' %>>
+												<label class="form-check-label" for="facingExternal">External</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="isPublicFacing" id="facingInternal" value="INTERNAL" <%= typeof assessment !== 'undefined' && assessment && assessment.isPublicFacing === 'INTERNAL' ? 'checked' : '' %>>
+												<label class="form-check-label" for="facingInternal">Internal</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="isPublicFacing" id="facingBoth" value="BOTH" <%= typeof assessment !== 'undefined' && assessment && assessment.isPublicFacing === 'BOTH' ? 'checked' : '' %>>
+												<label class="form-check-label" for="facingBoth">Both</label>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Processing Details -->
+								<div class="col-12 col-lg-6">
+									<div class="card bg-white border rounded-3 shadow-sm h-100 p-4">
+										<h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Processing Details</h6>
+										
+										<div class="mb-4">
+											<label class="form-label d-block text-dark fw-semibold mb-2">Is there any notification regarding any automated decision-making operation and/or profiling? (Check all that apply)</label>
+											<div class="form-check">
+												<input class="form-check-input" type="checkbox" name="hasAutomatedDecisionMaking" id="autoDec" value="true" <%= typeof assessment !== 'undefined' && assessment && assessment.hasAutomatedDecisionMaking === true ? 'checked' : '' %>>
+												<label class="form-check-label" for="autoDec">Automated Decision Making</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="checkbox" name="hasProfiling" id="profiling" value="true" <%= typeof assessment !== 'undefined' && assessment && assessment.hasProfiling === true ? 'checked' : '' %>>
+												<label class="form-check-label" for="profiling">Profiling</label>
+											</div>
+										</div>
+
+										<div class="mb-4">
+											<label class="form-label text-dark fw-semibold mb-2">What is the legal basis of processing personal data?</label>
+											<input type="text" name="legalBasis" class="form-control" value="<%= typeof assessment !== 'undefined' && assessment && assessment.legalBasis ? assessment.legalBasis : '' %>" placeholder="E.g., Legitimate Interest, Contract...">
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label text-dark fw-semibold mb-2">What are other relevant information pertaining to the specified lawful basis?</label>
+											<textarea name="otherLegalBasisInfo" class="form-control" style="min-height: 80px; resize: vertical;" placeholder="Enter details..."><%= typeof assessment !== 'undefined' && assessment && assessment.otherLegalBasisInfo ? assessment.otherLegalBasisInfo : '' %></textarea>
+										</div>
+									</div>
+								</div>
+
+								<!-- Consent Information -->
+								<div class="col-12 col-lg-6">
+									<div class="card bg-white border rounded-3 shadow-sm h-100 p-4">
+										<h6 class="fw-bold mb-3 text-primary border-bottom pb-2">Consent Information</h6>
+										
+										<div class="mb-4">
+											<label class="form-label d-block text-dark fw-semibold mb-2">Is consent used as the basis for processing?</label>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="radio" name="isConsentUsed" id="consentYes" value="true" <%= typeof assessment !== 'undefined' && assessment && assessment.isConsentUsed === true ? 'checked' : '' %>>
+												<label class="form-check-label" for="consentYes">Yes</label>
+											</div>
+											<div class="form-check form-check-inline">
+												<input class="form-check-input" type="radio" name="isConsentUsed" id="consentNo" value="false" <%= typeof assessment !== 'undefined' && assessment && assessment.isConsentUsed === false ? 'checked' : '' %>>
+												<label class="form-check-label" for="consentNo">No</label>
+											</div>
+										</div>
+
+										<div class="mb-3">
+											<label class="form-label d-block text-dark fw-semibold mb-2">Is consent form used and/or other proof for obtaining consent?</label>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="consentProof" id="proofForm" value="CONSENT_FORM" <%= typeof assessment !== 'undefined' && assessment && assessment.consentProof === 'CONSENT_FORM' ? 'checked' : '' %>>
+												<label class="form-check-label" for="proofForm">Consent Form</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="consentProof" id="proofOther" value="OTHER_PROOF" <%= typeof assessment !== 'undefined' && assessment && assessment.consentProof === 'OTHER_PROOF' ? 'checked' : '' %>>
+												<label class="form-check-label" for="proofOther">Other proof of obtaining consent</label>
+											</div>
+											<div class="form-check">
+												<input class="form-check-input" type="radio" name="consentProof" id="proofBoth" value="BOTH" <%= typeof assessment !== 'undefined' && assessment && assessment.consentProof === 'BOTH' ? 'checked' : '' %>>
+												<label class="form-check-label" for="proofBoth">Both</label>
+											</div>
+										</div>
+									</div>
+								</div>
+
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="d-flex justify-content-between align-items-center mt-4 mx-auto" style="max-width: 1100px;">
+				<a href="/assessment/threatsandcontrols?id=<%= assessmentId %>"
+					class="btn btn-danger btn-sm px-4 shadow-sm">
+					Previous Page
+				</a>
+				<div>6 of 6</div>
+				<button type="submit" form="securityForm"
+					class="btn btn-success btn-sm px-4 shadow-sm">
+					Save & Finish
+				</button>
+			</div>
+		</main>
+	</div>
+</div>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const toggles = document.querySelectorAll('.security-toggle');
+		const placeholder = document.getElementById('no-selection-placeholder');
+
+		const updatePanels = () => {
+			let anyChecked = false;
+			toggles.forEach(toggle => {
+				const targetId = toggle.getAttribute('data-target');
+				const panel = document.getElementById(targetId);
+				const typeInput = panel.querySelector('.type-input');
+				const descInput = panel.querySelector('.desc-input');
+
+				if (toggle.checked) {
+					panel.classList.remove('d-none');
+					typeInput.removeAttribute('disabled');
+					descInput.removeAttribute('disabled');
+					anyChecked = true;
+				} else {
+					panel.classList.add('d-none');
+					typeInput.setAttribute('disabled', 'disabled');
+					descInput.setAttribute('disabled', 'disabled');
+				}
+			});
+
+			if (anyChecked) {
+				placeholder.classList.add('d-none');
+			} else {
+				placeholder.classList.remove('d-none');
+			}
+		};
+
+		toggles.forEach(toggle => {
+			toggle.addEventListener('change', updatePanels);
+		});
+
+		updatePanels();
+	});
+</script>

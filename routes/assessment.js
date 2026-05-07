@@ -5,6 +5,7 @@ const authorizedPartiesController = require('../controllers/assessmentController
 const processDataLifeCycleController = require('../controllers/assessmentController/processDataLifeCycleController');
 const personalInfoInventoryController = require('../controllers/assessmentController/personalInfoInventoryController');
 const threatsAndControlsController = require('../controllers/assessmentController/threatsAndControlsController');
+const securityMeasuresController = require('../controllers/assessmentController/securityMeasuresController');
 const { requireAuth } = require('../middleware/auth');
 
 // Routes for Assessment Step 1 (DPS Information)
@@ -26,5 +27,9 @@ router.post('/personalinfoinventory', requireAuth, personalInfoInventoryControll
 // Router for Threats and Controls - Step 5
 router.get('/threatsandcontrols', requireAuth, threatsAndControlsController.threatsAndControls);
 router.post('/threatsandcontrols', requireAuth, threatsAndControlsController.saveThreatsAndControls);
+
+// Router for Security Measures - Step 6
+router.get('/securitymeasures', requireAuth, securityMeasuresController.securityMeasures);
+router.post('/securitymeasures', requireAuth, securityMeasuresController.saveSecurityMeasures);
 
 module.exports = router;
