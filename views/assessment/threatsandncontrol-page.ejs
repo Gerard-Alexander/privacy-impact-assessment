@@ -28,6 +28,71 @@
 				</div>
 			<% } %>
 			<div class="mx-auto" style="max-width: 1000px;">
+					<style>
+					/* Modern UI Enhancements */
+					.form-floating > .form-control:focus ~ label,
+					.form-floating > .form-control:not(:placeholder-shown) ~ label,
+					.form-floating > .form-select ~ label {
+						color: var(--bs-primary);
+						font-weight: 600;
+					}
+					.form-control, .form-select {
+						border-radius: 0.5rem;
+						border: 1px solid #dee2e6;
+						padding: 0.75rem 1rem;
+						transition: all 0.2s ease-in-out;
+					}
+					.form-control:focus, .form-select:focus {
+						border-color: var(--bs-primary);
+						box-shadow: 0 0 0 0.25rem rgba(13, 27, 75, 0.1);
+					}
+					.custom-card {
+						border-radius: 1rem;
+						background: #ffffff;
+						box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+						overflow: hidden;
+						animation: fadeIn 0.5s ease-out;
+					}
+					.custom-header {
+						background: linear-gradient(135deg, rgba(13, 27, 75, 0.05) 0%, transparent 100%);
+						border-bottom: 2px solid rgba(13, 27, 75, 0.1);
+						padding: 1.5rem 2rem;
+					}
+					.custom-header-title {
+						color: #0d1b4b; /* matching sidebar primary color */
+						font-weight: 700;
+						letter-spacing: -0.5px;
+					}
+					.btn-modern {
+						border-radius: 0.5rem;
+						padding: 0.6rem 1.5rem;
+						font-weight: 600;
+						transition: all 0.3s ease;
+						display: inline-flex;
+						align-items: center;
+						gap: 0.5rem;
+					}
+					.btn-modern:hover {
+						transform: translateY(-2px);
+						box-shadow: 0 5px 15px rgba(13, 27, 75, 0.2);
+					}
+					@keyframes fadeIn {
+						from { opacity: 0; transform: translateY(10px); }
+						to { opacity: 1; transform: translateY(0); }
+					}
+					.form-section {
+						padding: 2rem;
+					}
+					.upload-box {
+						border: 2px dashed #dee2e6;
+						border-radius: 0.75rem;
+						transition: all 0.2s ease;
+					}
+					.upload-box:hover {
+						border-color: var(--bs-primary);
+						background-color: rgba(13, 27, 75, 0.02);
+					}
+					</style>
 				<form id="threatsForm" action="/assessment/threatsandcontrols" method="POST">
 					<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
 
@@ -35,14 +100,21 @@
 						<% if (threatRows.length > 0) { %>
 							<% threatRows.forEach(function(threat, index) { %>
 								<!-- Single Row Template (Populated) -->
-								<div class="threats-row card shadow-sm border-0 mb-4">
+								<div class="threats-row card border-0 custom-card mb-4">
 									<% if (index === 0) { %>
 									<!-- Header (First Row Only) -->
-									<div class="card-header threats-main-header text-white d-flex justify-content-between align-items-center py-3"
-										style="background-color: #0f235d;">
-										<h5 class="mb-0">Section E - Threats and Controls</h5>
+									<div class="custom-header threats-main-header d-flex justify-content-between align-items-center">
+										<div class="d-flex align-items-center">
+											<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
+												<i class="bi bi-exclamation-triangle-fill fs-5"></i>
+											</div>
+											<div>
+												<h5 class="mb-0 custom-header-title">Section E - Threats and Controls</h5>
+												<small class="text-muted">Identify potential threats and security controls.</small>
+											</div>
+										</div>
 										<button type="button" id="addRowBtn"
-											class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+											class="btn btn-primary btn-modern shadow-sm">
 											<i class="bi bi-plus-circle me-1"></i> Add Row
 										</button>
 									</div>
@@ -103,7 +175,7 @@
 												</div>
 											</div>
 
-											<!-- Card 4 - Severity & Likelihood -->
+											<!-- Card 4 & 5 - Risk Assessment & Rating -->
 											<div class="col-12 col-md-6 col-lg-4">
 												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
 													<div class="mb-2">
@@ -117,25 +189,19 @@
 														<% }); %>
 													</select>
 													<div class="small text-muted mb-2 d-block">Likelihood Level:</div>
-													<select name="likelihoodLevel[]" class="form-select form-select-sm" required>
+													<select name="likelihoodLevel[]" class="form-select form-select-sm mb-3" required>
 														<option value="" <%= !threat.likelihoodLevel ? 'selected' : '' %>>Select...</option>
 												<% likelihoodOpts.forEach(function(option) { %>
 															<option value="<%= option %>" <%= threat.likelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
 														<% }); %>
 													</select>
-												</div>
-											</div>
-
-											<!-- Card 5 - Risk Rating (computed) -->
-											<div class="col-12 col-md-6 col-lg-4">
-												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Risk Rating</div>
-													</div>
-													<div class="small text-muted mb-3 d-block">Severity x Likelihood</div>
-													<div class="d-flex align-items-center gap-2">
-														<div class="badge bg-light text-dark risk-rating-display"><%= threat.riskRating || '' %></div>
-														<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
+													<div class="border-top pt-3 mt-auto">
+														<div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Risk Rating</div>
+														<div class="d-flex align-items-center justify-content-between">
+															<span class="small text-muted">Severity x Likelihood</span>
+															<div class="badge bg-primary bg-opacity-10 text-primary border risk-rating-display px-2 py-1"><%= threat.riskRating || '' %></div>
+															<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
+														</div>
 													</div>
 												</div>
 											</div>
@@ -178,13 +244,20 @@
 								<% }); %>
 						<% } else { %>
 							<!-- Single Row Template (Empty) -->
-							<div class="threats-row card shadow-sm border-0 mb-4">
+							<div class="threats-row card border-0 custom-card mb-4">
 								<!-- Header (First Row Only) -->
-								<div class="card-header threats-main-header text-white d-flex justify-content-between align-items-center py-3"
-									style="background-color: #0f235d;">
-									<h5 class="mb-0">Section E - Threats and Controls</h5>
+								<div class="custom-header threats-main-header d-flex justify-content-between align-items-center">
+									<div class="d-flex align-items-center">
+										<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
+											<i class="bi bi-exclamation-triangle-fill fs-5"></i>
+										</div>
+										<div>
+											<h5 class="mb-0 custom-header-title">Section E - Threats and Controls</h5>
+											<small class="text-muted">Identify potential threats and security controls.</small>
+										</div>
+									</div>
 									<button type="button" id="addRowBtn"
-										class="btn btn-light btn-sm fw-bold text-primary shadow-sm">
+										class="btn btn-primary btn-modern shadow-sm">
 										<i class="bi bi-plus-circle me-1"></i> Add Row
 									</button>
 								</div>
@@ -237,7 +310,7 @@
 											</div>
 										</div>
 
-										<!-- Card 4 - Severity & Likelihood -->
+										<!-- Card 4 & 5 - Risk Assessment & Rating -->
 										<div class="col-12 col-md-6 col-lg-4">
 											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
 												<div class="mb-2">
@@ -251,25 +324,19 @@
 													<% }); %>
 												</select>
 												<div class="small text-muted mb-2 d-block">Likelihood Level:</div>
-												<select name="likelihoodLevel[]" class="form-select form-select-sm" required>
+												<select name="likelihoodLevel[]" class="form-select form-select-sm mb-3" required>
 													<option value="">Select...</option>
 												<% likelihoodOpts.forEach(function(option) { %>
 														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
 													<% }); %>
 												</select>
-											</div>
-										</div>
-
-										<!-- Card 5 - Risk Rating (computed) -->
-										<div class="col-12 col-md-6 col-lg-4">
-											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-												<div class="mb-2">
-													<div class="fw-bold text-dark m-0">Risk Rating</div>
-												</div>
-												<div class="small text-muted mb-3 d-block">Severity x Likelihood</div>
-												<div class="d-flex align-items-center gap-2">
-													<div class="badge bg-light text-dark risk-rating-display"> </div>
-													<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="">
+												<div class="border-top pt-3 mt-auto">
+													<div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Risk Rating</div>
+													<div class="d-flex align-items-center justify-content-between">
+														<span class="small text-muted">Severity x Likelihood</span>
+														<div class="badge bg-primary bg-opacity-10 text-primary border risk-rating-display px-2 py-1"> </div>
+														<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="">
+													</div>
 												</div>
 											</div>
 										</div>
@@ -312,15 +379,16 @@
 					</div>
 				</form>
 			</div>
-			<div class="d-flex justify-content-between align-items-center mt-4 mx-auto" style="max-width: 1000px;">
+			<hr class="my-4 text-muted mx-auto" style="max-width: 1000px;">
+			<div class="d-flex justify-content-between align-items-center mt-2 mx-auto" style="max-width: 1000px;">
 				<a href="/assessment/personalinfoinventory?id=<%= assessmentId %>"
-					class="btn btn-danger btn-sm px-4 shadow-sm">
-					Previous Page
+					class="btn btn-danger btn-modern shadow-sm">
+					<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
 				</a>
-				<div>5 of 6</div>
+				<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 5 of 6</span>
 				<button type="submit" form="threatsForm"
-					class="btn btn-primary btn-sm px-4 shadow-sm">
-					Next Page
+					class="btn btn-primary btn-modern shadow-sm">
+					Next Page <i class="bi bi-arrow-right-short fs-5"></i>
 				</button>
 			</div>
 		</main>
@@ -400,7 +468,23 @@
 			const likNum = parseNumber(likVal);
 			const product = (sevNum && likNum) ? (sevNum * likNum) : '';
 
-			if (display) display.textContent = product;
+			if (display) {
+				display.classList.remove('bg-primary', 'bg-opacity-10', 'text-primary', 'bg-success', 'bg-warning', 'bg-danger', 'text-white', 'text-dark', 'bg-light', 'text-secondary');
+				
+				if (!product) {
+					display.classList.add('bg-light', 'text-secondary');
+					display.textContent = 'None';
+				} else if (product <= 3) {
+					display.classList.add('bg-success', 'text-white');
+					display.textContent = product + ' (Low)';
+				} else if (product <= 8) {
+					display.classList.add('bg-warning', 'text-dark');
+					display.textContent = product + ' (Medium)';
+				} else {
+					display.classList.add('bg-danger', 'text-white');
+					display.textContent = product + ' (High)';
+				}
+			}
 			if (hidden) hidden.value = product;
 		};
 

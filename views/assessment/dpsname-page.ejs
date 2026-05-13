@@ -12,103 +12,184 @@
 				}) %>
 				<div class="mx-auto" style="max-width: 1000px;">
 
-					<div class="card shadow-sm border-0 mb-4">
-						<div class="card-header bg-primary text-white">
-							<h5 class="mb-0">Section A — Data Processing System (DPS) Information</h5>
+					<style>
+					/* Modern UI Enhancements */
+					.form-floating > .form-control:focus ~ label,
+					.form-floating > .form-control:not(:placeholder-shown) ~ label,
+					.form-floating > .form-select ~ label {
+						color: var(--bs-primary);
+						font-weight: 600;
+					}
+					.form-control, .form-select {
+						border-radius: 0.5rem;
+						border: 1px solid #dee2e6;
+						padding: 0.75rem 1rem;
+						transition: all 0.2s ease-in-out;
+					}
+					.form-control:focus, .form-select:focus {
+						border-color: var(--bs-primary);
+						box-shadow: 0 0 0 0.25rem rgba(13, 27, 75, 0.1);
+					}
+					.custom-card {
+						border-radius: 1rem;
+						background: #ffffff;
+						box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+						overflow: hidden;
+						animation: fadeIn 0.5s ease-out;
+					}
+					.custom-header {
+						background: linear-gradient(135deg, rgba(13, 27, 75, 0.05) 0%, transparent 100%);
+						border-bottom: 2px solid rgba(13, 27, 75, 0.1);
+						padding: 1.5rem 2rem;
+					}
+					.custom-header-title {
+						color: #0d1b4b; /* matching sidebar primary color */
+						font-weight: 700;
+						letter-spacing: -0.5px;
+					}
+					.btn-modern {
+						border-radius: 0.5rem;
+						padding: 0.6rem 1.5rem;
+						font-weight: 600;
+						transition: all 0.3s ease;
+						display: inline-flex;
+						align-items: center;
+						gap: 0.5rem;
+					}
+					.btn-modern:hover {
+						transform: translateY(-2px);
+						box-shadow: 0 5px 15px rgba(13, 27, 75, 0.2);
+					}
+					.modern-radio-group .btn-outline-primary {
+						border-color: #dee2e6;
+						color: #6c757d;
+					}
+					.modern-radio-group .btn-check:checked + .btn-outline-primary {
+						background-color: rgba(13, 27, 75, 0.1);
+						border-color: #0d1b4b;
+						color: #0d1b4b;
+						font-weight: 600;
+					}
+					@keyframes fadeIn {
+						from { opacity: 0; transform: translateY(10px); }
+						to { opacity: 1; transform: translateY(0); }
+					}
+					.form-section {
+						padding: 2rem;
+					}
+					</style>
+
+					<div class="card border-0 custom-card mb-4">
+						<div class="custom-header d-flex align-items-center">
+							<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
+								<i class="bi bi-info-circle-fill fs-5"></i>
+							</div>
+							<div>
+								<h5 class="mb-0 custom-header-title">Section A — Data Processing System (DPS) Information</h5>
+								<small class="text-muted">Please provide the initial details of the system being assessed.</small>
+							</div>
 						</div>
 
-						<div class="card-body">
+						<div class="card-body form-section">
 							<form action="/assessment/dpsname" method="POST">
 								<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId || '' %>">
 								<% const selectedAssessment = assessment || {}; %>
 								<% if (error) { %>
-									<div class="alert alert-danger mb-3" role="alert"><%= error %></div>
+									<div class="alert alert-danger mb-4 rounded-3 shadow-sm" role="alert">
+										<i class="bi bi-exclamation-triangle-fill me-2"></i><%= error %>
+									</div>
 								<% } %>
 								<% if (success) { %>
-									<div class="alert alert-success mb-3" role="alert"><%= success %></div>
+									<div class="alert alert-success mb-4 rounded-3 shadow-sm" role="alert">
+										<i class="bi bi-check-circle-fill me-2"></i><%= success %>
+									</div>
 								<% } %>
+								
 								<div class="row g-4">
-
 									<!-- LEFT COLUMN -->
-									<div class="col-md-8">
+									<div class="col-lg-7">
 										<!-- Name -->
-										<div class="mb-3">
-											<label class="form-label fw-bold">
-												Name of Data Processing System (DPS):
-											<span class="text-danger">*</span>
-											</label>
-											<input type="text" name="systemName" class="form-control form-control-sm"
+										<div class="form-floating mb-4">
+											<input type="text" id="systemName" name="systemName" class="form-control"
 											placeholder="e.g. Student Enrollment Management System" value="<%= selectedAssessment.dpsName || '' %>" required>
+											<label for="systemName">Name of Data Processing System (DPS) <span class="text-danger">*</span></label>
 										</div>
 
 										<!-- Mandate -->
-										<div class="mb-3">
-											<label class="form-label fw-bold">
-											Mandate / Purpose:
-											<span class="text-danger">*</span>
-											</label>
-											<textarea name="mandate" class="form-control form-control-sm" rows="3"
+										<div class="form-floating mb-4">
+											<textarea id="mandate" name="mandate" class="form-control" style="height: 120px;"
 											placeholder="Describe the mandate or purpose..." required><%= selectedAssessment.mandate || '' %></textarea>
+											<label for="mandate">Mandate / Purpose <span class="text-danger">*</span></label>
 										</div>
 
 										<!-- Dates -->
-										<div class="row g-3">
+										<div class="row g-3 mb-4">
 											<div class="col-md-6">
-											<label class="form-label fw-bold">PIA Starting Date:</label>
-											<input type="date" name="piaStartDate" class="form-control form-control-sm" value="<%= selectedAssessment.piaStartDate || '' %>" required>
+												<div class="form-floating">
+													<input type="date" id="piaStartDate" name="piaStartDate" class="form-control" value="<%= selectedAssessment.piaStartDate || '' %>" required>
+													<label for="piaStartDate">PIA Starting Date <span class="text-danger">*</span></label>
+												</div>
 											</div>
 											<div class="col-md-6">
-											<label class="form-label fw-bold">PIA Ending Date:</label>
-											<input type="date" name="piaEndDate" class="form-control form-control-sm" value="<%= selectedAssessment.piaEndDate || '' %>" required>
+												<div class="form-floating">
+													<input type="date" id="piaEndDate" name="piaEndDate" class="form-control" value="<%= selectedAssessment.piaEndDate || '' %>" required>
+													<label for="piaEndDate">PIA Ending Date <span class="text-danger">*</span></label>
+												</div>
 											</div>
 										</div>
 									</div>
 
-									<!-- RIGHT COLUMN (30%) -->
-									<div class="col-md-4 d-flex flex-column gap-3">
-										<!-- DPS Modality -->
-										<div>
-											<label class="form-label fw-bold">DPS Modality:</label>
-											<select name="dpsModality" class="form-select form-select-sm">
-												<option value="" <%= !selectedAssessment.dpsModality ? 'selected' : '' %>>Select...</option>
-												<option value="ELECTRONIC" <%= selectedAssessment.dpsModality === 'ELECTRONIC' ? 'selected' : '' %>>Electronic</option>
-												<option value="MANUAL" <%= selectedAssessment.dpsModality === 'MANUAL' ? 'selected' : '' %>>Paper-based</option>
-												<option value="BOTH" <%= selectedAssessment.dpsModality === 'BOTH' ? 'selected' : '' %>>Both</option>
-											</select>
-										</div>
+									<!-- RIGHT COLUMN -->
+									<div class="col-lg-5">
+										<div class="p-4 bg-light rounded-4 border h-100 d-flex flex-column gap-4">
+											<!-- DPS Modality -->
+											<div>
+												<label class="form-label fw-semibold text-dark mb-2">
+													<i class="bi bi-display me-2 text-primary"></i>DPS Modality
+												</label>
+												<select name="dpsModality" class="form-select form-select-lg fs-6">
+													<option value="" <%= !selectedAssessment.dpsModality ? 'selected' : '' %>>Select modality...</option>
+													<option value="ELECTRONIC" <%= selectedAssessment.dpsModality === 'ELECTRONIC' ? 'selected' : '' %>>Electronic</option>
+													<option value="MANUAL" <%= selectedAssessment.dpsModality === 'MANUAL' ? 'selected' : '' %>>Paper-based</option>
+													<option value="BOTH" <%= selectedAssessment.dpsModality === 'BOTH' ? 'selected' : '' %>>Both</option>
+												</select>
+											</div>
 
-										<!-- Processing Role -->
-										<div>
-											<label class="form-label fw-bold">Processing Role / Entity:</label>
-											<select name="processingRole" class="form-select form-select-sm">
-												<option value="" <%= !selectedAssessment.processingRole ? 'selected' : '' %>>Select...</option>
-												<option value="PIC" <%= selectedAssessment.processingRole === 'PIC' ? 'selected' : '' %>>Personal Information Controller (PIC)</option>
-												<option value="PIP" <%= selectedAssessment.processingRole === 'PIP' ? 'selected' : '' %>>Personal Information Processor (PIP)</option>
-											</select>
-										</div>
+											<!-- Processing Role -->
+											<div>
+												<label class="form-label fw-semibold text-dark mb-2">
+													<i class="bi bi-person-badge me-2 text-primary"></i>Processing Role / Entity
+												</label>
+												<select name="processingRole" class="form-select form-select-lg fs-6">
+													<option value="" <%= !selectedAssessment.processingRole ? 'selected' : '' %>>Select role...</option>
+													<option value="PIC" <%= selectedAssessment.processingRole === 'PIC' ? 'selected' : '' %>>Personal Information Controller (PIC)</option>
+													<option value="PIP" <%= selectedAssessment.processingRole === 'PIP' ? 'selected' : '' %>>Personal Information Processor (PIP)</option>
+												</select>
+											</div>
 
-										<!-- Outsourced -->
-										<div>
-											<label class="form-label fw-bold">Outsourced/Subcontracted?</label>
-												<div class="d-flex gap-3">
-													<div class="form-check">
-														<input class="form-check-input" type="radio" name="isOutsourced" value="1" <%= selectedAssessment.isOutsourced === '1' ? 'checked' : '' %>>
-														<label class="form-check-label small">Yes</label>
-													</div>
-													<div class="form-check">
-														<input class="form-check-input" type="radio" name="isOutsourced" value="0" <%= selectedAssessment.isOutsourced === '1' ? '' : 'checked' %>>
-														<label class="form-check-label small">No</label>
-													</div>
+											<!-- Outsourced -->
+											<div>
+												<label class="form-label fw-semibold text-dark mb-2">
+													<i class="bi bi-building-gear me-2 text-primary"></i>Outsourced / Subcontracted?
+												</label>
+												<div class="d-flex gap-2 modern-radio-group w-100">
+													<input type="radio" class="btn-check" name="isOutsourced" id="outsourcedYes" value="1" <%= selectedAssessment.isOutsourced === '1' ? 'checked' : '' %>>
+													<label class="btn btn-outline-primary flex-fill" for="outsourcedYes">Yes</label>
+
+													<input type="radio" class="btn-check" name="isOutsourced" id="outsourcedNo" value="0" <%= selectedAssessment.isOutsourced === '1' ? '' : 'checked' %>>
+													<label class="btn btn-outline-primary flex-fill" for="outsourcedNo">No</label>
 												</div>
+											</div>
 										</div>
 									</div>
 								</div>
 
 								<!-- Submit -->
-								<div class="position-relative mt-4 text-center">
-									<div>1 of 5</div>
-									<button type="submit" class="btn btn-primary btn-sm px-4 shadow-sm position-absolute end-0 top-50 translate-middle-y">
-										Save and Continue
+								<hr class="my-4 text-muted">
+								<div class="d-flex align-items-center justify-content-between mt-2">
+									<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 1 of 5</span>
+									<button type="submit" class="btn btn-primary btn-modern shadow-sm">
+										Save and Continue <i class="bi bi-arrow-right-short fs-5"></i>
 									</button>
 								</div>
 							</form>
