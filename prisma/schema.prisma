@@ -337,7 +337,7 @@ enum SecurityType {
 model Session {
   id        String   @id @default(cuid())
   sid       String   @unique
-  data      String
+  data      String   @db.Text
   expiresAt DateTime
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
