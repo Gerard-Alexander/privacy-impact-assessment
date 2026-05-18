@@ -1,10 +1,12 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../../store/prisma');
+const { recordLoginFailure, resetLoginAttempts } = require('../../middleware/loginRateLimit');
 
 const loginSubmit = async (req, res) => {
   const { username, password } = req.body;
 
   if (!username || !password) {
+    recordLoginFailure(req);
     return res.redirect('/login-page?error=invalid');
   }
 
@@ -14,23 +16,34 @@ const loginSubmit = async (req, res) => {
     });
 
     if (!user) {
+      recordLoginFailure(req);
       return res.redirect('/login-page?error=invalid');
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password);
 
     if (!passwordMatches) {
+      recordLoginFailure(req);
       return res.redirect('/login-page?error=invalid');
     }
 
-    req.session.user = {
-      username: user.userName,
-      role: user.role,
-      fullName: `${user.firstName} ${user.lastName}`.trim(),
-      emailAddress: user.emailAddress
-    };
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regenerate error:', err);
+        return res.redirect('/login-page?error=server');
+      }
 
-    return res.redirect('/user-profile');
+      req.session.user = {
+        username: user.userName,
+        role: user.role,
+        fullName: `${user.firstName} ${user.lastName}`.trim(),
+        emailAddress: user.emailAddress
+      };
+
+      resetLoginAttempts(req);
+
+      return res.redirect('/user-profile');
+    });
   } catch (error) {
     console.error('Login error:', error);
     return res.redirect('/login-page?error=server');

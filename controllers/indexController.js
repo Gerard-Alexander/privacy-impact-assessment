@@ -70,13 +70,20 @@ const registerSubmit = async (req, res) => {
       }
     });
 
-    req.session.user = {
-      username: newUser.userName,
-      role: newUser.role,
-      fullName: `${newUser.firstName} ${newUser.lastName}`.trim()
-    };
+    req.session.regenerate((err) => {
+      if (err) {
+        console.error('Session regenerate error:', err);
+        return res.redirect('/register-page?error=server');
+      }
 
-    return res.redirect('/user-profile');
+      req.session.user = {
+        username: newUser.userName,
+        role: newUser.role,
+        fullName: `${newUser.firstName} ${newUser.lastName}`.trim()
+      };
+
+      return res.redirect('/user-profile');
+    });
   } catch (error) {
     console.error('Registration error:', error);
     return res.redirect('/register-page?error=server');

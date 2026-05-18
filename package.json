@@ -28,6 +28,7 @@
   },
   "homepage": "https://gitlab.com/2215699/privacy-impact-assessment#readme",
   "dependencies": {
+    "@quixo3/prisma-session-store": "^3.1.19",
     "@prisma/adapter-mariadb": "^7.7.0",
     "@prisma/client": "^7.7.0",
     "bcrypt": "^6.0.0",

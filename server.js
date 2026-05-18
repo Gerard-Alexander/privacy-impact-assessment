@@ -2,8 +2,10 @@ require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
+const { PrismaSessionStore } = require('@quixo3/prisma-session-store');
 const path = require('path');
 const expressLayouts = require('express-ejs-layouts');
+const prisma = require('./store/prisma');
 
 // Import Middleware and Import Routes
 const { securityHeaders, corsProtection } = require('./middleware/security');
@@ -44,6 +46,10 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-in-production', // MUST be env var in prod
   resave: false,
   saveUninitialized: false, // Don't create session until needed
+  store: new PrismaSessionStore(prisma, {
+    checkPeriod: 2 * 60 * 1000, // Prune expired sessions every 2 minutes
+    dbRecordIdIsSessionId: false
+  }),
   cookie: {
     httpOnly: true, // Prevent JS access to session cookie
     secure: process.env.NODE_ENV === 'production', // HTTPS only in production
