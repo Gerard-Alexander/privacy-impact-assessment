@@ -37,9 +37,9 @@
 						font-weight: 600;
 					}
 					.form-control, .form-select {
-						border-radius: 0.5rem;
+						border-radius: 0.75rem;
 						border: 1px solid #dee2e6;
-						padding: 0.75rem 1rem;
+						padding: 0.85rem 1.2rem;
 						transition: all 0.2s ease-in-out;
 					}
 					.form-control:focus, .form-select:focus {
@@ -47,7 +47,7 @@
 						box-shadow: 0 0 0 0.25rem rgba(13, 27, 75, 0.1);
 					}
 					.custom-card {
-						border-radius: 1rem;
+						border-radius: 1.25rem;
 						background: #ffffff;
 						box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 						overflow: hidden;
@@ -63,34 +63,87 @@
 						font-weight: 700;
 						letter-spacing: -0.5px;
 					}
-					.btn-modern {
+					.btn-modern.btn-sm {
+						padding: 0.4rem 1rem;
+						font-size: 0.875rem;
 						border-radius: 0.5rem;
-						padding: 0.6rem 1.5rem;
+					}
+					.btn-modern {
+						border-radius: 0.75rem;
+						padding: 0.75rem 1.75rem;
 						font-weight: 600;
 						transition: all 0.3s ease;
 						display: inline-flex;
 						align-items: center;
 						gap: 0.5rem;
+						border: none;
 					}
 					.btn-modern:hover {
 						transform: translateY(-2px);
 						box-shadow: 0 5px 15px rgba(13, 27, 75, 0.2);
 					}
+					.btn-primary.btn-modern {
+						background: linear-gradient(135deg, #3b82f6, #2563eb);
+						color: white;
+						box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+					}
+					.btn-primary.btn-modern:hover {
+						box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+						background: linear-gradient(135deg, #2563eb, #1d4ed8);
+					}
+					.btn-danger.btn-modern {
+						background: #fff;
+						color: #ef4444;
+						border: 1px solid #fee2e2;
+						box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+					}
+					.btn-danger.btn-modern:hover {
+						background: #fef2f2;
+						border-color: #fca5a5;
+						transform: translateY(-2px);
+					}
 					@keyframes fadeIn {
 						from { opacity: 0; transform: translateY(10px); }
 						to { opacity: 1; transform: translateY(0); }
 					}
-					.form-section {
-						padding: 2rem;
+					.inner-card {
+						background: #ffffff;
+						border: 1px solid #e2e8f0;
+						border-radius: 1rem;
+						box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+						padding: 1rem;
+						height: 100%;
+						transition: all 0.3s ease;
 					}
-					.upload-box {
-						border: 2px dashed #dee2e6;
-						border-radius: 0.75rem;
-						transition: all 0.2s ease;
+					.inner-card:hover {
+						transform: translateY(-4px);
+						box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1);
+						border-color: rgba(59, 130, 246, 0.3);
 					}
-					.upload-box:hover {
-						border-color: var(--bs-primary);
-						background-color: rgba(13, 27, 75, 0.02);
+					.inner-card-title {
+						font-size: 1.1rem;
+						font-weight: 700;
+						color: #0f172a;
+						margin-bottom: 0.25rem;
+						display: flex;
+						align-items: center;
+						gap: 0.5rem;
+					}
+					.inner-card-desc {
+						font-size: 0.85rem;
+						color: #64748b;
+						margin-bottom: 1.25rem;
+					}
+					.sub-header-bar {
+						background: linear-gradient(90deg, #f8fafc, #ffffff);
+						border-bottom: 1px solid #e2e8f0;
+					}
+					.section-label {
+						font-weight: 600;
+						color: #0f172a;
+						font-size: 0.85rem;
+						margin-bottom: 0.5rem;
+						letter-spacing: 0.2px;
 					}
 					</style>
 				<form id="threatsForm" action="/assessment/threatsandcontrols" method="POST">
@@ -100,10 +153,10 @@
 						<% if (threatRows.length > 0) { %>
 							<% threatRows.forEach(function(threat, index) { %>
 								<!-- Single Row Template (Populated) -->
-								<div class="threats-row card border-0 custom-card mb-4">
+								<div class="threats-row border-0 custom-card mb-4">
 									<% if (index === 0) { %>
 									<!-- Header (First Row Only) -->
-									<div class="custom-header threats-main-header d-flex justify-content-between align-items-center">
+									<div class="custom-header threats-main-header d-flex justify-content-between align-items-center flex-wrap gap-3">
 										<div class="d-flex align-items-center">
 											<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
 												<i class="bi bi-exclamation-triangle-fill fs-5"></i>
@@ -114,55 +167,65 @@
 											</div>
 										</div>
 										<button type="button" id="addRowBtn"
-											class="btn btn-primary btn-modern shadow-sm">
-											<i class="bi bi-plus-circle me-1"></i> Add Row
+											class="btn btn-primary btn-modern btn-sm shadow-sm add-row-btn">
+											<i class="bi bi-plus-lg me-1"></i> Add Row
 										</button>
 									</div>
 									<% } %>
 
 									<!-- Sub-header -->
-									<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
-										style="background-color: #c8ddf7;">
-										<h6 class="fw-bold mb-0">Threat Assessment
-											<span class="row-number">
-												<%= index + 1 %>
-											</span></h6>
-										<button type="button"
-											class="btn btn-danger btn-sm py-1 remove-row-btn <%= index === 0 ? 'd-none' : '' %>">
-											<i class="bi bi-trash me-1"></i> Remove
-										</button>
+									<div class="sub-header-bar d-flex justify-content-between align-items-center py-3 px-4">
+										<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+											<i class="bi bi-arrow-repeat text-primary fs-5"></i>
+											Threat Assessment <span class="badge bg-primary rounded-pill row-number ms-1"><%= index + 1 %></span>
+										</h6>
+										<div>
+											<button type="button" class="btn btn-primary btn-sm me-2 add-row-btn shadow-sm <%= index === 0 ? 'd-none' : '' %>" title="Add a new Threat Row">
+												<i class="bi bi-plus-lg"></i> Add Row
+											</button>
+											<button type="button" class="btn btn-sm btn-light text-secondary me-2 toggle-collapse-btn" title="Minimize/Maximize">
+												<i class="bi bi-chevron-up"></i>
+											</button>
+											<button type="button" class="btn btn-outline-danger btn-sm remove-row-btn <%= index === 0 ? 'd-none' : '' %>">
+												<i class="bi bi-trash3 me-1"></i> Remove Cycle
+											</button>
+										</div>
 									</div>
 
-									<div class="card-body bg-white pb-4">
+									<div class="threats-row-body bg-white p-4">
 										<div class="row g-4">
 											<!-- Card 1 - Data Subject + Threat Description (combined) -->
 											<div class="col-12 col-md-6 col-lg-4">
-												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Data Subject & Threat Description</div>
+												<div class="inner-card d-flex flex-column h-100">
+													<div class="inner-card-title">
+														<i class="bi bi-person-exclamation text-primary"></i> Data Subject & Threat
 													</div>
-													<div class="small text-muted mb-2 d-block">Who are the impacted data subject?</div>
-													<select name="dataSubjectId[]" class="form-select form-select-sm mb-3" required>
+													<div class="inner-card-desc mb-2">Impacted data subjects and threat details.</div>
+													
+													<div class="section-label">Who are the impacted data subject?</div>
+													<select name="dataSubjectId[]" class="form-select mb-3" required>
 														<option value="" <%= !threat.dataSubject_id ? 'selected' : '' %>>Select...</option>
 														<% dataSubjectOptions.forEach(function(subject) { %>
 															<option value="<%= subject.id %>" <%= threat.dataSubject_id === subject.id ? 'selected' : '' %>><%= subject.name %></option>
 														<% }); %>
 													</select>
-													<div class="small text-muted mb-3 d-block">What is the threat and its possible consequences?</div>
-													<textarea name="threatDescription[]" class="form-control form-control-sm" style="min-height: 140px; resize: vertical;" required><%= threat.threats_possibleConsequences || '' %></textarea>
+													
+													<div class="section-label mt-auto">What is the threat and its possible consequences?</div>
+													<textarea name="threatDescription[]" class="form-control" style="min-height: 140px; resize: vertical;" required><%= threat.threats_possibleConsequences || '' %></textarea>
 												</div>
 											</div>
 
 											<!-- Card 3 - Type of Threat -->
 											<div class="col-12 col-md-6 col-lg-4">
-												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Type of Threat</div>
+												<div class="inner-card d-flex flex-column h-100">
+													<div class="inner-card-title">
+														<i class="bi bi-tags text-primary"></i> Type of Threat
 													</div>
-													<div class="small text-muted mb-3 d-block">Select threat category (select all that apply):</div>
-													<div class="d-flex flex-column gap-2">
+													<div class="inner-card-desc mb-2">Select threat category (select all that apply).</div>
+													
+													<div class="d-flex flex-column gap-2 mt-2">
 														<% threatTypeOpts.forEach(function(threatType) { %>
-															<div class="form-check">
+															<div class="form-check custom-check">
 																<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_<%= index %>_<%= threatType %>"
 																	<% if (threat.typeOfThreatsArray && threat.typeOfThreatsArray.includes(threatType)) { %>checked<% } %>>
 																<label class="form-check-label" for="threatType_<%= index %>_<%= threatType %>">
@@ -177,24 +240,28 @@
 
 											<!-- Card 4 & 5 - Risk Assessment & Rating -->
 											<div class="col-12 col-md-6 col-lg-4">
-												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Risk Assessment</div>
+												<div class="inner-card d-flex flex-column h-100">
+													<div class="inner-card-title">
+														<i class="bi bi-speedometer2 text-primary"></i> Risk Assessment
 													</div>
-													<div class="small text-muted mb-2 d-block">Severity Level:</div>
-													<select name="severityLevel[]" class="form-select form-select-sm mb-3" required>
+													<div class="inner-card-desc mb-2">Determine severity and likelihood.</div>
+													
+													<div class="section-label">Severity Level:</div>
+													<select name="severityLevel[]" class="form-select mb-3" required>
 														<option value="" <%= !threat.severityLevel ? 'selected' : '' %>>Select...</option>
 												<% severityOpts.forEach(function(option) { %>
 															<option value="<%= option %>" <%= threat.severityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
 														<% }); %>
 													</select>
-													<div class="small text-muted mb-2 d-block">Likelihood Level:</div>
-													<select name="likelihoodLevel[]" class="form-select form-select-sm mb-3" required>
+													
+													<div class="section-label">Likelihood Level:</div>
+													<select name="likelihoodLevel[]" class="form-select mb-3" required>
 														<option value="" <%= !threat.likelihoodLevel ? 'selected' : '' %>>Select...</option>
 												<% likelihoodOpts.forEach(function(option) { %>
 															<option value="<%= option %>" <%= threat.likelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
 														<% }); %>
 													</select>
+													
 													<div class="border-top pt-3 mt-auto">
 														<div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Risk Rating</div>
 														<div class="d-flex align-items-center justify-content-between">
@@ -207,24 +274,26 @@
 											</div>
 
 											<!-- Card 6 - Proposed Control -->
-											<div class="col-12 col-md-6 col-lg-4">
-												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Proposed Control Measure</div>
+											<div class="col-12 col-md-6 col-lg-6">
+												<div class="inner-card d-flex flex-column h-100">
+													<div class="inner-card-title">
+														<i class="bi bi-shield-lock text-primary"></i> Proposed Control Measure
 													</div>
-													<div class="small text-muted mb-3 d-block">What control measures are proposed?</div>
-													<textarea name="proposedControl[]" class="form-control form-control-sm" style="min-height: 100px; resize: vertical;" required><%= threat.proposedControl || '' %></textarea>
+													<div class="inner-card-desc mb-2">What control measures are proposed?</div>
+													
+													<textarea name="proposedControl[]" class="form-control flex-grow-1" style="min-height: 100px; resize: vertical;" required><%= threat.proposedControl || '' %></textarea>
 												</div>
 											</div>
 
 											<!-- Card 7 - Type of Measure -->
-											<div class="col-12 col-md-6 col-lg-4">
-												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Type of Measure</div>
+											<div class="col-12 col-md-6 col-lg-6">
+												<div class="inner-card d-flex flex-column h-100">
+													<div class="inner-card-title">
+														<i class="bi bi-ui-checks text-primary"></i> Type of Measure
 													</div>
-													<div class="small text-muted mb-3 d-block">Select measure categories (select all that apply):</div>
-													<div class="d-flex flex-column gap-2">
+													<div class="inner-card-desc mb-2">Select measure categories (select all that apply).</div>
+													
+													<div class="d-flex flex-column gap-2 mt-2">
 														<% measureTypeOpts.forEach(function(measureType) { %>
 															<div class="form-check">
 																<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" id="measureType_<%= index %>_<%= measureType %>"
@@ -244,9 +313,9 @@
 								<% }); %>
 						<% } else { %>
 							<!-- Single Row Template (Empty) -->
-							<div class="threats-row card border-0 custom-card mb-4">
+							<div class="threats-row border-0 custom-card mb-4">
 								<!-- Header (First Row Only) -->
-								<div class="custom-header threats-main-header d-flex justify-content-between align-items-center">
+								<div class="custom-header threats-main-header d-flex justify-content-between align-items-center flex-wrap gap-3">
 									<div class="d-flex align-items-center">
 										<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
 											<i class="bi bi-exclamation-triangle-fill fs-5"></i>
@@ -257,54 +326,68 @@
 										</div>
 									</div>
 									<button type="button" id="addRowBtn"
-										class="btn btn-primary btn-modern shadow-sm">
-										<i class="bi bi-plus-circle me-1"></i> Add Row
+										class="btn btn-primary btn-modern btn-sm shadow-sm add-row-btn">
+										<i class="bi bi-plus-lg me-1"></i> Add Row
 									</button>
 								</div>
 								<!-- Sub-header -->
-								<div class="card-body text-black shadow-sm d-flex justify-content-between align-items-center py-2 px-4"
-									style="background-color: #c8ddf7;">
-									<h6 class="fw-bold mb-0">Threat Assessment<span class="row-number">1</span></h6>
-									<button type="button" class="btn btn-danger btn-sm py-1 remove-row-btn d-none">
-										<i class="bi bi-trash me-1"></i> Remove
-									</button>
+								<div class="sub-header-bar d-flex justify-content-between align-items-center py-3 px-4">
+									<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+										<i class="bi bi-arrow-repeat text-primary fs-5"></i>
+										Threat Assessment <span class="badge bg-primary rounded-pill row-number ms-1">1</span>
+									</h6>
+									<div>
+										<button type="button" class="btn btn-primary btn-sm me-2 add-row-btn shadow-sm d-none" title="Add a new Threat Row">
+											<i class="bi bi-plus-lg"></i> Add Row
+										</button>
+										<button type="button" class="btn btn-sm btn-light text-secondary me-2 toggle-collapse-btn" title="Minimize/Maximize">
+											<i class="bi bi-chevron-up"></i>
+										</button>
+										<button type="button" class="btn btn-outline-danger btn-sm remove-row-btn d-none">
+											<i class="bi bi-trash3 me-1"></i> Remove Cycle
+										</button>
+									</div>
 								</div>
-								<div class="card-body bg-white pb-4">
+								<div class="threats-row-body bg-white p-4">
 									<div class="row g-4">
 										<!-- Card 1 - Data Subject + Threat Description (combined) -->
 										<div class="col-12 col-md-6 col-lg-4">
-											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-												<div class="mb-2">
-													<div class="fw-bold text-dark m-0">Context & Threat Description</div>
+											<div class="inner-card d-flex flex-column h-100">
+												<div class="inner-card-title">
+													<i class="bi bi-person-exclamation text-primary"></i> Data Subject & Threat
 												</div>
-												<div class="small text-muted mb-2 d-block">Related to which data subject?</div>
-												<select name="dataSubjectId[]" class="form-select form-select-sm mb-3" required>
+												<div class="inner-card-desc mb-2">Impacted data subjects and threat details.</div>
+												
+												<div class="section-label">Who are the impacted data subject?</div>
+												<select name="dataSubjectId[]" class="form-select mb-3" required>
 													<option value="">Select...</option>
 													<% dataSubjectOptions.forEach(function(subject) { %>
 														<option value="<%= subject.id %>"><%= subject.name %></option>
 													<% }); %>
 												</select>
-												<div class="small text-muted mb-3 d-block">What is the threat and its possible consequences?</div>
-												<textarea name="threatDescription[]" class="form-control form-control-sm" style="min-height: 140px; resize: vertical;" required></textarea>
+												
+												<div class="section-label mt-auto">What is the threat and its possible consequences?</div>
+												<textarea name="threatDescription[]" class="form-control" style="min-height: 140px; resize: vertical;" required></textarea>
 											</div>
 										</div>
 
 										<!-- Card 3 - Type of Threat -->
 										<div class="col-12 col-md-6 col-lg-4">
-											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-												<div class="mb-2">
-													<div class="fw-bold text-dark m-0">Type of Threat</div>
+											<div class="inner-card d-flex flex-column h-100">
+												<div class="inner-card-title">
+													<i class="bi bi-tags text-primary"></i> Type of Threat
 												</div>
-												<div class="small text-muted mb-3 d-block">Select threat category (select all that apply):</div>
-												<div class="d-flex flex-column gap-2">
+												<div class="inner-card-desc mb-2">Select threat category (select all that apply).</div>
+												
+												<div class="d-flex flex-column gap-2 mt-2">
 											<% threatTypeOpts.forEach(function(threatType) { %>
-														<div class="form-check">
-															<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_0_<%= threatType %>">
-															<label class="form-check-label" for="threatType_0_<%= threatType %>">
-																<%= threatType.replace(/_/g, ' ') %>
-															</label>
-														</div>
-													<% }); %>
+													<div class="form-check custom-check">
+														<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_0_<%= threatType %>">
+														<label class="form-check-label" for="threatType_0_<%= threatType %>">
+															<%= threatType.replace(/_/g, ' ') %>
+														</label>
+													</div>
+												<% }); %>
 												</div>
 												<input type="hidden" name="threatType[]" class="threat-type-hidden" value="">
 											</div>
@@ -312,24 +395,28 @@
 
 										<!-- Card 4 & 5 - Risk Assessment & Rating -->
 										<div class="col-12 col-md-6 col-lg-4">
-											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-												<div class="mb-2">
-													<div class="fw-bold text-dark m-0">Risk Assessment</div>
+											<div class="inner-card d-flex flex-column h-100">
+												<div class="inner-card-title">
+													<i class="bi bi-speedometer2 text-primary"></i> Risk Assessment
 												</div>
-												<div class="small text-muted mb-2 d-block">Severity Level:</div>
-												<select name="severityLevel[]" class="form-select form-select-sm mb-3" required>
+												<div class="inner-card-desc mb-2">Determine severity and likelihood.</div>
+												
+												<div class="section-label">Severity Level:</div>
+												<select name="severityLevel[]" class="form-select mb-3" required>
 													<option value="">Select...</option>
 												<% severityOpts.forEach(function(option) { %>
 														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
 													<% }); %>
 												</select>
-												<div class="small text-muted mb-2 d-block">Likelihood Level:</div>
-												<select name="likelihoodLevel[]" class="form-select form-select-sm mb-3" required>
+												
+												<div class="section-label">Likelihood Level:</div>
+												<select name="likelihoodLevel[]" class="form-select mb-3" required>
 													<option value="">Select...</option>
 												<% likelihoodOpts.forEach(function(option) { %>
 														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
 													<% }); %>
 												</select>
+												
 												<div class="border-top pt-3 mt-auto">
 													<div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Risk Rating</div>
 													<div class="d-flex align-items-center justify-content-between">
@@ -342,26 +429,28 @@
 										</div>
 
 										<!-- Card 6 - Proposed Control -->
-										<div class="col-12 col-md-6 col-lg-4">
-											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-												<div class="mb-2">
-													<div class="fw-bold text-dark m-0">Proposed Control</div>
+										<div class="col-12 col-md-6 col-lg-6">
+											<div class="inner-card d-flex flex-column h-100">
+												<div class="inner-card-title">
+													<i class="bi bi-shield-lock text-primary"></i> Proposed Control Measure
 												</div>
-												<div class="small text-muted mb-3 d-block">What control measures are proposed?</div>
-												<textarea name="proposedControl[]" class="form-control form-control-sm" style="min-height: 100px; resize: vertical;" required></textarea>
+												<div class="inner-card-desc mb-2">What control measures are proposed?</div>
+												
+												<textarea name="proposedControl[]" class="form-control flex-grow-1" style="min-height: 100px; resize: vertical;" required></textarea>
 											</div>
 										</div>
 
 										<!-- Card 7 - Type of Measure -->
-										<div class="col-12 col-md-6 col-lg-4">
-											<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
-												<div class="mb-2">
-													<div class="fw-bold text-dark m-0">Type of Measure</div>
+										<div class="col-12 col-md-6 col-lg-6">
+											<div class="inner-card d-flex flex-column h-100">
+												<div class="inner-card-title">
+													<i class="bi bi-ui-checks text-primary"></i> Type of Measure
 												</div>
-												<div class="small text-muted mb-3 d-block">Select measure categories (select all that apply):</div>
-												<div class="d-flex flex-column gap-2">
+												<div class="inner-card-desc mb-2">Select measure categories (select all that apply).</div>
+												
+												<div class="d-flex flex-column gap-2 mt-2">
 												<% measureTypeOpts.forEach(function(measureType) { %>
-														<div class="form-check">
+														<div class="form-check custom-check">
 															<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" id="measureType_0_<%= measureType %>">
 															<label class="form-check-label" for="measureType_0_<%= measureType %>">
 																<%= measureType.replace(/_/g, ' ') %>
@@ -427,7 +516,12 @@
 
 				const removeButton = row.querySelector('.remove-row-btn');
 				if (removeButton) {
-					removeButton.classList.toggle('d-none', rows.length === 1 && index === 0);
+					removeButton.classList.toggle('d-none', index === 0);
+				}
+				
+				const subHeaderAddBtn = row.querySelector('.sub-header-bar .add-row-btn');
+				if (subHeaderAddBtn) {
+					subHeaderAddBtn.classList.toggle('d-none', index === 0);
 				}
 			});
 		};
@@ -504,7 +598,7 @@
 		});
 
 		document.addEventListener('click', function (event) {
-			if (event.target.closest('#addRowBtn')) {
+			if (event.target.closest('.add-row-btn')) {
 				event.preventDefault();
 
 				const firstRow = container.querySelector('.threats-row');
@@ -513,6 +607,20 @@
 				}
 
 				const newRow = firstRow.cloneNode(true);
+				
+				// Delete the dark blue main header from the cloned row
+				const mainHeader = newRow.querySelector('.threats-main-header');
+				if (mainHeader) mainHeader.remove();
+
+				// Reset toggle state to open
+				const body = newRow.querySelector('.threats-row-body');
+				if (body) body.style.display = 'block';
+				const toggleIcon = newRow.querySelector('.toggle-collapse-btn i');
+				if (toggleIcon) {
+					toggleIcon.classList.remove('bi-chevron-down');
+					toggleIcon.classList.add('bi-chevron-up');
+				}
+
 				newRow.querySelectorAll('input, select, textarea').forEach(createBlankValue);
 				// clear computed displays for risk rating
 				const display = newRow.querySelector('.risk-rating-display');
@@ -549,6 +657,26 @@
 				if (row) {
 					row.remove();
 					updateRowNumbers();
+				}
+			}
+
+			const toggleBtn = event.target.closest('.toggle-collapse-btn');
+			if (toggleBtn) {
+				const row = toggleBtn.closest('.threats-row');
+				if (row) {
+					const body = row.querySelector('.threats-row-body');
+					const icon = toggleBtn.querySelector('i');
+					if (body) {
+						if (body.style.display === 'none') {
+							body.style.display = 'block';
+							icon.classList.remove('bi-chevron-down');
+							icon.classList.add('bi-chevron-up');
+						} else {
+							body.style.display = 'none';
+							icon.classList.remove('bi-chevron-up');
+							icon.classList.add('bi-chevron-down');
+						}
+					}
 				}
 			}
 		});
