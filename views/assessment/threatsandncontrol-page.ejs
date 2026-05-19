@@ -206,7 +206,9 @@
 													<select name="dataSubjectId[]" class="form-select mb-3" required>
 														<option value="" <%= !threat.dataSubject_id ? 'selected' : '' %>>Select...</option>
 														<% dataSubjectOptions.forEach(function(subject) { %>
-															<option value="<%= subject.id %>" <%= threat.dataSubject_id === subject.id ? 'selected' : '' %>><%= subject.name %></option>
+															<option value="<%= subject.id %>" <%= threat.dataSubject_id === subject.id ? 'selected' : '' %>>
+																<%= subject.name %><%= subject.dataSubjectType ? ' (' + subject.dataSubjectType.dataSubjectType + ')' : '' %>
+															</option>
 														<% }); %>
 													</select>
 													
@@ -363,7 +365,9 @@
 												<select name="dataSubjectId[]" class="form-select mb-3" required>
 													<option value="">Select...</option>
 													<% dataSubjectOptions.forEach(function(subject) { %>
-														<option value="<%= subject.id %>"><%= subject.name %></option>
+														<option value="<%= subject.id %>">
+															<%= subject.name %><%= subject.dataSubjectType ? ' (' + subject.dataSubjectType.dataSubjectType + ')' : '' %>
+														</option>
 													<% }); %>
 												</select>
 												

@@ -8,8 +8,8 @@
 						const piiRows = Array.isArray(piiData) ? piiData : (Array.isArray(pdlcData) ? pdlcData : []);
 						const dataSubjectTypeOptions = Array.isArray(dataSubjectTypes) ? dataSubjectTypes : [];
 						const dataProcessingOptions = ['ELECTRONIC', 'PAPER_BASED', 'BOTH'];
-						const processingTypeOptions = ['PI', 'SPI'];
-						const basisOptions = ['TYPE_1', 'TYPE_2', 'TYPE_3', 'TYPE_4', 'TYPE_5', 'TYPE_6'];
+						const piBasisOptions = Array.isArray(piProcessingBasisOptions) ? piProcessingBasisOptions : [];
+						const spiBasisOptions = Array.isArray(spiProcessingBasisOptions) ? spiProcessingBasisOptions : [];
 						const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : (typeof piiAssessmentId !== 'undefined' ? piiAssessmentId : '');
 					%>
 					<%- include('../layouts/stepper', { currentStep: 4, dpsTitle: 'Data Processing System' ,
@@ -219,13 +219,13 @@
 													<div class="inner-card-desc mb-2">Form details, processing type, and recipients.</div>
 													
 													<div class="section-label">Name of Data Capture</div>
-													<input type="text" name="formName[]" class="form-control mb-3" value="<%= pii.formName || '' %>" required>
+													<input type="text" name="formName[<%= index %>]" data-top-field="formName" class="form-control mb-3" value="<%= pii.formName || '' %>" required>
 													
 													<div class="section-label">Number of Data Capture</div>
-													<input type="text" name="formNo[]" class="form-control mb-3" value="<%= pii.formNo || '' %>" required>
+													<input type="text" name="formNo[<%= index %>]" data-top-field="formNo" class="form-control mb-3" value="<%= pii.formNo || '' %>" required>
 													
 													<div class="section-label">Data Processing</div>
-													<select name="dataProcessing[]" class="form-select mb-3" required>
+													<select name="dataProcessing[<%= index %>]" data-top-field="dataProcessing" class="form-select mb-3" required>
 														<option value="" <%= !pii.dataProcessingValue ? 'selected' : '' %>>Select...</option>
 														<% dataProcessingOptions.forEach(function(option) { %>
 															<option value="<%= option %>" <%= pii.dataProcessingValue === option ? 'selected' : '' %>><%= option.replace('_', ' ') %></option>
@@ -233,7 +233,24 @@
 													</select>
 
 													<div class="section-label mt-auto">Recipient Users</div>
-													<textarea name="recipientsUsers[]" class="form-control flex-grow-1" style="min-height: 80px; resize: vertical;" placeholder="Who receives this data?" required><%= pii.recipientsUsers || '' %></textarea>
+													<div class="pii-recipients">
+														<% const recipients = pii.recipients && pii.recipients.length ? pii.recipients : [{}]; %>
+														<% recipients.forEach(function(entry, entryIndex) { %>
+														<div class="pii-recipient pdlc-subentry">
+															<div class="row g-2">
+																<div class="col-12">
+																	<textarea name="recipients[<%= index %>][<%= entryIndex %>][recipientName]" data-field="recipientName" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="Recipient name" required><%= entry.recipientName || '' %></textarea>
+																	<button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="recipients">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
+														<% }); %>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm mt-1 add-subentry-btn" data-section="recipients">
+														<i class="bi bi-plus-lg me-1"></i> Add Recipient
+													</button>
 												</div>
 											</div>
 
@@ -245,60 +262,64 @@
 													</div>
 													<div class="inner-card-desc mb-2">Subject information and contact details.</div>
 													
-													<div class="section-label">Subject Type</div>
-													<select id="dataSubjectType" name="dataSubjectTypeId[]" class="form-select mb-3" required>
-														<option value="" <%= !pii.dataSubjectsType_id ? 'selected' : '' %>>Select...</option>
-														<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
-															<option value="<%= typeOption.id %>" <%= Number(pii.dataSubjectsType_id) === Number(typeOption.id) ? 'selected' : '' %>><%= typeOption.dataSubjectType %></option>
+													<div class="pii-datasubjects">
+														<% const dataSubjects = pii.dataSubjects && pii.dataSubjects.length ? pii.dataSubjects : [{}]; %>
+														<% dataSubjects.forEach(function(entry, entryIndex) { %>
+														<div class="pii-datasubject pdlc-subentry">
+															<div class="row g-2">
+																<div class="col-12 col-md-6">
+																	<div class="section-label">Subject Type</div>
+																	<select id="dataSubjectType" name="dataSubjects[<%= index %>][<%= entryIndex %>][dataSubjectsTypeId]" data-field="dataSubjectsTypeId" class="form-select" required>
+																		<option value="" <%= !entry.dataSubjectsType_id ? 'selected' : '' %>>Select...</option>
+																		<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
+																			<option value="<%= typeOption.id %>" <%= Number(entry.dataSubjectsType_id) === Number(typeOption.id) ? 'selected' : '' %>><%= typeOption.dataSubjectType %></option>
+																		<% }); %>
+																	</select>
+																</div>
+																<div class="col-12 col-md-6">
+																	<div class="section-label">Name</div>
+																	<input type="text" id="dataSubjectName" name="dataSubjects[<%= index %>][<%= entryIndex %>][name]" data-field="name" class="form-control" value="<%= entry.name || '' %>" required>
+																	<button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="dataSubjects">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
 														<% }); %>
-													</select>
-													
-													<div class="section-label">Name</div>
-													<input type="text" id="dataSubjectName" name="dataSubjectName[]" class="form-control mb-3" value="<%= pii.dataSubjectName || '' %>" required>
-													
-													<div class="section-label">Email</div>
-													<input type="email" id="dataSubjectEmail" name="dataSubjectEmail[]" class="form-control mb-3" value="<%= pii.dataSubjectEmail || '' %>" required>
-													
-													<div class="section-label mt-auto">Phone</div>
-													<input type="tel" id="dataSubjectPhone" name="dataSubjectPhone[]" class="form-control" value="<%= pii.dataSubjectPhone || '' %>" required>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm mt-1 add-subentry-btn" data-section="dataSubjects">
+														<i class="bi bi-plus-lg me-1"></i> Add Subject
+													</button>
 												</div>
 											</div>
 
 											<!-- Card 3: Processing Basis -->
-											<div class="col-12 col-md-4">
+											<div class="col-12 col-md-6">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
 														Processing Basis
 													</div>
 													<div class="inner-card-desc mb-2">Legal basis for processing.</div>
 													
-													<div class="section-label">Basis Type</div>
-													<select name="processingType[]" class="form-select mb-3" required>
-														<option value="" <%= !pii.processingTypeValue ? 'selected' : '' %>>Select...</option>
-														<% processingTypeOptions.forEach(function(option) { %>
-															<option value="<%= option %>" <%= pii.processingTypeValue === option ? 'selected' : '' %>><%= option %></option>
+													<div class="section-label">PI Processing Basis</div>
+													<select name="piProcessBasisId[<%= index %>]" data-top-field="piProcessBasisId" class="form-select mb-3" required>
+														<option value="" <%= !pii.piProcessBasisId ? 'selected' : '' %>>Select...</option>
+														<% piBasisOptions.forEach(function(option) { %>
+															<option value="<%= option.id %>" <%= Number(pii.piProcessBasisId) === Number(option.id) ? 'selected' : '' %>>
+																<%= option.basisNum %> - <%= option.keyword %>
+															</option>
 														<% }); %>
 													</select>
-													
-													<div class="section-label mt-auto">Number of Bases Used</div>
-													<select name="basisNum[]" class="form-select" required>
-														<option value="" <%= !pii.basisNumValue ? 'selected' : '' %>>Select...</option>
-														<% basisOptions.forEach(function(option) { %>
-															<option value="<%= option %>" <%= pii.basisNumValue === option ? 'selected' : '' %>><%= option %></option>
+												
+													<div class="section-label mt-auto">SPI Processing Basis</div>
+													<select name="spiProcessBasisId[<%= index %>]" data-top-field="spiProcessBasisId" class="form-select" required>
+														<option value="" <%= !pii.spiProcessBasisId ? 'selected' : '' %>>Select...</option>
+														<% spiBasisOptions.forEach(function(option) { %>
+															<option value="<%= option.id %>" <%= Number(pii.spiProcessBasisId) === Number(option.id) ? 'selected' : '' %>>
+																<%= option.basisNum %> - <%= option.keyword %>
+															</option>
 														<% }); %>
 													</select>
-												</div>
-											</div>
-
-											<!-- Card 4: Purpose of Processing -->
-											<div class="col-12 col-md-8">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Purpose of Processing
-													</div>
-													<div class="inner-card-desc mb-2">Why is this data being processed?</div>
-													
-													<textarea name="purposeOfProcessing[]" class="form-control flex-grow-1" style="min-height: 80px; resize: vertical;" required><%= pii.purposeOfProcessing || '' %></textarea>
 												</div>
 											</div>
 										</div>
@@ -354,13 +375,13 @@
 													<div class="inner-card-desc mb-2">Form details, processing type, and recipients.</div>
 													
 													<div class="section-label">Name of Data Capture</div>
-													<input type="text" name="formName[]" class="form-control mb-3" required>
+													<input type="text" name="formName[0]" data-top-field="formName" class="form-control mb-3" required>
 													
 													<div class="section-label">Number of Data Capture</div>
-													<input type="text" name="formNo[]" class="form-control mb-3" required>
+													<input type="text" name="formNo[0]" data-top-field="formNo" class="form-control mb-3" required>
 													
 													<div class="section-label">Data Processing</div>
-													<select name="dataProcessing[]" class="form-select mb-3" required>
+													<select name="dataProcessing[0]" data-top-field="dataProcessing" class="form-select mb-3" required>
 														<option value="">Select...</option>
 														<% dataProcessingOptions.forEach(function(option) { %>
 															<option value="<%= option %>"><%= option.replace('_', ' ') %></option>
@@ -368,7 +389,21 @@
 													</select>
 
 													<div class="section-label mt-auto">Recipient Users</div>
-													<textarea name="recipientsUsers[]" class="form-control flex-grow-1" style="min-height: 80px; resize: vertical;" placeholder="Who receives this data?" required></textarea>
+													<div class="pii-recipients">
+														<div class="pii-recipient pdlc-subentry">
+															<div class="row g-2">
+																<div class="col-12">
+																	<textarea name="recipients[0][0][recipientName]" data-field="recipientName" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="Recipient name" required></textarea>
+																	<button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-subentry-btn d-none" data-section="recipients">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm mt-1 add-subentry-btn" data-section="recipients">
+														<i class="bi bi-plus-lg me-1"></i> Add Recipient
+													</button>
 												</div>
 											</div>
 
@@ -380,60 +415,57 @@
 													</div>
 													<div class="inner-card-desc mb-2">Subject information and contact details.</div>
 													
-													<div class="section-label">Subject Type</div>
-													<select id="dataSubjectType" name="dataSubjectTypeId[]" class="form-select mb-3" required>
-														<option value="">Select...</option>
-														<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
-															<option value="<%= typeOption.id %>"><%= typeOption.dataSubjectType %></option>
-														<% }); %>
-													</select>
-													
-													<div class="section-label">Name</div>
-													<input type="text" id="dataSubjectName" name="dataSubjectName[]" class="form-control mb-3" required>
-													
-													<div class="section-label">Email</div>
-													<input type="email" id="dataSubjectEmail" name="dataSubjectEmail[]" class="form-control mb-3" required>
-													
-													<div class="section-label mt-auto">Phone</div>
-													<input type="tel" id="dataSubjectPhone" name="dataSubjectPhone[]" class="form-control" required>
+													<div class="pii-datasubjects">
+														<div class="pii-datasubject pdlc-subentry">
+															<div class="row g-2">
+																<div class="col-12 col-md-6">
+																	<div class="section-label">Subject Type</div>
+																	<select id="dataSubjectType" name="dataSubjects[0][0][dataSubjectsTypeId]" data-field="dataSubjectsTypeId" class="form-select" required>
+																		<option value="">Select...</option>
+																		<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
+																			<option value="<%= typeOption.id %>"><%= typeOption.dataSubjectType %></option>
+																		<% }); %>
+																	</select>
+																</div>
+																<div class="col-12 col-md-6">
+																	<div class="section-label">Name</div>
+																	<input type="text" id="dataSubjectName" name="dataSubjects[0][0][name]" data-field="name" class="form-control" required>
+																	<button type="button" class="btn btn-outline-danger btn-sm mt-2 remove-subentry-btn d-none" data-section="dataSubjects">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm mt-1 add-subentry-btn" data-section="dataSubjects">
+														<i class="bi bi-plus-lg me-1"></i> Add Subject
+													</button>
 												</div>
 											</div>
 
 											<!-- Card 3: Processing Basis -->
-											<div class="col-12 col-md-4">
+											<div class="col-12 col-md-6">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
 														Processing Basis
 													</div>
 													<div class="inner-card-desc mb-2">Legal basis for processing.</div>
 													
-													<div class="section-label">Basis Type</div>
-													<select name="processingType[]" class="form-select mb-3" required>
+													<div class="section-label">PI Processing Basis</div>
+													<select name="piProcessBasisId[0]" data-top-field="piProcessBasisId" class="form-select mb-3" required>
 														<option value="">Select...</option>
-														<% processingTypeOptions.forEach(function(option) { %>
-															<option value="<%= option %>"><%= option %></option>
+														<% piBasisOptions.forEach(function(option) { %>
+															<option value="<%= option.id %>"><%= option.basisNum %> - <%= option.keyword %></option>
 														<% }); %>
 													</select>
-													
-													<div class="section-label mt-auto">Number of Bases Used</div>
-													<select name="basisNum[]" class="form-select" required>
+											
+													<div class="section-label mt-auto">SPI Processing Basis</div>
+													<select name="spiProcessBasisId[0]" data-top-field="spiProcessBasisId" class="form-select" required>
 														<option value="">Select...</option>
-														<% basisOptions.forEach(function(option) { %>
-															<option value="<%= option %>"><%= option %></option>
+														<% spiBasisOptions.forEach(function(option) { %>
+															<option value="<%= option.id %>"><%= option.basisNum %> - <%= option.keyword %></option>
 														<% }); %>
 													</select>
-												</div>
-											</div>
-
-											<!-- Card 4: Purpose of Processing -->
-											<div class="col-12 col-md-8">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Purpose of Processing
-													</div>
-													<div class="inner-card-desc mb-2">Why is this data being processed?</div>
-													
-													<textarea name="purposeOfProcessing[]" class="form-control flex-grow-1" style="min-height: 80px; resize: vertical;" required></textarea>
 												</div>
 											</div>
 										</div>
@@ -466,6 +498,11 @@
 			return;
 		}
 
+		const sectionConfig = {
+			recipients: { containerClass: 'pii-recipients', entryClass: 'pii-recipient' },
+			dataSubjects: { containerClass: 'pii-datasubjects', entryClass: 'pii-datasubject' }
+		};
+
 		const createBlankValue = (element) => {
 			if (element.tagName === 'SELECT') {
 				element.selectedIndex = 0;
@@ -497,6 +534,46 @@
 			});
 		};
 
+		const updateSubEntryButtons = (row) => {
+			Object.keys(sectionConfig).forEach((section) => {
+				const config = sectionConfig[section];
+				const containerEl = row.querySelector('.' + config.containerClass);
+				if (!containerEl) return;
+				const entries = containerEl.querySelectorAll('.' + config.entryClass);
+				for (let i = 0; i < entries.length; i += 1) {
+					const removeBtn = entries[i].querySelector('.remove-subentry-btn');
+					if (!removeBtn) continue;
+					removeBtn.classList.toggle('d-none', entries.length <= 1);
+				}
+			});
+		};
+
+		const updateAllNames = () => {
+			const rows = container.querySelectorAll('.pdlc-row');
+			for (let i = 0; i < rows.length; i += 1) {
+				const row = rows[i];
+				const topFields = row.querySelectorAll('[data-top-field]');
+				for (let j = 0; j < topFields.length; j += 1) {
+					const field = topFields[j].getAttribute('data-top-field');
+					topFields[j].name = field + '[' + i + ']';
+				}
+
+				Object.keys(sectionConfig).forEach((section) => {
+					const config = sectionConfig[section];
+					const containerEl = row.querySelector('.' + config.containerClass);
+					if (!containerEl) return;
+					const entries = containerEl.querySelectorAll('.' + config.entryClass);
+					for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+						const inputs = entries[entryIndex].querySelectorAll('[data-field]');
+						for (let k = 0; k < inputs.length; k += 1) {
+							const fieldName = inputs[k].getAttribute('data-field');
+							inputs[k].name = section + '[' + i + '][' + entryIndex + '][' + fieldName + ']';
+						}
+					}
+				});
+			}
+		};
+
 		const validateRow = (row) => {
 			const inputs = row.querySelectorAll('input, select, textarea');
 			for (const input of inputs) {
@@ -517,12 +594,10 @@
 				}
 
 				const newRow = firstRow.cloneNode(true);
-				
-				// Delete the dark blue main header from the cloned row
+
 				const mainHeader = newRow.querySelector('.pdlc-main-header');
 				if (mainHeader) mainHeader.remove();
 
-				// Reset toggle state to open
 				const body = newRow.querySelector('.pdlc-row-body');
 				if (body) body.style.display = 'block';
 				const toggleIcon = newRow.querySelector('.toggle-collapse-btn i');
@@ -532,6 +607,20 @@
 				}
 
 				newRow.querySelectorAll('input, select, textarea').forEach(createBlankValue);
+
+				Object.keys(sectionConfig).forEach((section) => {
+					const config = sectionConfig[section];
+					const containerEl = newRow.querySelector('.' + config.containerClass);
+					if (!containerEl) return;
+					const entries = containerEl.querySelectorAll('.' + config.entryClass);
+					for (let i = entries.length - 1; i >= 1; i -= 1) {
+						entries[i].parentNode.removeChild(entries[i]);
+					}
+					if (entries[0]) {
+						entries[0].querySelectorAll('input, select, textarea').forEach(createBlankValue);
+					}
+				});
+
 				const removeButton = newRow.querySelector('.remove-row-btn');
 				if (removeButton) {
 					removeButton.classList.remove('d-none');
@@ -539,16 +628,18 @@
 
 				container.appendChild(newRow);
 				updateRowNumbers();
+				updateAllNames();
+				updateSubEntryButtons(newRow);
 			}
 
 			const removeButton = event.target.closest('.remove-row-btn');
 			if (removeButton) {
 				event.preventDefault();
-
 				const row = removeButton.closest('.pdlc-row');
 				if (row) {
 					row.remove();
 					updateRowNumbers();
+					updateAllNames();
 				}
 			}
 
@@ -571,13 +662,47 @@
 					}
 				}
 			}
+
+			const addSubBtn = event.target.closest('.add-subentry-btn');
+			if (addSubBtn) {
+				const section = addSubBtn.getAttribute('data-section');
+				const config = sectionConfig[section];
+				if (!config) return;
+				const row = addSubBtn.closest('.pdlc-row');
+				if (!row) return;
+				const containerEl = row.querySelector('.' + config.containerClass);
+				if (!containerEl) return;
+				const firstEntry = containerEl.querySelector('.' + config.entryClass);
+				if (!firstEntry) return;
+				const newEntry = firstEntry.cloneNode(true);
+				newEntry.querySelectorAll('input, select, textarea').forEach(createBlankValue);
+				containerEl.appendChild(newEntry);
+				updateSubEntryButtons(row);
+				updateAllNames();
+			}
+
+			const removeSubBtn = event.target.closest('.remove-subentry-btn');
+			if (removeSubBtn) {
+				const section = removeSubBtn.getAttribute('data-section');
+				const config = sectionConfig[section];
+				if (!config) return;
+				const row = removeSubBtn.closest('.pdlc-row');
+				if (!row) return;
+				const entry = removeSubBtn.closest('.' + config.entryClass);
+				const containerEl = row.querySelector('.' + config.containerClass);
+				if (entry && containerEl && containerEl.querySelectorAll('.' + config.entryClass).length > 1) {
+					containerEl.removeChild(entry);
+					updateSubEntryButtons(row);
+					updateAllNames();
+				}
+			}
 		});
 
 		const piiForm = document.getElementById('piiForm');
 		if (piiForm) {
 			piiForm.addEventListener('submit', function (e) {
 				const rows = container.querySelectorAll('.pdlc-row');
-				for (let i = 0; i < rows.length; i++) {
+				for (let i = 0; i < rows.length; i += 1) {
 					if (!validateRow(rows[i])) {
 						e.preventDefault();
 						alert('Please complete all fields in every row before submitting.');
@@ -588,5 +713,10 @@
 		}
 
 		updateRowNumbers();
+		updateAllNames();
+		const initRows = container.querySelectorAll('.pdlc-row');
+		for (let r = 0; r < initRows.length; r += 1) {
+			updateSubEntryButtons(initRows[r]);
+		}
 	})();
 </script>

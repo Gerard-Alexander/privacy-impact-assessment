@@ -18,20 +18,22 @@ const ensureDataSubjectTypes = async () => {
 };
 
 const formatPiiForForm = (pii) => {
-  const processBasis = Array.isArray(pii.processBasis) ? pii.processBasis[0] : null;
+  const dataSubjects = Array.isArray(pii.piiDatasubjects) ? pii.piiDatasubjects : [];
+  const recipients = Array.isArray(pii.recipientUsers) ? pii.recipientUsers : [];
 
   return {
     ...pii,
     dataProcessingValue: pii.dataProcessing || '',
-    processingTypeValue: processBasis?.processingType || '',
-    basisNumValue: processBasis?.basisNum || '',
-    dataSubjectTypeId: pii.dataSubjectsType_id || '',
-    dataSubjectTypeLabel: pii.DataSubjectType?.dataSubjectType || '',
-    dataSubjectId: pii.dataSubject_id || '',
-    dataSubjectName: pii.dataSubject?.name || '',
-    dataSubjectEmail: pii.dataSubject?.email || '',
-    dataSubjectPhone: pii.dataSubject?.mobileNumber || '',
-    purposeOfProcessing: pii.purposeOfProcessing || '',
+    piProcessBasisId: pii.piProcessBasis_id || '',
+    spiProcessBasisId: pii.spiProcessBasis_id || '',
+    dataSubjects: dataSubjects.map((subject) => ({
+      dataSubjectsType_id: subject.dataSubjectsType_id,
+      dataSubjectTypeLabel: subject.dataSubjectType?.dataSubjectType || '',
+      name: subject.name || ''
+    })),
+    recipients: recipients.map((recipient) => ({
+      recipientName: recipient.recipientName || ''
+    })),
     dataSharing: '',
     sharedTo: '',
     disposalMethod: '',
@@ -63,21 +65,31 @@ const personalInfoInventory = async (req, res) => {
   try {
     await ensureDataSubjectTypes();
 
-    const [existingPii, dataSubjectTypes] = await Promise.all([
+    const [existingPii, dataSubjectTypes, processingBasis] = await Promise.all([
       prisma.pII.findMany({
         where: { piaAssessment_id: parseInt(piiAssessmentId, 10) },
         include: {
-          DataSubjectType: true,
-          dataSubject: true,
-          processBasis: true
+          piProcessBasis: true,
+          spiProcessBasis: true,
+          piiDatasubjects: {
+            include: {
+              dataSubjectType: true
+            }
+          },
+          recipientUsers: true
         }
       }),
       prisma.dataSubjectTypes.findMany({
         orderBy: { id: 'asc' }
+      }),
+      prisma.processingBasis.findMany({
+        orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }]
       })
     ]);
 
     const mappedPii = existingPii.map(formatPiiForForm);
+    const piProcessingBasisOptions = processingBasis.filter((basis) => ['PI', 'BOTH'].includes(basis.processingType));
+    const spiProcessingBasisOptions = processingBasis.filter((basis) => ['SPI', 'BOTH'].includes(basis.processingType));
 
     return res.render('assessment/personalinfoinventory-page', {
       title: res.locals.personalInfoInventory,
@@ -88,6 +100,8 @@ const personalInfoInventory = async (req, res) => {
       piiData: mappedPii.length > 0 ? mappedPii : null,
       pdlcData: mappedPii.length > 0 ? mappedPii : null,
       dataSubjectTypes,
+      piProcessingBasisOptions,
+      spiProcessingBasisOptions,
       error: null,
       success: req.query.saved === '1' ? 'Personal information inventory saved successfully!' : null
     });
@@ -108,17 +122,24 @@ const savePersonalInfoInventory = async (req, res) => {
 
     await ensureDataSubjectTypes();
 
-    const formNames = toArray(req.body.formName);
-    const formNos = toArray(req.body.formNo);
-    const dataProcessingValues = toArray(req.body.dataProcessing);
-    const dataSubjectTypeIds = toArray(req.body.dataSubjectTypeId);
-    const dataSubjectNames = toArray(req.body.dataSubjectName);
-    const dataSubjectEmails = toArray(req.body.dataSubjectEmail);
-    const dataSubjectPhones = toArray(req.body.dataSubjectPhone);
-    const recipientsUsers = toArray(req.body.recipientsUsers);
-    const processingTypes = toArray(req.body.processingType);
-    const basisNums = toArray(req.body.basisNum);
-    const purposes = toArray(req.body.purposeOfProcessing);
+    const normalizeIndexedArray = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'object') {
+        return Object.keys(value)
+          .sort((a, b) => Number(a) - Number(b))
+          .map((key) => value[key]);
+      }
+      return [value];
+    };
+
+    const formNames = normalizeIndexedArray(req.body.formName);
+    const formNos = normalizeIndexedArray(req.body.formNo);
+    const dataProcessingValues = normalizeIndexedArray(req.body.dataProcessing);
+    const recipientsByRow = normalizeIndexedArray(req.body.recipients);
+    const dataSubjectsByRow = normalizeIndexedArray(req.body.dataSubjects);
+    const piProcessBasisIds = normalizeIndexedArray(req.body.piProcessBasisId);
+    const spiProcessBasisIds = normalizeIndexedArray(req.body.spiProcessBasisId);
 
     const defaultDataSubjectType = await prisma.dataSubjectTypes.findFirst({
       orderBy: { id: 'asc' },
@@ -129,14 +150,10 @@ const savePersonalInfoInventory = async (req, res) => {
       formNames.length,
       formNos.length,
       dataProcessingValues.length,
-      dataSubjectTypeIds.length,
-      dataSubjectNames.length,
-      dataSubjectEmails.length,
-      dataSubjectPhones.length,
-      recipientsUsers.length,
-      processingTypes.length,
-      basisNums.length,
-      purposes.length
+      recipientsByRow.length,
+      dataSubjectsByRow.length,
+      piProcessBasisIds.length,
+      spiProcessBasisIds.length
     );
 
     if (!rowCount) {
@@ -151,27 +168,42 @@ const savePersonalInfoInventory = async (req, res) => {
       const formName = formNames[index] || '';
       const formNo = Number.parseInt(formNos[index] || '', 10);
       const dataProcessing = dataProcessingValues[index] || '';
-      const dataSubjectTypeId = Number.parseInt(dataSubjectTypeIds[index] || '', 10);
-      const dataSubjectName = dataSubjectNames[index] || '';
-      const dataSubjectEmail = dataSubjectEmails[index] || '';
-      const dataSubjectPhone = dataSubjectPhones[index] || '';
-      const recipientsUser = recipientsUsers[index] || '';
-      const processingType = processingTypes[index] || '';
-      const basisNum = basisNums[index] || '';
-      const purposeOfProcessing = purposes[index] || '';
+      const piProcessBasisId = Number.parseInt(piProcessBasisIds[index] || '', 10);
+      const spiProcessBasisId = Number.parseInt(spiProcessBasisIds[index] || '', 10);
+
+      const recipientsRaw = normalizeIndexedArray(recipientsByRow[index]);
+      const dataSubjectsRaw = normalizeIndexedArray(dataSubjectsByRow[index]);
+
+      const recipients = recipientsRaw
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') return null;
+          const recipientName = String(entry.recipientName || '').trim();
+          if (!recipientName) return null;
+          return { recipientName };
+        })
+        .filter(Boolean);
+
+      const dataSubjects = dataSubjectsRaw
+        .map((entry) => {
+          if (!entry || typeof entry !== 'object') return null;
+          const name = String(entry.name || '').trim();
+          const dataSubjectsTypeId = Number.parseInt(entry.dataSubjectsTypeId || '', 10);
+          if (!name) return null;
+          return {
+            name,
+            dataSubjectsType_id: Number.isInteger(dataSubjectsTypeId) ? dataSubjectsTypeId : defaultDataSubjectTypeId
+          };
+        })
+        .filter(Boolean);
 
       const normalizedRow = {
         formNo: formNo,
         formName: formName,
         dataProcessing: dataProcessing,
-        dataSubjectTypeId: Number.isInteger(dataSubjectTypeId) ? dataSubjectTypeId : defaultDataSubjectTypeId,
-        dataSubjectName: dataSubjectName,
-        dataSubjectEmail: dataSubjectEmail,
-        dataSubjectPhone: dataSubjectPhone,
-        recipientsUser: recipientsUser,
-        processingType: processingType,
-        basisNum: basisNum,
-        purposeOfProcessing: purposeOfProcessing
+        recipients,
+        dataSubjects,
+        piProcessBasisId: Number.isInteger(piProcessBasisId) ? piProcessBasisId : null,
+        spiProcessBasisId: Number.isInteger(spiProcessBasisId) ? spiProcessBasisId : null
       };
 
       // Store submitted row for re-rendering if validation fails
@@ -179,84 +211,60 @@ const savePersonalInfoInventory = async (req, res) => {
         formNo: formNos[index] || '',
         formName,
         dataProcessingValue: dataProcessing,
-        dataSubjectsType_id: dataSubjectTypeId,
-        dataSubjectTypeLabel: '',
-        dataSubjectId: '',
-        dataSubjectName,
-        dataSubjectEmail,
-        dataSubjectPhone,
-        processingTypeValue: processingType,
-        basisNumValue: basisNum,
-        purposeOfProcessing,
-        recipientsUsers: recipientsUser
+        piProcessBasisId: piProcessBasisId || '',
+        spiProcessBasisId: spiProcessBasisId || '',
+        dataSubjects: dataSubjects,
+        recipients: recipients
       });
 
       validatedRows.push({
         formNo: normalizedRow.formNo,
         formName: normalizedRow.formName,
         dataProcessing: normalizedRow.dataProcessing,
-        dataSubjectTypeId: normalizedRow.dataSubjectTypeId,
-        dataSubjectName: normalizedRow.dataSubjectName,
-        dataSubjectEmail: normalizedRow.dataSubjectEmail,
-        dataSubjectPhone: normalizedRow.dataSubjectPhone,
-        recipientsUser: normalizedRow.recipientsUser,
-        processingType: normalizedRow.processingType,
-        basisNum: normalizedRow.basisNum,
-        purposeOfProcessing: normalizedRow.purposeOfProcessing
+        dataSubjects: normalizedRow.dataSubjects,
+        recipients: normalizedRow.recipients,
+        piProcessBasisId: normalizedRow.piProcessBasisId,
+        spiProcessBasisId: normalizedRow.spiProcessBasisId
       });
     }
 
     // Delete dependent ThreatsAndControl records first to avoid FK violations
     await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
 
-    const existingPii = await prisma.pII.findMany({
-      where: { piaAssessment_id: piaAssessmentId },
-      select: { dataSubject_id: true }
-    });
-
     await prisma.pII.deleteMany({
       where: { piaAssessment_id: piaAssessmentId }
     });
 
-    const dataSubjectIdsToDelete = existingPii
-      .map((record) => record.dataSubject_id)
-      .filter((id) => Number.isInteger(id));
-
-    if (dataSubjectIdsToDelete.length > 0) {
-      await prisma.dataSubjectInfo.deleteMany({
-        where: { id: { in: dataSubjectIdsToDelete } }
-      });
-    }
-
     for (const row of validatedRows) {
-      const createdDataSubject = await prisma.dataSubjectInfo.create({
-        data: {
-          name: row.dataSubjectName,
-          email: row.dataSubjectEmail,
-          mobileNumber: row.dataSubjectPhone
-        }
-      });
-
       const createdPii = await prisma.pII.create({
         data: {
           piaAssessment_id: piaAssessmentId,
           formNo: row.formNo,
           formName: row.formName,
           dataProcessing: row.dataProcessing,
-          dataSubjectsType_id: row.dataSubjectTypeId,
-          dataSubject_id: createdDataSubject.id,
-          recipientsUsers: row.recipientsUser,
-          purposeOfProcessing: row.purposeOfProcessing
+          piProcessBasis_id: row.piProcessBasisId,
+          spiProcessBasis_id: row.spiProcessBasisId
         }
       });
 
-      await prisma.processingBasis.create({
-        data: {
-          pii_ID: createdPii.id,
-          processingType: row.processingType,
-          basisNum: row.basisNum
-        }
-      });
+      if (row.dataSubjects.length > 0) {
+        await prisma.piiDatasubject.createMany({
+          data: row.dataSubjects.map((subject) => ({
+            pii_id: createdPii.id,
+            dataSubjectsType_id: subject.dataSubjectsType_id,
+            name: subject.name
+          }))
+        });
+      }
+
+      if (row.recipients.length > 0) {
+        await prisma.recipientUser.createMany({
+          data: row.recipients.map((recipient) => ({
+            pii_id: createdPii.id,
+            recipientName: recipient.recipientName
+          }))
+        });
+      }
     }
 
     return res.redirect(`/assessment/threatsandcontrols?id=${piaAssessmentId}`);
@@ -266,16 +274,25 @@ const savePersonalInfoInventory = async (req, res) => {
       orderBy: { id: 'asc' }
     }).catch(() => []);
 
+    const processingBasis = await prisma.processingBasis.findMany({
+      orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }]
+    }).catch(() => []);
+
+    const piProcessingBasisOptions = processingBasis.filter((basis) => ['PI', 'BOTH'].includes(basis.processingType));
+    const spiProcessingBasisOptions = processingBasis.filter((basis) => ['SPI', 'BOTH'].includes(basis.processingType));
+
     return res.render('assessment/personalinfoinventory-page', {
-        title: res.locals.personalInfoInventory,
-        activePage: 'personalinfoinventory-page',
-        user: req.session.user,
-        piaAssessmentId,
-        piiData: null,
-        pdlcData: null,
-        dataSubjectTypes,
-        error: 'An error occurred while saving. Please try again.',
-        success: null
+      title: res.locals.personalInfoInventory,
+      activePage: 'personalinfoinventory-page',
+      user: req.session.user,
+      piaAssessmentId,
+      piiData: null,
+      pdlcData: null,
+      dataSubjectTypes,
+      piProcessingBasisOptions,
+      spiProcessingBasisOptions,
+      error: 'An error occurred while saving. Please try again.',
+      success: null
     });
   }
 };

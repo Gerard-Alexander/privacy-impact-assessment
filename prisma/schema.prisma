@@ -218,25 +218,23 @@ model PII {
   formName            String           @db.VarChar(255)
   dataProcessing      DataProcessing
 
-  // FK to DataSubjectType
-  dataSubjectsType_id Int
-  DataSubjectType     DataSubjectTypes @relation(fields: [dataSubjectsType_id], references: [id])
-  
-  // FK to DataSubjectInfo
-  dataSubject_id      Int 
-  dataSubject         DataSubjectInfo  @relation(fields: [dataSubject_id], references: [id])
-  
-  recipientsUsers     String           @db.VarChar(255) 
-  purposeOfProcessing String           @db.Text         
-  
-  processBasis        ProcessingBasis[]
+  // FK to ProcessingBasis (PI)
+  piProcessBasis_id   Int
+  piProcessBasis      ProcessingBasis  @relation("PiProcessBasis", fields: [piProcessBasis_id], references: [id])
+
+  // FK to ProcessingBasis (SPI)
+  spiProcessBasis_id  Int
+  spiProcessBasis     ProcessingBasis  @relation("SpiProcessBasis", fields: [spiProcessBasis_id], references: [id])
   
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
 
+  piiDatasubjects     PiiDatasubject[]
+  recipientUsers      RecipientUser[]
+
   @@index([piaAssessment_id])
-  @@index([dataSubjectsType_id])
-  @@index([dataSubject_id])
+  @@index([piProcessBasis_id])
+  @@index([spiProcessBasis_id])
 }
 
 enum DataProcessing {
@@ -248,7 +246,7 @@ enum DataProcessing {
 model DataSubjectTypes {
   id              Int         @id @default(autoincrement())
   dataSubjectType datasubject
-  pii             PII[]     
+  piiDatasubjects PiiDatasubject[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -260,44 +258,55 @@ enum datasubject {
   SUPPLIERS
 }
 
-model DataSubjectInfo {
+model PiiDatasubject {
   id                 Int                 @id @default(autoincrement())
+
+  // FK to PII
+  pii_id             Int
+  pii                PII                 @relation(fields: [pii_id], references: [id], onDelete: Cascade)
+
+  // FK to DataSubjectType
+  dataSubjectsType_id Int
+  dataSubjectType     DataSubjectTypes   @relation(fields: [dataSubjectsType_id], references: [id])
+
   name               String              @db.VarChar(255)
-  email              String              @db.VarChar(255)
-  mobileNumber       String              @db.VarChar(255)
-  
-  pii                PII[]
+
   threatsAndControls ThreatsAndControl[]
-  
+
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
+
+  @@index([pii_id])
+  @@index([dataSubjectsType_id])
+}
+
+model RecipientUser {
+  id            Int      @id @default(autoincrement())
+
+  // FK to PII
+  pii_id        Int
+  pii           PII      @relation(fields: [pii_id], references: [id], onDelete: Cascade)
+
+  recipientName String   @db.VarChar(255)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([pii_id])
 }
 
 model ProcessingBasis {
   id             Int            @id @default(autoincrement())
-  processingType ProcessingType
-  basisNum       Basis
-  pii_ID         Int
-  pii            PII            @relation(fields: [pii_ID], references: [id], onDelete: Cascade)    
-  
+  processingType String         @db.VarChar(255)
+  basisNum       String         @db.VarChar(255)
+  keyword        String         @db.VarChar(255)
+  description    String         @db.Text
+
+  piPii          PII[]          @relation("PiProcessBasis")
+  spiPii         PII[]          @relation("SpiProcessBasis")
+
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-
-  @@index([pii_ID])
-}
-
-enum ProcessingType {
-    PI
-    SPI
-}
-
-enum Basis {
-    TYPE_1
-    TYPE_2
-    TYPE_3
-    TYPE_4
-    TYPE_5
-    TYPE_6
 }
 
 //**********************************************//
@@ -309,9 +318,9 @@ model ThreatsAndControl {
   piaAssessment_id             Int
   piaAssessment                PiaAssessment   @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
 
-  // FK to DataSubjectInfo
+  // FK to PiiDatasubject
   dataSubject_id               Int
-  dataSubjects                 DataSubjectInfo @relation(fields: [dataSubject_id], references :[id])
+  dataSubjects                 PiiDatasubject @relation(fields: [dataSubject_id], references :[id])
 
   // FK to PDLC
   pdlc_id                      Int

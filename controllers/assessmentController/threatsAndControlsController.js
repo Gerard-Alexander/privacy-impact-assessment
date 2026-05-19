@@ -33,11 +33,27 @@ const threatsAndControls = async (req, res) => {
       prisma.threatsAndControl.findMany({
         where: { piaAssessment_id: parseInt(piaAssessmentId, 10) },
         include: {
-          dataSubjects: true,
+          dataSubjects: {
+            include: {
+              dataSubjectType: true,
+              pii: true
+            }
+          },
           pdlc: true
         }
       }),
-      prisma.dataSubjectInfo.findMany(),
+      prisma.piiDatasubject.findMany({
+        where: {
+          pii: {
+            piaAssessment_id: parseInt(piaAssessmentId, 10)
+          }
+        },
+        include: {
+          dataSubjectType: true,
+          pii: true
+        },
+        orderBy: { id: 'asc' }
+      }),
       prisma.pDLC.findMany({
         where: { piaAssessment_id: parseInt(piaAssessmentId, 10) }
       })
@@ -156,7 +172,18 @@ const saveThreatsAndControls = async (req, res) => {
 
       // Validate that filled rows have all required fields
       if (!threatDesc || !severity || !likelihood || riskRating === 0 || !proposedControl || dataSubjectId === 0) {
-        const dataSubjects = await prisma.dataSubjectInfo.findMany();
+        const dataSubjects = await prisma.piiDatasubject.findMany({
+          where: {
+            pii: {
+              piaAssessment_id: piaAssessmentId
+            }
+          },
+          include: {
+            dataSubjectType: true,
+            pii: true
+          },
+          orderBy: { id: 'asc' }
+        });
         const pdlcData = await prisma.pDLC.findMany({
           where: { piaAssessment_id: piaAssessmentId }
         });
@@ -202,7 +229,18 @@ const saveThreatsAndControls = async (req, res) => {
 
     if (!defaultPdlcId && validatedRows.length > 0) {
       // If no PDLC exists in DB and user did not supply pdlc, prompt to add one (DB requires this FK)
-      const dataSubjects = await prisma.dataSubjectInfo.findMany();
+      const dataSubjects = await prisma.piiDatasubject.findMany({
+        where: {
+          pii: {
+            piaAssessment_id: piaAssessmentId
+          }
+        },
+        include: {
+          dataSubjectType: true,
+          pii: true
+        },
+        orderBy: { id: 'asc' }
+      });
       const pdlcData = await prisma.pDLC.findMany({ where: { piaAssessment_id: piaAssessmentId } });
 
       const threatTypeOptions = ['CONFIDENTIALITY', 'INTEGRITY', 'AVAILABILITY', 'AUTHENTICITY', 'NON_REPUDIATION'];
@@ -254,7 +292,18 @@ const saveThreatsAndControls = async (req, res) => {
     return res.redirect(`/assessment/securitymeasures?id=${piaAssessmentId}`);
   } catch (error) {
     console.error('Error saving threats and controls:', error);
-    const dataSubjects = await prisma.dataSubjectInfo.findMany().catch(() => []);
+    const dataSubjects = await prisma.piiDatasubject.findMany({
+      where: {
+        pii: {
+          piaAssessment_id: piaAssessmentId
+        }
+      },
+      include: {
+        dataSubjectType: true,
+        pii: true
+      },
+      orderBy: { id: 'asc' }
+    }).catch(() => []);
     const pdlcData = await prisma.pDLC.findMany({
       where: { piaAssessment_id: piaAssessmentId }
     }).catch(() => []);
