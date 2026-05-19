@@ -198,7 +198,7 @@
 											<div class="col-12 col-md-6 col-lg-4">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
-														<i class="bi bi-person-exclamation text-primary"></i> Data Subject & Threat
+														Data Subject & Threat
 													</div>
 													<div class="inner-card-desc mb-2">Impacted data subjects and threat details.</div>
 													
@@ -219,7 +219,7 @@
 											<div class="col-12 col-md-6 col-lg-4">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
-														<i class="bi bi-tags text-primary"></i> Type of Threat
+														Type of Threat
 													</div>
 													<div class="inner-card-desc mb-2">Select threat category (select all that apply).</div>
 													
@@ -242,7 +242,7 @@
 											<div class="col-12 col-md-6 col-lg-4">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
-														<i class="bi bi-speedometer2 text-primary"></i> Risk Assessment
+														Risk Assessment
 													</div>
 													<div class="inner-card-desc mb-2">Determine severity and likelihood.</div>
 													
@@ -262,13 +262,14 @@
 														<% }); %>
 													</select>
 													
-													<div class="border-top pt-3 mt-auto">
-														<div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Risk Rating</div>
-														<div class="d-flex align-items-center justify-content-between">
-															<span class="small text-muted">Severity x Likelihood</span>
-															<div class="badge bg-primary bg-opacity-10 text-primary border risk-rating-display px-2 py-1"><%= threat.riskRating || '' %></div>
-															<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
+													<div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+														<div>
+															<div class="fw-bold text-dark" style="font-size: 0.9rem;">Total Risk</div>
 														</div>
+														<span class="risk-rating-display fw-bold fs-6">
+															<%= threat.riskRating || 'None' %>
+														</span>
+														<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
 													</div>
 												</div>
 											</div>
@@ -277,7 +278,7 @@
 											<div class="col-12 col-md-6 col-lg-6">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
-														<i class="bi bi-shield-lock text-primary"></i> Proposed Control Measure
+														Proposed Control Measure
 													</div>
 													<div class="inner-card-desc mb-2">What control measures are proposed?</div>
 													
@@ -289,7 +290,7 @@
 											<div class="col-12 col-md-6 col-lg-6">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">
-														<i class="bi bi-ui-checks text-primary"></i> Type of Measure
+														Type of Measure
 													</div>
 													<div class="inner-card-desc mb-2">Select measure categories (select all that apply).</div>
 													
@@ -354,7 +355,7 @@
 										<div class="col-12 col-md-6 col-lg-4">
 											<div class="inner-card d-flex flex-column h-100">
 												<div class="inner-card-title">
-													<i class="bi bi-person-exclamation text-primary"></i> Data Subject & Threat
+													Data Subject & Threat
 												</div>
 												<div class="inner-card-desc mb-2">Impacted data subjects and threat details.</div>
 												
@@ -375,7 +376,7 @@
 										<div class="col-12 col-md-6 col-lg-4">
 											<div class="inner-card d-flex flex-column h-100">
 												<div class="inner-card-title">
-													<i class="bi bi-tags text-primary"></i> Type of Threat
+													Type of Threat
 												</div>
 												<div class="inner-card-desc mb-2">Select threat category (select all that apply).</div>
 												
@@ -397,7 +398,7 @@
 										<div class="col-12 col-md-6 col-lg-4">
 											<div class="inner-card d-flex flex-column h-100">
 												<div class="inner-card-title">
-													<i class="bi bi-speedometer2 text-primary"></i> Risk Assessment
+													Risk Assessment
 												</div>
 												<div class="inner-card-desc mb-2">Determine severity and likelihood.</div>
 												
@@ -417,13 +418,12 @@
 													<% }); %>
 												</select>
 												
-												<div class="border-top pt-3 mt-auto">
-													<div class="fw-bold text-dark mb-1" style="font-size: 0.9rem;">Risk Rating</div>
-													<div class="d-flex align-items-center justify-content-between">
-														<span class="small text-muted">Severity x Likelihood</span>
-														<div class="badge bg-primary bg-opacity-10 text-primary border risk-rating-display px-2 py-1"> </div>
-														<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="">
+												<div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+													<div>
+														<div class="fw-bold text-dark" style="font-size: 0.9rem;">Total Risk</div>
 													</div>
+													<span class="risk-rating-display fw-bold fs-6 text-secondary">None</span>
+													<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="">
 												</div>
 											</div>
 										</div>
@@ -432,7 +432,7 @@
 										<div class="col-12 col-md-6 col-lg-6">
 											<div class="inner-card d-flex flex-column h-100">
 												<div class="inner-card-title">
-													<i class="bi bi-shield-lock text-primary"></i> Proposed Control Measure
+													Proposed Control Measure
 												</div>
 												<div class="inner-card-desc mb-2">What control measures are proposed?</div>
 												
@@ -444,7 +444,7 @@
 										<div class="col-12 col-md-6 col-lg-6">
 											<div class="inner-card d-flex flex-column h-100">
 												<div class="inner-card-title">
-													<i class="bi bi-ui-checks text-primary"></i> Type of Measure
+													Type of Measure
 												</div>
 												<div class="inner-card-desc mb-2">Select measure categories (select all that apply).</div>
 												
@@ -563,19 +563,19 @@
 			const product = (sevNum && likNum) ? (sevNum * likNum) : '';
 
 			if (display) {
-				display.classList.remove('bg-primary', 'bg-opacity-10', 'text-primary', 'bg-success', 'bg-warning', 'bg-danger', 'text-white', 'text-dark', 'bg-light', 'text-secondary');
+				display.classList.remove('text-success', 'text-warning', 'text-danger', 'text-secondary', 'text-primary', 'bg-primary', 'bg-opacity-10', 'bg-success', 'bg-warning', 'bg-danger', 'text-white', 'text-dark', 'bg-light', 'border');
 				
 				if (!product) {
-					display.classList.add('bg-light', 'text-secondary');
+					display.classList.add('text-secondary');
 					display.textContent = 'None';
 				} else if (product <= 3) {
-					display.classList.add('bg-success', 'text-white');
+					display.classList.add('text-success');
 					display.textContent = product + ' (Low)';
 				} else if (product <= 8) {
-					display.classList.add('bg-warning', 'text-dark');
+					display.classList.add('text-warning');
 					display.textContent = product + ' (Medium)';
 				} else {
-					display.classList.add('bg-danger', 'text-white');
+					display.classList.add('text-danger');
 					display.textContent = product + ' (High)';
 				}
 			}
