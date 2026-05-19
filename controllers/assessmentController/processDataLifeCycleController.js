@@ -11,7 +11,12 @@ const processDataLifeCycle = async (req, res) => {
 
   try {
     const existingPdlc = await prisma.pDLC.findMany({
-      where: { piaAssessment_id: parseInt(piaAssessmentId, 10) }
+      where: { piaAssessment_id: parseInt(piaAssessmentId, 10) },
+      include: {
+        collections: true,
+        uses: true,
+        sharings: true
+      }
     });
 
     return res.render('assessment/processdatalifecycle-page', {
@@ -39,6 +44,23 @@ const saveProcessDataLifeCycle = async (req, res) => {
   try {
     req.session.currentAssessmentId = piaAssessmentId;
 
+    const normalizeIndexedArray = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) return value;
+      if (typeof value === 'object') {
+        return Object.keys(value)
+          .sort((a, b) => Number(a) - Number(b))
+          .map((key) => value[key]);
+      }
+      return [value];
+    };
+
+    const parseDateValue = (value) => {
+      if (!value) return null;
+      const parsed = new Date(value);
+      return Number.isNaN(parsed.getTime()) ? null : parsed;
+    };
+
     // Delete dependent ThreatsAndControl records first to avoid FK violations,
     // then delete PDLC records to overwrite with new ones
     await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
@@ -46,46 +68,77 @@ const saveProcessDataLifeCycle = async (req, res) => {
 
     // Check if there's any data to save
     if (req.body.stakeholderName) {
-      if (Array.isArray(req.body.stakeholderName)) {
-        // Multiple rows submitted
-        const pdlcToInsert = req.body.stakeholderName.map((name, index) => {
-          return {
-            piaAssessment_id: piaAssessmentId,
-            stakeholderName: name,
-            collection: req.body.collection[index] || '',
-            useOfData: req.body.useOfData[index] || '',
-            process: req.body.process[index] || '',
-            dataSharing: req.body.dataSharing[index] || '',
-            disposalMethod: req.body.disposalMethod[index] || '',
-            // Empty strings for required schema fields not in UI
-            dateCollected: req.body.dateCollected[index] || '',
-            retentionPeriod: req.body.retentionPeriod[index] || '',
-            retentionDate: req.body.retentionDate && req.body.retentionDate[index] ? new Date(req.body.retentionDate[index]) : null,
-            sharedTo: req.body.sharedTo && req.body.sharedTo[index] ? req.body.sharedTo[index] : ''
-          };
-        });
+      const stakeholderNames = normalizeIndexedArray(req.body.stakeholderName);
+      const retentionPeriods = normalizeIndexedArray(req.body.retentionPeriod);
+      const retentionDates = normalizeIndexedArray(req.body.retentionDate);
+      const disposalMethods = normalizeIndexedArray(req.body.disposalMethod);
+      const dlcDiagrams = normalizeIndexedArray(req.body.dlcDiagram);
 
-        await prisma.pDLC.createMany({
-          data: pdlcToInsert
-        });
-      } else {
-        // Single row submitted
-        await prisma.pDLC.create({
-          data: {
-            piaAssessment_id: piaAssessmentId,
-            stakeholderName: req.body.stakeholderName,
-            collection: req.body.collection || '',
-            useOfData: req.body.useOfData || '',
-            process: req.body.process || '',
-            dataSharing: req.body.dataSharing || '',
-            disposalMethod: req.body.disposalMethod || '',
-            // Save new UI fields
-            dateCollected: req.body.dateCollected || '',
-            retentionPeriod: req.body.retentionPeriod || '',
-            retentionDate: req.body.retentionDate ? new Date(req.body.retentionDate) : null,
-            sharedTo: req.body.sharedTo || ''
-          }
-        });
+      const collectionsByRow = normalizeIndexedArray(req.body.collections);
+      const usesByRow = normalizeIndexedArray(req.body.uses);
+      const sharingsByRow = normalizeIndexedArray(req.body.sharings);
+
+      const createOperations = stakeholderNames.map((name, index) => {
+        const collectionsRaw = normalizeIndexedArray(collectionsByRow[index]);
+        const usesRaw = normalizeIndexedArray(usesByRow[index]);
+        const sharingsRaw = normalizeIndexedArray(sharingsByRow[index]);
+
+        const collections = collectionsRaw
+          .map((entry) => {
+            if (!entry || typeof entry !== 'object') return null;
+            const collection = String(entry.collection || '').trim();
+            const dateCollected = parseDateValue(entry.dateCollected);
+            if (!collection && !dateCollected) return null;
+            return { collection, dateCollected };
+          })
+          .filter(Boolean);
+
+        const uses = usesRaw
+          .map((entry) => {
+            if (!entry || typeof entry !== 'object') return null;
+            const useOfData = String(entry.useOfData || '').trim();
+            const process = String(entry.process || '').trim();
+            if (!useOfData && !process) return null;
+            return { useOfData, process };
+          })
+          .filter(Boolean);
+
+        const sharings = sharingsRaw
+          .map((entry) => {
+            if (!entry || typeof entry !== 'object') return null;
+            const dataSharing = String(entry.dataSharing || '').trim();
+            const sharedTo = String(entry.sharedTo || '').trim();
+            if (!dataSharing && !sharedTo) return null;
+            return { dataSharing, sharedTo };
+          })
+          .filter(Boolean);
+
+        const data = {
+          piaAssessment_id: piaAssessmentId,
+          stakeholderName: String(name || '').trim(),
+          retentionPeriod: String(retentionPeriods[index] || '').trim(),
+          retentionDate: parseDateValue(retentionDates[index]),
+          disposalMethod: String(disposalMethods[index] || '').trim(),
+          dlcDiagram: dlcDiagrams[index] || null
+        };
+
+        if (collections.length > 0) {
+          data.collections = { create: collections };
+        }
+
+        if (uses.length > 0) {
+          data.uses = { create: uses };
+        }
+
+        if (sharings.length > 0) {
+          data.sharings = { create: sharings };
+        }
+
+        return prisma.pDLC.create({ data });
+      });
+
+      if (createOperations.length > 0) {
+        await prisma.$transaction(createOperations);
       }
     }
 

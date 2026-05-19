@@ -136,7 +136,7 @@
 														<div class="fw-bold text-dark m-0">Stakeholders / Parties Involved</div>
 													</div>
 													<div class="small text-muted mb-3 d-block">Who is involved in this process?</div>
-													<textarea name="stakeholderName[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required><%= pdlc.stakeholderName || '' %></textarea>
+													<textarea name="stakeholderName[<%= index %>]" data-top-field="stakeholderName" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required><%= pdlc.stakeholderName || '' %></textarea>
 												</div>
 											</div>
 											<!-- Card 2 -->
@@ -146,10 +146,22 @@
 														<div class="fw-bold text-dark m-0">Collection & Creation</div>
 													</div>
 													<div class="small text-muted mb-2 d-block">How is data collected or created?</div>
-													<textarea name="collection[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required><%= pdlc.collection || '' %></textarea>
-													
-													<div class="fw-bold text-dark small mb-1">Indicate Date</div>
-													<input type="date" name="dateCollected[]" class="form-control form-control-sm" placeholder="e.g. Upon submission of form" value="<%= pdlc.dateCollected || '' %>" required>
+													<div class="pdlc-collections">
+														<% const collections = pdlc.collections && pdlc.collections.length ? pdlc.collections : [{}]; %>
+														<% collections.forEach(function(entry, entryIndex) { %>
+														<div class="pdlc-collection border rounded-3 p-3 mb-3">
+															<textarea name="collections[<%= index %>][<%= entryIndex %>][collection]" data-field="collection" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required><%= entry.collection || '' %></textarea>
+															<div class="fw-bold text-dark small mb-1">Indicate Date</div>
+															<input type="date" name="collections[<%= index %>][<%= entryIndex %>][dateCollected]" data-field="dateCollected" class="form-control form-control-sm" value="<%= entry.dateCollected ? new Date(entry.dateCollected).toISOString().split('T')[0] : '' %>" required>
+															<button type="button" class="btn btn-outline-danger btn-sm mt-3 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="collections">
+																<i class="bi bi-trash me-1"></i> Remove
+															</button>
+														</div>
+														<% }); %>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm add-subentry-btn" data-section="collections">
+														<i class="bi bi-plus-circle me-1"></i> Add Collection
+													</button>
 												</div>
 											</div>
 											<!-- Card 3 -->
@@ -159,23 +171,36 @@
 														<div class="fw-bold text-dark m-0">Use / Processing</div>
 													</div>
 													<div class="small text-muted mb-3 d-block">How is the data used and processed?</div>
-													<textarea name="useOfData[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required><%= pdlc.useOfData || '' %></textarea>
+													<div class="pdlc-uses">
+														<% const uses = pdlc.uses && pdlc.uses.length ? pdlc.uses : [{}]; %>
+														<% uses.forEach(function(entry, entryIndex) { %>
+														<div class="pdlc-use border rounded-3 p-3 mb-3">
+															<textarea name="uses[<%= index %>][<%= entryIndex %>][useOfData]" data-field="useOfData" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required><%= entry.useOfData || '' %></textarea>
+															<div class="fw-bold text-dark small mb-1">Storage & Transmission</div>
+															<textarea name="uses[<%= index %>][<%= entryIndex %>][process]" data-field="process" class="form-control" style="min-height: 70px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required><%= entry.process || '' %></textarea>
+															<button type="button" class="btn btn-outline-danger btn-sm mt-3 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="uses">
+																<i class="bi bi-trash me-1"></i> Remove
+															</button>
+														</div>
+														<% }); %>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm add-subentry-btn" data-section="uses">
+														<i class="bi bi-plus-circle me-1"></i> Add Use
+													</button>
 												</div>
 											</div>
 											<!-- Card 4 -->
 											<div class="col-12 col-md-6 col-lg-4">
 												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
 													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Storage & Transmission</div>
+														<div class="fw-bold text-dark m-0">Retention</div>
 													</div>
-													<div class="small text-muted mb-2 d-block">Where is it stored? How is it transmitted?</div>
-													<textarea name="process[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required><%= pdlc.process || '' %></textarea>
-													
+													<div class="small text-muted mb-2 d-block">How long is the data retained?</div>
 													<div class="fw-bold text-dark small mb-1">Retention Period</div>
-													<input type="text" name="retentionPeriod[]" class="form-control form-control-sm mb-3" placeholder="e.g. 2 years after collection" value="<%= pdlc.retentionPeriod || '' %>" required>
-													
+													<input type="text" name="retentionPeriod[<%= index %>]" data-top-field="retentionPeriod" class="form-control form-control-sm mb-3" placeholder="e.g. 2 years after collection" value="<%= pdlc.retentionPeriod || '' %>" required>
+												
 													<div class="fw-bold text-dark small mb-1">Indicate Date</div>
-													<input type="date" name="retentionDate[]" class="form-control form-control-sm" value="<%= pdlc.retentionDate ? new Date(pdlc.retentionDate).toISOString().split('T')[0] : '' %>" required>
+													<input type="date" name="retentionDate[<%= index %>]" data-top-field="retentionDate" class="form-control form-control-sm" value="<%= pdlc.retentionDate ? new Date(pdlc.retentionDate).toISOString().split('T')[0] : '' %>" required>
 												</div>
 											</div>
 											<!-- Card 5 -->
@@ -185,9 +210,22 @@
 														<div class="fw-bold text-dark m-0">Sharing</div>
 													</div>
 													<div class="small text-muted mb-3 d-block">How is the data being shared?</div>
-													<textarea name="dataSharing[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= pdlc.dataSharing || '' %></textarea>
-													<div class="small text-muted mb-3 d-block">Who is it shared?</div>
-													<textarea name="sharedTo[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= pdlc.sharedTo || '' %></textarea>
+													<div class="pdlc-sharings">
+														<% const sharings = pdlc.sharings && pdlc.sharings.length ? pdlc.sharings : [{}]; %>
+														<% sharings.forEach(function(entry, entryIndex) { %>
+														<div class="pdlc-sharing border rounded-3 p-3 mb-3">
+															<textarea name="sharings[<%= index %>][<%= entryIndex %>][dataSharing]" data-field="dataSharing" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= entry.dataSharing || '' %></textarea>
+															<div class="small text-muted mb-2 d-block">Who is it shared?</div>
+															<textarea name="sharings[<%= index %>][<%= entryIndex %>][sharedTo]" data-field="sharedTo" class="form-control" style="min-height: 70px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= entry.sharedTo || '' %></textarea>
+															<button type="button" class="btn btn-outline-danger btn-sm mt-3 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="sharings">
+																<i class="bi bi-trash me-1"></i> Remove
+															</button>
+														</div>
+														<% }); %>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm add-subentry-btn" data-section="sharings">
+														<i class="bi bi-plus-circle me-1"></i> Add Sharing
+													</button>
 												</div>
 											</div>
 											<!-- Card 6 -->
@@ -197,13 +235,14 @@
 														<div class="fw-bold text-dark m-0">Disposal & Destruction</div>
 													</div>
 													<div class="small text-muted mb-2 d-block">How and when is the data destroyed?</div>
-													<textarea name="disposalMethod[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required><%= pdlc.disposalMethod || '' %></textarea>
+													<textarea name="disposalMethod[<%= index %>]" data-top-field="disposalMethod" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required><%= pdlc.disposalMethod || '' %></textarea>
 													
 													<div class="mb-3">
 														<label class="fw-bold text-dark m-0 form-label">Upload DLC Diagram</label>
 														<label class="border border-2 border-dashed rounded p-4 text-center w-100 bg-light position-relative" style="cursor: pointer;">
 															<input type="file" class="d-none"
-																		name="dlcDiagram"
+																	name="dlcDiagram[<%= index %>]"
+																	data-top-field="dlcDiagram"
 																		accept=".jpg,.png,.jpeg,.gif,.pdf"
 																		onchange="previewSig(this,'head-preview')">
 																		<div class="text-muted">
@@ -255,7 +294,7 @@
 														<div class="fw-bold text-dark m-0">Stakeholders / Parties Involved</div>
 													</div>
 													<div class="small text-muted mb-3 d-block">Who is involved in this process?</div>
-													<textarea name="stakeholderName[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required></textarea>
+													<textarea name="stakeholderName[0]" data-top-field="stakeholderName" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required></textarea>
 												</div>
 											</div>
 											<!-- Card 2 -->
@@ -265,10 +304,19 @@
 														<div class="fw-bold text-dark m-0">Collection & Creation</div>
 													</div>
 													<div class="small text-muted mb-2 d-block">How is data collected or created?</div>
-													<textarea name="collection[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required></textarea>
-													
-													<div class="fw-bold text-dark small mb-1">Indicate Date / Timing</div>
-													<input type="date" name="dateCollected[]" class="form-control form-control-sm" placeholder="e.g. Upon submission of form" required>
+													<div class="pdlc-collections">
+														<div class="pdlc-collection border rounded-3 p-3 mb-3">
+															<textarea name="collections[0][0][collection]" data-field="collection" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required></textarea>
+															<div class="fw-bold text-dark small mb-1">Indicate Date / Timing</div>
+															<input type="date" name="collections[0][0][dateCollected]" data-field="dateCollected" class="form-control form-control-sm" placeholder="e.g. Upon submission of form" required>
+															<button type="button" class="btn btn-outline-danger btn-sm mt-3 remove-subentry-btn d-none" data-section="collections">
+																<i class="bi bi-trash me-1"></i> Remove
+															</button>
+														</div>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm add-subentry-btn" data-section="collections">
+														<i class="bi bi-plus-circle me-1"></i> Add Collection
+													</button>
 												</div>
 											</div>
 											<!-- Card 3 -->
@@ -278,23 +326,33 @@
 														<div class="fw-bold text-dark m-0">Use / Processing</div>
 													</div>
 													<div class="small text-muted mb-3 d-block">How is the data used and processed?</div>
-													<textarea name="useOfData[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required></textarea>
+													<div class="pdlc-uses">
+														<div class="pdlc-use border rounded-3 p-3 mb-3">
+															<textarea name="uses[0][0][useOfData]" data-field="useOfData" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required></textarea>
+															<div class="fw-bold text-dark small mb-1">Storage & Transmission</div>
+															<textarea name="uses[0][0][process]" data-field="process" class="form-control" style="min-height: 70px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required></textarea>
+															<button type="button" class="btn btn-outline-danger btn-sm mt-3 remove-subentry-btn d-none" data-section="uses">
+																<i class="bi bi-trash me-1"></i> Remove
+															</button>
+														</div>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm add-subentry-btn" data-section="uses">
+														<i class="bi bi-plus-circle me-1"></i> Add Use
+													</button>
 												</div>
 											</div>
 											<!-- Card 4 -->
 											<div class="col-12 col-md-6 col-lg-4">
 												<div class="card bg-white border rounded-3 shadow-sm h-100 p-3">
 													<div class="mb-2">
-														<div class="fw-bold text-dark m-0">Storage & Transmission</div>
+														<div class="fw-bold text-dark m-0">Retention</div>
 													</div>
-													<div class="small text-muted mb-2 d-block">Where is it stored? How is it transmitted?</div>
-													<textarea name="process[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required></textarea>
-													
+													<div class="small text-muted mb-2 d-block">How long is the data retained?</div>
 													<div class="fw-bold text-dark small mb-1">Retention Period</div>
-													<input type="text" name="retentionPeriod[]" class="form-control form-control-sm mb-3" placeholder="e.g. 2 years after collection" required>
-													
+													<input type="text" name="retentionPeriod[0]" data-top-field="retentionPeriod" class="form-control form-control-sm mb-3" placeholder="e.g. 2 years after collection" required>
+												
 													<div class="fw-bold text-dark small mb-1">Indicate Date</div>
-													<input type="date" name="retentionDate[]" class="form-control form-control-sm" required>
+													<input type="date" name="retentionDate[0]" data-top-field="retentionDate" class="form-control form-control-sm" required>
 												</div>
 											</div>
 											<!-- Card 5 -->
@@ -304,9 +362,19 @@
 														<div class="fw-bold text-dark m-0">Sharing</div>
 													</div>
 													<div class="small text-muted mb-3 d-block">How is the data being shared?</div>
-													<textarea name="dataSharing[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
-													<div class="small text-muted mb-3 d-block">Who is it shared?</div>
-													<textarea name="sharedTo[]" class="form-control" style="min-height: 100px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
+													<div class="pdlc-sharings">
+														<div class="pdlc-sharing border rounded-3 p-3 mb-3">
+															<textarea name="sharings[0][0][dataSharing]" data-field="dataSharing" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
+															<div class="small text-muted mb-2 d-block">Who is it shared?</div>
+															<textarea name="sharings[0][0][sharedTo]" data-field="sharedTo" class="form-control" style="min-height: 70px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
+															<button type="button" class="btn btn-outline-danger btn-sm mt-3 remove-subentry-btn d-none" data-section="sharings">
+																<i class="bi bi-trash me-1"></i> Remove
+															</button>
+														</div>
+													</div>
+													<button type="button" class="btn btn-outline-primary btn-sm add-subentry-btn" data-section="sharings">
+														<i class="bi bi-plus-circle me-1"></i> Add Sharing
+													</button>
 												</div>
 											</div>
 											<!-- Card 6 -->
@@ -316,10 +384,10 @@
 														<div class="fw-bold text-dark m-0">Disposal & Destruction</div>
 													</div>
 													<div class="small text-muted mb-2 d-block">How and when is the data destroyed?</div>
-													<textarea name="disposalMethod[]" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required></textarea>
+													<textarea name="disposalMethod[0]" data-top-field="disposalMethod" class="form-control mb-3" style="min-height: 70px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required></textarea>
 													
 													<div class="fw-bold text-dark small mb-1">Upload DLC Diagram</div>
-													<input type="file" name="dlcDiagram[]" class="form-control form-control-sm" accept="image/*">
+													<input type="file" name="dlcDiagram[0]" data-top-field="dlcDiagram" class="form-control form-control-sm" accept="image/*">
 												</div>
 											</div>
 										</div>
@@ -332,6 +400,23 @@
 				<script>
 					document.addEventListener('DOMContentLoaded', function () {
 						var container = document.getElementById('pdlcRowsContainer');
+						var sectionConfig = {
+							collections: { containerClass: 'pdlc-collections', entryClass: 'pdlc-collection' },
+							uses: { containerClass: 'pdlc-uses', entryClass: 'pdlc-use' },
+							sharings: { containerClass: 'pdlc-sharings', entryClass: 'pdlc-sharing' }
+						};
+
+						function clearEntryInputs(entry) {
+							var textareas = entry.querySelectorAll('textarea');
+							for (var i = 0; i < textareas.length; i++) {
+								textareas[i].value = '';
+							}
+
+							var inputs = entry.querySelectorAll('input[type="text"], input[type="date"], input[type="file"]');
+							for (var j = 0; j < inputs.length; j++) {
+								inputs[j].value = '';
+							}
+						}
 
 						function updateRowNumbers() {
 							var rows = container.querySelectorAll('.pdlc-row');
@@ -356,6 +441,50 @@
 							}
 						}
 
+						function updateSubEntryButtons(row) {
+							Object.keys(sectionConfig).forEach(function (section) {
+								var config = sectionConfig[section];
+								var containerEl = row.querySelector('.' + config.containerClass);
+								if (!containerEl) return;
+								var entries = containerEl.querySelectorAll('.' + config.entryClass);
+								for (var i = 0; i < entries.length; i++) {
+									var removeBtn = entries[i].querySelector('.remove-subentry-btn');
+									if (!removeBtn) continue;
+									if (entries.length > 1) {
+										removeBtn.classList.remove('d-none');
+									} else {
+										removeBtn.classList.add('d-none');
+									}
+								}
+							});
+						}
+
+						function updateAllNames() {
+							var rows = container.querySelectorAll('.pdlc-row');
+							for (var i = 0; i < rows.length; i++) {
+								var row = rows[i];
+								var topFields = row.querySelectorAll('[data-top-field]');
+								for (var j = 0; j < topFields.length; j++) {
+									var field = topFields[j].getAttribute('data-top-field');
+									topFields[j].name = field + '[' + i + ']';
+								}
+
+								Object.keys(sectionConfig).forEach(function (section) {
+									var config = sectionConfig[section];
+									var containerEl = row.querySelector('.' + config.containerClass);
+									if (!containerEl) return;
+									var entries = containerEl.querySelectorAll('.' + config.entryClass);
+									for (var entryIndex = 0; entryIndex < entries.length; entryIndex++) {
+										var inputs = entries[entryIndex].querySelectorAll('[data-field]');
+										for (var k = 0; k < inputs.length; k++) {
+											var fieldName = inputs[k].getAttribute('data-field');
+											inputs[k].name = section + '[' + i + '][' + entryIndex + '][' + fieldName + ']';
+										}
+									}
+								});
+							}
+						}
+
 						// Attach listener safely by delegating to container just in case it takes time to render
 						document.addEventListener('click', function (e) {
 							if (e.target.closest('#addRowBtn')) {
@@ -369,19 +498,25 @@
 								var mainHeader = newRow.querySelector('.pdlc-main-header');
 								if (mainHeader) mainHeader.remove();
 
-								// Clear textareas robustly
-								var textareas = newRow.querySelectorAll('textarea');
-								for (var j = 0; j < textareas.length; j++) {
-									textareas[j].value = '';
-								}
-								
-								var inputs = newRow.querySelectorAll('input[type="text"], input[type="date"], input[type="file"]');
-								for (var k = 0; k < inputs.length; k++) {
-									inputs[k].value = '';
-								}
+								// Reset values and keep only one sub-entry per section
+								clearEntryInputs(newRow);
+								Object.keys(sectionConfig).forEach(function (section) {
+									var config = sectionConfig[section];
+									var containerEl = newRow.querySelector('.' + config.containerClass);
+									if (!containerEl) return;
+									var entries = containerEl.querySelectorAll('.' + config.entryClass);
+									for (var i = entries.length - 1; i >= 1; i--) {
+										entries[i].parentNode.removeChild(entries[i]);
+									}
+									if (entries[0]) {
+										clearEntryInputs(entries[0]);
+									}
+								});
 
 								container.appendChild(newRow);
 								updateRowNumbers();
+								updateAllNames();
+								updateSubEntryButtons(newRow);
 							}
 						});
 
@@ -392,12 +527,54 @@
 								if (row) {
 									row.parentNode.removeChild(row);
 									updateRowNumbers();
+									updateAllNames();
+								}
+							}
+
+							var addSubBtn = e.target.closest('.add-subentry-btn');
+							if (addSubBtn) {
+								var section = addSubBtn.getAttribute('data-section');
+								var config = sectionConfig[section];
+								if (!config) return;
+								var row = addSubBtn.closest('.pdlc-row');
+								if (!row) return;
+								var containerEl = row.querySelector('.' + config.containerClass);
+								if (!containerEl) return;
+								var firstEntry = containerEl.querySelector('.' + config.entryClass);
+								if (!firstEntry) return;
+								var newEntry = firstEntry.cloneNode(true);
+								clearEntryInputs(newEntry);
+								containerEl.appendChild(newEntry);
+								updateSubEntryButtons(row);
+								updateAllNames();
+							}
+
+							var removeSubBtn = e.target.closest('.remove-subentry-btn');
+							if (removeSubBtn) {
+								var removeSection = removeSubBtn.getAttribute('data-section');
+								var removeConfig = sectionConfig[removeSection];
+								if (!removeConfig) return;
+								var removeRow = removeSubBtn.closest('.pdlc-row');
+								if (!removeRow) return;
+								var removeEntry = removeSubBtn.closest('.' + removeConfig.entryClass);
+								if (removeEntry) {
+									var entryContainer = removeRow.querySelector('.' + removeConfig.containerClass);
+									if (entryContainer && entryContainer.querySelectorAll('.' + removeConfig.entryClass).length > 1) {
+										entryContainer.removeChild(removeEntry);
+										updateSubEntryButtons(removeRow);
+										updateAllNames();
+									}
 								}
 							}
 						});
 
 						// Run on initial load to ensure state is correct
 						updateRowNumbers();
+						updateAllNames();
+						var initRows = container.querySelectorAll('.pdlc-row');
+						for (var r = 0; r < initRows.length; r++) {
+							updateSubEntryButtons(initRows[r]);
+						}
 					});
 				</script>
 

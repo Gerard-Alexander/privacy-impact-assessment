@@ -137,23 +137,66 @@ model PDLC {
   piaAssessment    PiaAssessment @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
   
   stakeholderName  String        @db.VarChar(255)
-  dateCollected    String        @db.VarChar(255) 
-  collection       String        @db.VarChar(255)
-  useOfData        String        @db.VarChar(255)
-  process          String        @db.VarChar(255)
   retentionPeriod  String        @db.VarChar(255) 
   retentionDate    DateTime?
-  dataSharing      String        @db.VarChar(255)
-  sharedTo         String        @db.VarChar(255)
   disposalMethod   String        @db.VarChar(255) 
   dlcDiagram       String?       @db.Text
   
   createdAt        DateTime      @default(now())
   updatedAt        DateTime      @updatedAt
 
+  collections      PDLCCollection[]
+  uses             PDLCUse[]
+  sharings         PDLCSharing[]
+
   threatsAndControls ThreatsAndControl[] 
   
   @@index([piaAssessment_id])
+}
+
+model PDLCCollection {
+  id            Int      @id @default(autoincrement())
+
+  pdlc_id       Int
+  pdlc          PDLC     @relation(fields: [pdlc_id], references: [id], onDelete: Cascade)
+
+  dateCollected DateTime?
+  collection    String   @db.VarChar(255)
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([pdlc_id])
+}
+
+model PDLCUse {
+  id         Int      @id @default(autoincrement())
+
+  pdlc_id    Int
+  pdlc       PDLC     @relation(fields: [pdlc_id], references: [id], onDelete: Cascade)
+
+  useOfData  String   @db.VarChar(255)
+  process    String   @db.VarChar(255)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([pdlc_id])
+}
+
+model PDLCSharing {
+  id          Int      @id @default(autoincrement())
+
+  pdlc_id     Int
+  pdlc        PDLC     @relation(fields: [pdlc_id], references: [id], onDelete: Cascade)
+
+  dataSharing String   @db.VarChar(255)
+  sharedTo    String   @db.VarChar(255)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([pdlc_id])
 }
 
 enum DisposalMethod {
