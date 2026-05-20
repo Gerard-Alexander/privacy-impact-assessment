@@ -166,7 +166,8 @@ const savePersonalInfoInventory = async (req, res) => {
 
     for (let index = 0; index < rowCount; index += 1) {
       const formName = formNames[index] || '';
-      const formNo = Number.parseInt(formNos[index] || '', 10);
+      let formNo = Number.parseInt(formNos[index] || '', 10);
+      if (Number.isNaN(formNo)) formNo = 0;
       const dataProcessing = dataProcessingValues[index] || '';
       const piProcessBasisId = Number.parseInt(piProcessBasisIds[index] || '', 10);
       const spiProcessBasisId = Number.parseInt(spiProcessBasisIds[index] || '', 10);
