@@ -1,4 +1,6 @@
+const path = require('path');
 const prisma = require('../../store/prisma');
+const { piiUpload } = require('../uploadController/uploadController');
 
 const DATA_SUBJECT_TYPE_VALUES = ['EMPLOYEES', 'CUSTOMERS', 'CLIENTS', 'SUPPLIERS'];
 
@@ -26,6 +28,8 @@ const formatPiiForForm = (pii) => {
     dataProcessingValue: pii.dataProcessing || '',
     piProcessBasisId: pii.piProcessBasis_id || '',
     spiProcessBasisId: pii.spiProcessBasis_id || '',
+    dataFormImagePath: pii.dataFormImagePath || '',
+    dataFormImageUploadedAt: pii.dataFormImageUploadedAt || null,
     dataSubjects: dataSubjects.map((subject) => ({
       dataSubjectsType_id: subject.dataSubjectsType_id,
       dataSubjectTypeLabel: subject.dataSubjectType?.dataSubjectType || '',
@@ -112,12 +116,22 @@ const personalInfoInventory = async (req, res) => {
 };
 
 const savePersonalInfoInventory = async (req, res) => {
-  const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+  let piaAssessmentId;
 
-  if (!Number.isInteger(piaAssessmentId)) {
-    return res.redirect('/assessment');
-  }
   try {
+    await new Promise((resolve, reject) => {
+      piiUpload.any()(req, res, (err) => {
+        if (err) return reject(err);
+        return resolve();
+      });
+    });
+
+    piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+
+    if (!Number.isInteger(piaAssessmentId)) {
+      return res.redirect('/assessment');
+    }
+
     req.session.currentAssessmentId = piaAssessmentId;
 
     await ensureDataSubjectTypes();
@@ -140,11 +154,39 @@ const savePersonalInfoInventory = async (req, res) => {
     const dataSubjectsByRow = normalizeIndexedArray(req.body.dataSubjects);
     const piProcessBasisIds = normalizeIndexedArray(req.body.piProcessBasisId);
     const spiProcessBasisIds = normalizeIndexedArray(req.body.spiProcessBasisId);
+    const dataFormImagePaths = normalizeIndexedArray(req.body.dataFormImagePath);
+    const dataFormImageUploadedAtValues = normalizeIndexedArray(req.body.dataFormImageUploadedAt);
+
+    const dataFormImageByIndex = new Map();
+    if (Array.isArray(req.files)) {
+      req.files.forEach((file) => {
+        const match = file.fieldname.match(/^dataFormImage\[(\d+)\]$/);
+        if (!match) return;
+        const index = Number.parseInt(match[1], 10);
+        if (!Number.isNaN(index)) {
+          const relativePath = path.join('uploads', 'pii', file.filename).replace(/\\/g, '/');
+          dataFormImageByIndex.set(index, relativePath);
+        }
+      });
+    }
 
     const defaultDataSubjectType = await prisma.dataSubjectTypes.findFirst({
       orderBy: { id: 'asc' },
       select: { id: true }
     });
+
+    const [defaultPiBasis, defaultSpiBasis] = await Promise.all([
+      prisma.processingBasis.findFirst({
+        where: { processingType: { in: ['PI', 'BOTH'] } },
+        orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }],
+        select: { id: true }
+      }),
+      prisma.processingBasis.findFirst({
+        where: { processingType: { in: ['SPI', 'BOTH'] } },
+        orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }],
+        select: { id: true }
+      })
+    ]);
 
     const rowCount = Math.max(
       formNames.length,
@@ -153,7 +195,9 @@ const savePersonalInfoInventory = async (req, res) => {
       recipientsByRow.length,
       dataSubjectsByRow.length,
       piProcessBasisIds.length,
-      spiProcessBasisIds.length
+      spiProcessBasisIds.length,
+      dataFormImagePaths.length,
+      dataFormImageByIndex.size
     );
 
     if (!rowCount) {
@@ -171,6 +215,17 @@ const savePersonalInfoInventory = async (req, res) => {
       const dataProcessing = dataProcessingValues[index] || '';
       const piProcessBasisId = Number.parseInt(piProcessBasisIds[index] || '', 10);
       const spiProcessBasisId = Number.parseInt(spiProcessBasisIds[index] || '', 10);
+      const uploadedImagePath = dataFormImageByIndex.get(index) || '';
+      const existingImagePath = dataFormImagePaths[index] || '';
+      const dataFormImagePath = uploadedImagePath || existingImagePath || '';
+      let parsedUploadedAt = null;
+      if (!uploadedImagePath && dataFormImageUploadedAtValues[index]) {
+        const candidate = new Date(dataFormImageUploadedAtValues[index]);
+        if (!Number.isNaN(candidate.getTime())) {
+          parsedUploadedAt = candidate;
+        }
+      }
+      const dataFormImageUploadedAt = uploadedImagePath ? new Date() : parsedUploadedAt;
 
       const recipientsRaw = normalizeIndexedArray(recipientsByRow[index]);
       const dataSubjectsRaw = normalizeIndexedArray(dataSubjectsByRow[index]);
@@ -197,14 +252,21 @@ const savePersonalInfoInventory = async (req, res) => {
         })
         .filter(Boolean);
 
+      const hasImageInput = Boolean(dataFormImagePath);
       const normalizedRow = {
         formNo: formNo,
         formName: formName,
-        dataProcessing: dataProcessing,
+        dataProcessing: dataProcessing || (hasImageInput ? 'BOTH' : ''),
+        dataFormImagePath: dataFormImagePath || null,
+        dataFormImageUploadedAt: dataFormImageUploadedAt,
         recipients,
         dataSubjects,
-        piProcessBasisId: Number.isInteger(piProcessBasisId) ? piProcessBasisId : null,
-        spiProcessBasisId: Number.isInteger(spiProcessBasisId) ? spiProcessBasisId : null
+        piProcessBasisId: Number.isInteger(piProcessBasisId)
+          ? piProcessBasisId
+          : (hasImageInput ? (defaultPiBasis?.id || null) : null),
+        spiProcessBasisId: Number.isInteger(spiProcessBasisId)
+          ? spiProcessBasisId
+          : (hasImageInput ? (defaultSpiBasis?.id || null) : null)
       };
 
       // Store submitted row for re-rendering if validation fails
@@ -214,6 +276,8 @@ const savePersonalInfoInventory = async (req, res) => {
         dataProcessingValue: dataProcessing,
         piProcessBasisId: piProcessBasisId || '',
         spiProcessBasisId: spiProcessBasisId || '',
+        dataFormImagePath: dataFormImagePath || '',
+        dataFormImageUploadedAt: dataFormImageUploadedAt,
         dataSubjects: dataSubjects,
         recipients: recipients
       });
@@ -222,6 +286,8 @@ const savePersonalInfoInventory = async (req, res) => {
         formNo: normalizedRow.formNo,
         formName: normalizedRow.formName,
         dataProcessing: normalizedRow.dataProcessing,
+        dataFormImagePath: normalizedRow.dataFormImagePath,
+        dataFormImageUploadedAt: normalizedRow.dataFormImageUploadedAt,
         dataSubjects: normalizedRow.dataSubjects,
         recipients: normalizedRow.recipients,
         piProcessBasisId: normalizedRow.piProcessBasisId,
@@ -244,7 +310,9 @@ const savePersonalInfoInventory = async (req, res) => {
           formName: row.formName,
           dataProcessing: row.dataProcessing,
           piProcessBasis_id: row.piProcessBasisId,
-          spiProcessBasis_id: row.spiProcessBasisId
+          spiProcessBasis_id: row.spiProcessBasisId,
+          dataFormImagePath: row.dataFormImagePath,
+          dataFormImageUploadedAt: row.dataFormImageUploadedAt
         }
       });
 

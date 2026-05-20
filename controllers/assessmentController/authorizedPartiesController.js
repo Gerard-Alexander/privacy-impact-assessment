@@ -20,7 +20,6 @@ const authorizedParties = async (req, res) => {
       positionField: 'headPosition',
       officeField: 'headOfficeUnit',
       emailField: '',
-      signatureField: 'headSignature',
       dateField: 'headDateSigned',
       userType: 'HEAD_OFFICE'
     },
@@ -30,7 +29,6 @@ const authorizedParties = async (req, res) => {
       positionField: 'compPosition',
       officeField: '',
       emailField: 'compEmail',
-      signatureField: 'compSignature',
       dateField: 'compDateSigned',
       userType: 'COMPLIANCE_OFFICER'
     },
@@ -40,7 +38,6 @@ const authorizedParties = async (req, res) => {
       positionField: 'reviewPosition',
       officeField: '',
       emailField: '',
-      signatureField: 'reviewSignature',
       dateField: 'reviewDateSigned',
       userType: 'REVIEWER'
     },
@@ -50,13 +47,12 @@ const authorizedParties = async (req, res) => {
       positionField: 'approvePosition',
       officeField: '',
       emailField: '',
-      signatureField: 'approveSignature',
       dateField: 'approveDateSigned',
       userType: 'APPROVED_BY'
     }
   ];
   const formData = {};
-  partyDefinitions.forEach(({userType, firstNameField, lastNameField, positionField, officeField, emailField, signatureField, dateField}) => {
+  partyDefinitions.forEach(({userType, firstNameField, lastNameField, positionField, officeField, emailField, dateField}) => {
     const party = rawPartyData.find(p => p.userType === userType);
     if (party) {
       const nameParts = party.name.trim().split(/\s+/);
@@ -65,7 +61,6 @@ const authorizedParties = async (req, res) => {
       formData[positionField] = party.position || '';
       if (officeField) formData[officeField] = party.officeUnit || '';
       if (emailField) formData[emailField] = party.email || '';
-      formData[signatureField] = party.signature || '';
       formData[dateField] = formatDateForInput(party.dateSigned);
     }
   });
@@ -104,7 +99,6 @@ const saveAuthorizedParties = async (req, res) => {
         positionField: 'headPosition',
         officeField: 'headOfficeUnit',
         emailField: '',
-        signatureField: 'headSignature',
         dateField: 'headDateSigned',
         userType: 'HEAD_OFFICE'
       },
@@ -114,7 +108,6 @@ const saveAuthorizedParties = async (req, res) => {
         positionField: 'compPosition',
         officeField: '',
         emailField: 'compEmail',
-        signatureField: 'compSignature',
         dateField: 'compDateSigned',
         userType: 'COMPLIANCE_OFFICER'
       },
@@ -124,7 +117,6 @@ const saveAuthorizedParties = async (req, res) => {
         positionField: 'reviewPosition',
         officeField: '',
         emailField: '',
-        signatureField: 'reviewSignature',
         dateField: 'reviewDateSigned',
         userType: 'REVIEWER'
       },
@@ -134,7 +126,6 @@ const saveAuthorizedParties = async (req, res) => {
         positionField: 'approvePosition',
         officeField: '',
         emailField: '',
-        signatureField: 'approveSignature',
         dateField: 'approveDateSigned',
         userType: 'APPROVED_BY'
       }
@@ -142,14 +133,13 @@ const saveAuthorizedParties = async (req, res) => {
 
     const partyData = partyDefinitions
       .filter(({ firstNameField, positionField }) => body[firstNameField] || body[positionField])
-      .map(({ firstNameField, lastNameField, positionField, officeField, emailField, signatureField, dateField, userType }) => ({
+      .map(({ firstNameField, lastNameField, positionField, officeField, emailField, dateField, userType }) => ({
         piaAssessment_id,
         name: `${getFieldValue(body[firstNameField])} ${getFieldValue(body[lastNameField])}`.replace(/\s+/g, ' ').trim(),
         position: getFieldValue(body[positionField]),
         officeUnit: getFieldValue(body[officeField]),
         email: getFieldValue(body[emailField]),
         userType,
-        signature: getFieldValue(body[signatureField]),
         dateSigned: body[dateField] ? new Date(body[dateField]) : null
       }));
 

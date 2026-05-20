@@ -196,7 +196,7 @@
 						font-weight: 600;
 					}
 					</style>
-				<form id="pdlcForm" action="/assessment/processdatalifecycle" method="POST">
+				<form id="pdlcForm" action="/assessment/processdatalifecycle" method="POST" enctype="multipart/form-data">
 					<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
 
 					<div id="pdlcRowsContainer">
@@ -276,15 +276,16 @@
 													<div class="inner-card-desc mb-2">How and when is the data destroyed?</div>
 													<textarea name="disposalMethod[<%= index %>]" data-top-field="disposalMethod" class="form-control mb-3 flex-grow-1" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required><%= pdlc.disposalMethod || '' %></textarea>
 													
-													<div class="section-label mt-auto">Upload DLC Diagram</div>
-													<label class="upload-box p-3 text-center w-100 d-block mb-0">
-														<input type="file" class="d-none" name="dlcDiagram[<%= index %>]" data-top-field="dlcDiagram" accept=".jpg,.png,.jpeg,.gif,.pdf" onchange="previewSig(this,'dlc-preview-<%= index %>')">
-														<div class="text-muted">
-															<span class="fw-semibold text-dark">Click to upload</span><br>
-															<small style="font-size: 0.75rem;">PNG, JPG, PDF</small>
-														</div>
-														<img id="dlc-preview-<%= index %>" class="img-fluid mt-2 rounded d-none shadow-sm">
-													</label>
+														<div class="section-label mt-auto">Upload DLC Diagram</div>
+														<input type="hidden" name="dlcDiagramPath[<%= index %>]" value="<%= pdlc.dlcDiagram || '' %>">
+														<label class="upload-box p-3 text-center w-100 d-block mb-0">
+															<input type="file" class="d-none" name="dlcDiagram[<%= index %>]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-<%= index %>')">
+															<div class="text-muted">
+																<span class="fw-semibold text-dark">Click to upload</span><br>
+																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
+															</div>
+															<img id="dlc-preview-<%= index %>" class="img-fluid mt-2 rounded <%= pdlc.dlcDiagram ? '' : 'd-none' %> shadow-sm" <%= pdlc.dlcDiagram ? `src="/${pdlc.dlcDiagram}"` : '' %>>
+														</label>
 												</div>
 											</div>
 
@@ -492,15 +493,16 @@
 													<div class="inner-card-desc mb-2">How and when is the data destroyed?</div>
 													<textarea name="disposalMethod[0]" data-top-field="disposalMethod" class="form-control mb-3 flex-grow-1" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required></textarea>
 													
-													<div class="section-label mt-auto">Upload DLC Diagram</div>
-													<label class="upload-box p-3 text-center w-100 d-block mb-0">
-														<input type="file" class="d-none" name="dlcDiagram[0]" data-top-field="dlcDiagram" accept=".jpg,.png,.jpeg,.gif,.pdf" onchange="previewSig(this,'dlc-preview-empty')">
-														<div class="text-muted">
-															<span class="fw-semibold text-dark">Click to upload</span><br>
-															<small style="font-size: 0.75rem;">PNG, JPG, PDF</small>
-														</div>
-														<img id="dlc-preview-empty" class="img-fluid mt-2 rounded d-none shadow-sm">
-													</label>
+														<div class="section-label mt-auto">Upload DLC Diagram</div>
+														<input type="hidden" name="dlcDiagramPath[0]" value="">
+														<label class="upload-box p-3 text-center w-100 d-block mb-0">
+															<input type="file" class="d-none" name="dlcDiagram[0]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-empty')">
+															<div class="text-muted">
+																<span class="fw-semibold text-dark">Click to upload</span><br>
+																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
+															</div>
+															<img id="dlc-preview-empty" class="img-fluid mt-2 rounded d-none shadow-sm">
+														</label>
 												</div>
 											</div>
 

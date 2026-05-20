@@ -1,4 +1,5 @@
 const prisma = require('../../store/prisma');
+const path = require('path');
 
 const processDataLifeCycle = async (req, res) => {
   res.locals.processDataCycle = 'Process Data LifeCycle';
@@ -66,13 +67,26 @@ const saveProcessDataLifeCycle = async (req, res) => {
     await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
     await prisma.pDLC.deleteMany({ where: { piaAssessment_id: piaAssessmentId } });
 
+    const dlcDiagramByIndex = new Map();
+    if (Array.isArray(req.files)) {
+      req.files.forEach((file) => {
+        const match = file.fieldname.match(/^dlcDiagram\[(\d+)\]$/);
+        if (!match) return;
+        const index = Number.parseInt(match[1], 10);
+        if (!Number.isNaN(index)) {
+          const relativePath = path.join('uploads', 'dlc', file.filename).replace(/\\/g, '/');
+          dlcDiagramByIndex.set(index, relativePath);
+        }
+      });
+    }
+
     // Check if there's any data to save
     if (req.body.stakeholderName) {
       const stakeholderNames = normalizeIndexedArray(req.body.stakeholderName);
       const retentionPeriods = normalizeIndexedArray(req.body.retentionPeriod);
       const retentionDates = normalizeIndexedArray(req.body.retentionDate);
       const disposalMethods = normalizeIndexedArray(req.body.disposalMethod);
-      const dlcDiagrams = normalizeIndexedArray(req.body.dlcDiagram);
+      const dlcDiagramPaths = normalizeIndexedArray(req.body.dlcDiagramPath);
 
       const collectionsByRow = normalizeIndexedArray(req.body.collections);
       const usesByRow = normalizeIndexedArray(req.body.uses);
@@ -119,7 +133,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
           retentionPeriod: String(retentionPeriods[index] || '').trim(),
           retentionDate: parseDateValue(retentionDates[index]),
           disposalMethod: String(disposalMethods[index] || '').trim(),
-          dlcDiagram: dlcDiagrams[index] || null
+          dlcDiagram: dlcDiagramByIndex.get(index) || String(dlcDiagramPaths[index] || '').trim() || null
         };
 
         if (collections.length > 0) {
