@@ -226,14 +226,14 @@
 										<div class="d-flex flex-column gap-3">
 											
 											<% 
-												const orgMeasure = securityRows.find(m => m.securityType === 'ORGANIZATIONAL');
-												const physMeasure = securityRows.find(m => m.securityType === 'PHYSICAL');
-												const techMeasure = securityRows.find(m => m.securityType === 'TECHNICAL');
+												const orgMeasures = securityRows.filter(m => m.securityType === 'ORGANIZATIONAL');
+												const physMeasures = securityRows.filter(m => m.securityType === 'PHYSICAL');
+												const techMeasures = securityRows.filter(m => m.securityType === 'TECHNICAL');
 											%>
 
 											<!-- Organizational Toggle -->
 											<label class="cursor-pointer d-block m-0">
-												<input type="checkbox" class="btn-check security-toggle" id="toggle-org" data-target="panel-org" autocomplete="off" <%= orgMeasure ? 'checked' : '' %>>
+												<input type="checkbox" class="btn-check security-toggle" id="toggle-org" data-target="panel-org" autocomplete="off" <%= orgMeasures.length ? 'checked' : '' %>>
 												<div class="card border rounded-3 p-3 toggle-card transition-all h-100">
 													<div class="d-flex align-items-center mb-2">
 														<div class="toggle-circle me-3 flex-shrink-0">
@@ -246,7 +246,7 @@
 
 											<!-- Physical Toggle -->
 											<label class="cursor-pointer d-block m-0">
-												<input type="checkbox" class="btn-check security-toggle" id="toggle-phys" data-target="panel-phys" autocomplete="off" <%= physMeasure ? 'checked' : '' %>>
+												<input type="checkbox" class="btn-check security-toggle" id="toggle-phys" data-target="panel-phys" autocomplete="off" <%= physMeasures.length ? 'checked' : '' %>>
 												<div class="card border rounded-3 p-3 toggle-card transition-all h-100">
 													<div class="d-flex align-items-center mb-2">
 														<div class="toggle-circle me-3 flex-shrink-0">
@@ -259,7 +259,7 @@
 
 											<!-- Technical Toggle -->
 											<label class="cursor-pointer d-block m-0">
-												<input type="checkbox" class="btn-check security-toggle" id="toggle-tech" data-target="panel-tech" autocomplete="off" <%= techMeasure ? 'checked' : '' %>>
+												<input type="checkbox" class="btn-check security-toggle" id="toggle-tech" data-target="panel-tech" autocomplete="off" <%= techMeasures.length ? 'checked' : '' %>>
 												<div class="card border rounded-3 p-3 toggle-card transition-all h-100">
 													<div class="d-flex align-items-center mb-2">
 														<div class="toggle-circle me-3 flex-shrink-0">
@@ -286,43 +286,127 @@
 
 										<div class="d-flex flex-column gap-4 flex-grow-1">
 											<!-- Org Panel -->
-											<div id="panel-org" class="security-panel <%= orgMeasure ? '' : 'd-none' %>">
+											<div id="panel-org" class="security-panel <%= orgMeasures.length ? '' : 'd-none' %>">
 												<div class="card bg-white border border-primary border-opacity-50 shadow-sm rounded-3">
 													<div class="card-body p-4">
-														<div class="d-flex align-items-center mb-3">
-															<div class="bg-primary rounded-circle me-2" style="width: 12px; height: 12px;"></div>
-															<h6 class="fw-bold text-primary mb-0">Organizational Measures</h6>
+														<div class="d-flex align-items-center justify-content-between mb-3">
+															<div class="d-flex align-items-center">
+																<div class="bg-primary rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+																<h6 class="fw-bold text-primary mb-0">Organizational Measures</h6>
+															</div>
+															<button type="button" class="btn btn-primary btn-sm add-measure-btn" data-panel="panel-org">
+																<i class="bi bi-plus-lg"></i> Add
+															</button>
 														</div>
-														<input type="hidden" name="securityType[]" value="ORGANIZATIONAL" class="type-input" <%= orgMeasure ? '' : 'disabled' %>>
-														<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the organizational security measures implemented..." <%= orgMeasure ? '' : 'disabled' %>><%= orgMeasure ? orgMeasure.description : '' %></textarea>
+														<div class="measure-list">
+															<% const orgList = orgMeasures.length ? orgMeasures : [{}]; %>
+															<% orgList.forEach(function(measure, index) { %>
+																<div class="measure-item">
+																	<input type="hidden" name="securityType[]" value="ORGANIZATIONAL" class="type-input" <%= orgMeasures.length ? '' : 'disabled' %>>
+																	<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the organizational security measures implemented..." <%= orgMeasures.length ? '' : 'disabled' %>><%= measure.description || '' %></textarea>
+																	<div class="text-end mt-2">
+																		<button type="button" class="btn btn-outline-danger btn-sm remove-measure-btn <%= orgList.length === 1 ? 'd-none' : '' %>">
+																			<i class="bi bi-trash3 me-1"></i> Remove
+																		</button>
+																	</div>
+																</div>
+															<% }); %>
+														</div>
+														<div class="measure-template d-none">
+															<div class="measure-item">
+																<input type="hidden" name="securityType[]" value="ORGANIZATIONAL" class="type-input" disabled>
+																<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the organizational security measures implemented..." disabled></textarea>
+																<div class="text-end mt-2">
+																	<button type="button" class="btn btn-outline-danger btn-sm remove-measure-btn">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
 													</div>
 												</div>
 											</div>
 
 											<!-- Phys Panel -->
-											<div id="panel-phys" class="security-panel <%= physMeasure ? '' : 'd-none' %>">
+											<div id="panel-phys" class="security-panel <%= physMeasures.length ? '' : 'd-none' %>">
 												<div class="card bg-white border border-success border-opacity-50 shadow-sm rounded-3">
 													<div class="card-body p-4">
-														<div class="d-flex align-items-center mb-3">
-															<div class="bg-success rounded-circle me-2" style="width: 12px; height: 12px;"></div>
-															<h6 class="fw-bold text-success mb-0">Physical Measures</h6>
+														<div class="d-flex align-items-center justify-content-between mb-3">
+															<div class="d-flex align-items-center">
+																<div class="bg-success rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+																<h6 class="fw-bold text-success mb-0">Physical Measures</h6>
+															</div>
+															<button type="button" class="btn btn-success btn-sm add-measure-btn" data-panel="panel-phys">
+																<i class="bi bi-plus-lg"></i> Add
+															</button>
 														</div>
-														<input type="hidden" name="securityType[]" value="PHYSICAL" class="type-input" <%= physMeasure ? '' : 'disabled' %>>
-														<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the physical security measures implemented..." <%= physMeasure ? '' : 'disabled' %>><%= physMeasure ? physMeasure.description : '' %></textarea>
+														<div class="measure-list">
+															<% const physList = physMeasures.length ? physMeasures : [{}]; %>
+															<% physList.forEach(function(measure, index) { %>
+																<div class="measure-item">
+																	<input type="hidden" name="securityType[]" value="PHYSICAL" class="type-input" <%= physMeasures.length ? '' : 'disabled' %>>
+																	<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the physical security measures implemented..." <%= physMeasures.length ? '' : 'disabled' %>><%= measure.description || '' %></textarea>
+																	<div class="text-end mt-2">
+																		<button type="button" class="btn btn-outline-danger btn-sm remove-measure-btn <%= physList.length === 1 ? 'd-none' : '' %>">
+																			<i class="bi bi-trash3 me-1"></i> Remove
+																		</button>
+																	</div>
+																</div>
+															<% }); %>
+														</div>
+														<div class="measure-template d-none">
+															<div class="measure-item">
+																<input type="hidden" name="securityType[]" value="PHYSICAL" class="type-input" disabled>
+																<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the physical security measures implemented..." disabled></textarea>
+																<div class="text-end mt-2">
+																	<button type="button" class="btn btn-outline-danger btn-sm remove-measure-btn">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
 													</div>
 												</div>
 											</div>
 
 											<!-- Tech Panel -->
-											<div id="panel-tech" class="security-panel <%= techMeasure ? '' : 'd-none' %>">
+											<div id="panel-tech" class="security-panel <%= techMeasures.length ? '' : 'd-none' %>">
 												<div class="card bg-white border border-info border-opacity-50 shadow-sm rounded-3">
 													<div class="card-body p-4">
-														<div class="d-flex align-items-center mb-3">
-															<div class="bg-info rounded-circle me-2" style="width: 12px; height: 12px;"></div>
-															<h6 class="fw-bold text-info mb-0">Technical Measures</h6>
+														<div class="d-flex align-items-center justify-content-between mb-3">
+															<div class="d-flex align-items-center">
+																<div class="bg-info rounded-circle me-2" style="width: 12px; height: 12px;"></div>
+																<h6 class="fw-bold text-info mb-0">Technical Measures</h6>
+															</div>
+															<button type="button" class="btn btn-info btn-sm add-measure-btn" data-panel="panel-tech">
+																<i class="bi bi-plus-lg"></i> Add
+															</button>
 														</div>
-														<input type="hidden" name="securityType[]" value="TECHNICAL" class="type-input" <%= techMeasure ? '' : 'disabled' %>>
-														<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the technical security measures implemented..." <%= techMeasure ? '' : 'disabled' %>><%= techMeasure ? techMeasure.description : '' %></textarea>
+														<div class="measure-list">
+															<% const techList = techMeasures.length ? techMeasures : [{}]; %>
+															<% techList.forEach(function(measure, index) { %>
+																<div class="measure-item">
+																	<input type="hidden" name="securityType[]" value="TECHNICAL" class="type-input" <%= techMeasures.length ? '' : 'disabled' %>>
+																	<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the technical security measures implemented..." <%= techMeasures.length ? '' : 'disabled' %>><%= measure.description || '' %></textarea>
+																	<div class="text-end mt-2">
+																		<button type="button" class="btn btn-outline-danger btn-sm remove-measure-btn <%= techList.length === 1 ? 'd-none' : '' %>">
+																			<i class="bi bi-trash3 me-1"></i> Remove
+																		</button>
+																	</div>
+																</div>
+															<% }); %>
+														</div>
+														<div class="measure-template d-none">
+															<div class="measure-item">
+																<input type="hidden" name="securityType[]" value="TECHNICAL" class="type-input" disabled>
+																<textarea name="description[]" class="form-control desc-input" style="min-height: 120px; resize: vertical;" placeholder="Describe the technical security measures implemented..." disabled></textarea>
+																<div class="text-end mt-2">
+																	<button type="button" class="btn btn-outline-danger btn-sm remove-measure-btn">
+																		<i class="bi bi-trash3 me-1"></i> Remove
+																	</button>
+																</div>
+															</div>
+														</div>
 													</div>
 												</div>
 											</div>
@@ -503,7 +587,7 @@
 					class="btn btn-danger btn-modern shadow-sm">
 					<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
 				</a>
-				<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 6 of 6</span>
+				<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 6 of 7</span>
 				<button type="submit" form="securityForm"
 					class="btn btn-success btn-modern shadow-sm">
 					<i class="bi bi-check-circle me-2"></i> Save & Finish
@@ -517,24 +601,63 @@
 	document.addEventListener('DOMContentLoaded', () => {
 		const toggles = document.querySelectorAll('.security-toggle');
 		const placeholder = document.getElementById('no-selection-placeholder');
+		const container = document.getElementById('descriptions-container');
+
+		const updateRemoveButtons = (panel) => {
+			const items = panel.querySelectorAll('.measure-item');
+			items.forEach((item, index) => {
+				const removeBtn = item.querySelector('.remove-measure-btn');
+				if (removeBtn) {
+					removeBtn.classList.toggle('d-none', items.length === 1 && index === 0);
+				}
+			});
+		};
+
+		const enablePanelInputs = (panel, enabled) => {
+			panel.querySelectorAll('.type-input, .desc-input').forEach((input) => {
+				if (enabled) {
+					input.removeAttribute('disabled');
+				} else {
+					input.setAttribute('disabled', 'disabled');
+				}
+			});
+		};
+
+		const ensureOneItem = (panel) => {
+			const list = panel.querySelector('.measure-list');
+			if (!list) {
+				return;
+			}
+			const items = list.querySelectorAll('.measure-item');
+			if (items.length > 0) {
+				return;
+			}
+			const template = panel.querySelector('.measure-template .measure-item');
+			if (!template) {
+				return;
+			}
+			const clone = template.cloneNode(true);
+			list.appendChild(clone);
+		};
 
 		const updatePanels = () => {
 			let anyChecked = false;
 			toggles.forEach(toggle => {
 				const targetId = toggle.getAttribute('data-target');
 				const panel = document.getElementById(targetId);
-				const typeInput = panel.querySelector('.type-input');
-				const descInput = panel.querySelector('.desc-input');
+				if (!panel) {
+					return;
+				}
 
 				if (toggle.checked) {
 					panel.classList.remove('d-none');
-					typeInput.removeAttribute('disabled');
-					descInput.removeAttribute('disabled');
+					ensureOneItem(panel);
+					enablePanelInputs(panel, true);
+					updateRemoveButtons(panel);
 					anyChecked = true;
 				} else {
 					panel.classList.add('d-none');
-					typeInput.setAttribute('disabled', 'disabled');
-					descInput.setAttribute('disabled', 'disabled');
+					enablePanelInputs(panel, false);
 				}
 			});
 
@@ -548,6 +671,42 @@
 		toggles.forEach(toggle => {
 			toggle.addEventListener('change', updatePanels);
 		});
+
+		if (container) {
+			container.addEventListener('click', (event) => {
+				const addBtn = event.target.closest('.add-measure-btn');
+				if (addBtn) {
+					event.preventDefault();
+					const panelId = addBtn.getAttribute('data-panel');
+					const panel = panelId ? document.getElementById(panelId) : addBtn.closest('.security-panel');
+					if (!panel) {
+						return;
+					}
+					const list = panel.querySelector('.measure-list');
+					const template = panel.querySelector('.measure-template .measure-item');
+					if (!list || !template) {
+						return;
+					}
+					const clone = template.cloneNode(true);
+					list.appendChild(clone);
+					enablePanelInputs(panel, true);
+					updateRemoveButtons(panel);
+				}
+
+				const removeBtn = event.target.closest('.remove-measure-btn');
+				if (removeBtn) {
+					event.preventDefault();
+					const item = removeBtn.closest('.measure-item');
+					const panel = removeBtn.closest('.security-panel');
+					if (!item || !panel) {
+						return;
+					}
+					item.remove();
+					ensureOneItem(panel);
+					updateRemoveButtons(panel);
+				}
+			});
+		}
 
 		updatePanels();
 	});

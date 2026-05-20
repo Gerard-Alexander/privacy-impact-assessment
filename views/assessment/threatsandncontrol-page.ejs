@@ -12,6 +12,24 @@
 				const severityOpts = typeof severityOptions !== 'undefined' ? severityOptions : ['NEGLIGIBLE_1', 'LIMITED_2', 'SIGNIFICANT_3', 'EXTREME_4'];
 				const likelihoodOpts = typeof likelihoodOptions !== 'undefined' ? likelihoodOptions : ['UNLIKELY_1', 'POSSIBLE_2', 'LIKELY_3', 'ALMOST_CERTAIN_4'];
 				const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : '';
+				const groupedThreats = [];
+				const threatGroupsBySubject = {};
+				threatRows.forEach(function (threat) {
+					const subjectKey = threat.dataSubject_id ? String(threat.dataSubject_id) : '0';
+					if (!threatGroupsBySubject[subjectKey]) {
+						threatGroupsBySubject[subjectKey] = [];
+					}
+					threatGroupsBySubject[subjectKey].push(threat);
+				});
+				Object.keys(threatGroupsBySubject).forEach(function (key) {
+					groupedThreats.push({
+						dataSubjectId: key === '0' ? '' : Number(key),
+						threats: threatGroupsBySubject[key]
+					});
+				});
+				if (groupedThreats.length === 0) {
+					groupedThreats.push({ dataSubjectId: '', threats: [{}] });
+				}
 			%>
 			<%- include('../layouts/stepper', { currentStep: 5, dpsTitle: 'Data Processing System' ,
 				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
@@ -28,134 +46,130 @@
 				</div>
 			<% } %>
 			<div class="mx-auto" style="max-width: 1000px;">
-					<style>
-					/* Modern UI Enhancements */
-					.form-floating > .form-control:focus ~ label,
-					.form-floating > .form-control:not(:placeholder-shown) ~ label,
-					.form-floating > .form-select ~ label {
-						color: var(--bs-primary);
-						font-weight: 600;
-					}
-					.form-control, .form-select {
-						border-radius: 0.75rem;
-						border: 1px solid #dee2e6;
-						padding: 0.85rem 1.2rem;
-						transition: all 0.2s ease-in-out;
-					}
-					.form-control:focus, .form-select:focus {
-						border-color: var(--bs-primary);
-						box-shadow: 0 0 0 0.25rem rgba(13, 27, 75, 0.1);
-					}
-					.custom-card {
-						border-radius: 1.25rem;
-						background: #ffffff;
-						box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-						overflow: hidden;
-						animation: fadeIn 0.5s ease-out;
-					}
-					.custom-header {
-						background: linear-gradient(135deg, rgba(13, 27, 75, 0.05) 0%, transparent 100%);
-						border-bottom: 2px solid rgba(13, 27, 75, 0.1);
-						padding: 1.5rem 2rem;
-					}
-					.custom-header-title {
-						color: #0d1b4b; /* matching sidebar primary color */
-						font-weight: 700;
-						letter-spacing: -0.5px;
-					}
-					.btn-modern.btn-sm {
-						padding: 0.4rem 1rem;
-						font-size: 0.875rem;
-						border-radius: 0.5rem;
-					}
-					.btn-modern {
-						border-radius: 0.75rem;
-						padding: 0.75rem 1.75rem;
-						font-weight: 600;
-						transition: all 0.3s ease;
-						display: inline-flex;
-						align-items: center;
-						gap: 0.5rem;
-						border: none;
-					}
-					.btn-modern:hover {
-						transform: translateY(-2px);
-						box-shadow: 0 5px 15px rgba(13, 27, 75, 0.2);
-					}
-					.btn-primary.btn-modern {
-						background: linear-gradient(135deg, #3b82f6, #2563eb);
-						color: white;
-						box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-					}
-					.btn-primary.btn-modern:hover {
-						box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
-						background: linear-gradient(135deg, #2563eb, #1d4ed8);
-					}
-					.btn-danger.btn-modern {
-						background: #fff;
-						color: #ef4444;
-						border: 1px solid #fee2e2;
-						box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-					}
-					.btn-danger.btn-modern:hover {
-						background: #fef2f2;
-						border-color: #fca5a5;
-						transform: translateY(-2px);
-					}
-					@keyframes fadeIn {
-						from { opacity: 0; transform: translateY(10px); }
-						to { opacity: 1; transform: translateY(0); }
-					}
-					.inner-card {
-						background: #ffffff;
-						border: 1px solid #e2e8f0;
-						border-radius: 1rem;
-						box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-						padding: 1rem;
-						height: 100%;
-						transition: all 0.3s ease;
-					}
-					.inner-card:hover {
-						transform: translateY(-4px);
-						box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1);
-						border-color: rgba(59, 130, 246, 0.3);
-					}
-					.inner-card-title {
-						font-size: 1.1rem;
-						font-weight: 700;
-						color: #0f172a;
-						margin-bottom: 0.25rem;
-						display: flex;
-						align-items: center;
-						gap: 0.5rem;
-					}
-					.inner-card-desc {
-						font-size: 0.85rem;
-						color: #64748b;
-						margin-bottom: 1.25rem;
-					}
-					.sub-header-bar {
-						background: linear-gradient(90deg, #f8fafc, #ffffff);
-						border-bottom: 1px solid #e2e8f0;
-					}
-					.section-label {
-						font-weight: 600;
-						color: #0f172a;
-						font-size: 0.85rem;
-						margin-bottom: 0.5rem;
-						letter-spacing: 0.2px;
-					}
-					</style>
+				<style>
+				.form-floating > .form-control:focus ~ label,
+				.form-floating > .form-control:not(:placeholder-shown) ~ label,
+				.form-floating > .form-select ~ label {
+					color: var(--bs-primary);
+					font-weight: 600;
+				}
+				.form-control, .form-select {
+					border-radius: 0.75rem;
+					border: 1px solid #dee2e6;
+					padding: 0.85rem 1.2rem;
+					transition: all 0.2s ease-in-out;
+				}
+				.form-control:focus, .form-select:focus {
+					border-color: var(--bs-primary);
+					box-shadow: 0 0 0 0.25rem rgba(13, 27, 75, 0.1);
+				}
+				.custom-card {
+					border-radius: 1.25rem;
+					background: #ffffff;
+					box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+					overflow: hidden;
+					animation: fadeIn 0.5s ease-out;
+				}
+				.custom-header {
+					background: linear-gradient(135deg, rgba(13, 27, 75, 0.05) 0%, transparent 100%);
+					border-bottom: 2px solid rgba(13, 27, 75, 0.1);
+					padding: 1.5rem 2rem;
+				}
+				.custom-header-title {
+					color: #0d1b4b; /* matching sidebar primary color */
+					font-weight: 700;
+					letter-spacing: -0.5px;
+				}
+				.btn-modern.btn-sm {
+					padding: 0.4rem 1rem;
+					font-size: 0.875rem;
+					border-radius: 0.5rem;
+				}
+				.btn-modern {
+					border-radius: 0.75rem;
+					padding: 0.75rem 1.75rem;
+					font-weight: 600;
+					transition: all 0.3s ease;
+					display: inline-flex;
+					align-items: center;
+					gap: 0.5rem;
+					border: none;
+				}
+				.btn-modern:hover {
+					transform: translateY(-2px);
+					box-shadow: 0 5px 15px rgba(13, 27, 75, 0.2);
+				}
+				.btn-primary.btn-modern {
+					background: linear-gradient(135deg, #3b82f6, #2563eb);
+					color: white;
+					box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+				}
+				.btn-primary.btn-modern:hover {
+					box-shadow: 0 8px 20px rgba(59, 130, 246, 0.35);
+					background: linear-gradient(135deg, #2563eb, #1d4ed8);
+				}
+				.btn-danger.btn-modern {
+					background: #fff;
+					color: #ef4444;
+					border: 1px solid #fee2e2;
+					box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+				}
+				.btn-danger.btn-modern:hover {
+					background: #fef2f2;
+					border-color: #fca5a5;
+					transform: translateY(-2px);
+				}
+				@keyframes fadeIn {
+					from { opacity: 0; transform: translateY(10px); }
+					to { opacity: 1; transform: translateY(0); }
+				}
+				.inner-card {
+					background: #ffffff;
+					border: 1px solid #e2e8f0;
+					border-radius: 1rem;
+					box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+					padding: 1rem;
+					height: 100%;
+					transition: all 0.3s ease;
+				}
+				.inner-card:hover {
+					transform: translateY(-4px);
+					box-shadow: 0 12px 24px rgba(59, 130, 246, 0.1);
+					border-color: rgba(59, 130, 246, 0.3);
+				}
+				.inner-card-title {
+					font-size: 1.1rem;
+					font-weight: 700;
+					color: #0f172a;
+					margin-bottom: 0.25rem;
+					display: flex;
+					align-items: center;
+					gap: 0.5rem;
+				}
+				.inner-card-desc {
+					font-size: 0.85rem;
+					color: #64748b;
+					margin-bottom: 1.25rem;
+				}
+				.sub-header-bar {
+					background: linear-gradient(90deg, #f8fafc, #ffffff);
+					border-bottom: 1px solid #e2e8f0;
+				}
+				.section-label {
+					font-weight: 600;
+					color: #0f172a;
+					font-size: 0.85rem;
+					margin-bottom: 0.5rem;
+					letter-spacing: 0.2px;
+				}
+				</style>
 				<form id="threatsForm" action="/assessment/threatsandcontrols" method="POST">
 					<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
 
 					<div id="threatsRowsContainer">
-						<% if (threatRows.length > 0) { %>
-							<% threatRows.forEach(function(threat, index) { %>
-								<!-- Single Row Template (Populated) -->
-								<div class="threats-row border-0 custom-card mb-4">
-									<% if (index === 0) { %>
-									<!-- Header (First Row Only) -->
+							<% groupedThreats.forEach(function(group, groupIndex) { %>
+								<div class="data-subject-group border-0 custom-card mb-4">
+									<% if (groupIndex === 0) { %>
 									<div class="custom-header threats-main-header d-flex justify-content-between align-items-center flex-wrap gap-3">
 										<div class="d-flex align-items-center">
 											<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
@@ -166,320 +180,139 @@
 												<small class="text-muted">Identify potential threats and security controls.</small>
 											</div>
 										</div>
-										<button type="button" id="addRowBtn"
-											class="btn btn-primary btn-modern btn-sm shadow-sm add-row-btn">
-											<i class="bi bi-plus-lg me-1"></i> Add Row
+										<button type="button" class="btn btn-primary btn-modern btn-sm shadow-sm add-group-btn">
+											<i class="bi bi-plus-lg me-1"></i> Add Data Subject
 										</button>
 									</div>
 									<% } %>
 
-									<!-- Sub-header -->
 									<div class="sub-header-bar d-flex justify-content-between align-items-center py-3 px-4">
 										<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-											<i class="bi bi-arrow-repeat text-primary fs-5"></i>
-											Threat Assessment <span class="badge bg-primary rounded-pill row-number ms-1"><%= index + 1 %></span>
+											<i class="bi bi-person-lines-fill text-primary fs-5"></i>
+											Data Subject <span class="badge bg-primary rounded-pill group-number ms-1"><%= groupIndex + 1 %></span>
 										</h6>
 										<div>
-											<button type="button" class="btn btn-primary btn-sm me-2 add-row-btn shadow-sm <%= index === 0 ? 'd-none' : '' %>" title="Add a new Threat Row">
-												<i class="bi bi-plus-lg"></i> Add Row
+											<button type="button" class="btn btn-primary btn-sm me-2 add-threat-btn shadow-sm" title="Add a new Threat">
+												<i class="bi bi-plus-lg"></i> Add Threat
 											</button>
 											<button type="button" class="btn btn-sm btn-light text-secondary me-2 toggle-collapse-btn" title="Minimize/Maximize">
 												<i class="bi bi-chevron-up"></i>
 											</button>
-											<button type="button" class="btn btn-outline-danger btn-sm remove-row-btn <%= index === 0 ? 'd-none' : '' %>">
-												<i class="bi bi-trash3 me-1"></i> Remove Cycle
+											<button type="button" class="btn btn-outline-danger btn-sm remove-group-btn <%= groupIndex === 0 ? 'd-none' : '' %>">
+												<i class="bi bi-trash3 me-1"></i> Remove Data Subject
 											</button>
 										</div>
 									</div>
 
-									<div class="threats-row-body bg-white p-4">
-										<div class="row g-4">
-											<!-- Card 1 - Data Subject + Threat Description (combined) -->
-											<div class="col-12 col-md-6 col-lg-4">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Data Subject & Threat
-													</div>
-													<div class="inner-card-desc mb-2">Impacted data subjects and threat details.</div>
-													
-													<div class="section-label">Who are the impacted data subject?</div>
-													<select name="dataSubjectId[]" class="form-select mb-3" required>
-														<option value="" <%= !threat.dataSubject_id ? 'selected' : '' %>>Select...</option>
+									<div class="group-body bg-white p-4">
+										<div class="row g-4 mb-3">
+											<div class="col-12">
+												<div class="inner-card d-flex flex-column">
+													<div class="inner-card-title">Who are the impacted data subject?</div>
+													<div class="inner-card-desc mb-2">Select the data subject to attach multiple threat assessments.</div>
+													<select class="form-select data-subject-select" required>
+														<option value="" <%= !group.dataSubjectId ? 'selected' : '' %>>Select...</option>
 														<% dataSubjectOptions.forEach(function(subject) { %>
-															<option value="<%= subject.id %>" <%= threat.dataSubject_id === subject.id ? 'selected' : '' %>>
+															<option value="<%= subject.id %>" <%= group.dataSubjectId === subject.id ? 'selected' : '' %>>
 																<%= subject.name %><%= subject.dataSubjectType ? ' (' + subject.dataSubjectType.dataSubjectType + ')' : '' %>
 															</option>
 														<% }); %>
 													</select>
-													
-													<div class="section-label mt-auto">What is the threat and its possible consequences?</div>
-													<textarea name="threatDescription[]" class="form-control" style="min-height: 140px; resize: vertical;" required><%= threat.threats_possibleConsequences || '' %></textarea>
 												</div>
 											</div>
+										</div>
 
-											<!-- Card 3 - Type of Threat -->
-											<div class="col-12 col-md-6 col-lg-4">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Type of Threat
-													</div>
-													<div class="inner-card-desc mb-2">Select threat category (select all that apply).</div>
-													
-													<div class="d-flex flex-column gap-2 mt-2">
-														<% threatTypeOpts.forEach(function(threatType) { %>
-															<div class="form-check custom-check">
-																<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_<%= index %>_<%= threatType %>"
-																	<% if (threat.typeOfThreatsArray && threat.typeOfThreatsArray.includes(threatType)) { %>checked<% } %>>
-																<label class="form-check-label" for="threatType_<%= index %>_<%= threatType %>">
-																	<%= threatType.replace(/_/g, ' ') %>
-																</label>
-															</div>
-														<% }); %>
-													</div>
-													<input type="hidden" name="threatType[]" class="threat-type-hidden" value="">
-												</div>
-											</div>
-
-											<!-- Card 4 & 5 - Risk Assessment & Rating -->
-											<div class="col-12 col-md-6 col-lg-4">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Risk Assessment
-													</div>
-													<div class="inner-card-desc mb-2">Determine severity and likelihood.</div>
-													
-													<div class="section-label">Severity Level:</div>
-													<select name="severityLevel[]" class="form-select mb-3" required>
-														<option value="" <%= !threat.severityLevel ? 'selected' : '' %>>Select...</option>
-												<% severityOpts.forEach(function(option) { %>
-															<option value="<%= option %>" <%= threat.severityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
-														<% }); %>
-													</select>
-													
-													<div class="section-label">Likelihood Level:</div>
-													<select name="likelihoodLevel[]" class="form-select mb-3" required>
-														<option value="" <%= !threat.likelihoodLevel ? 'selected' : '' %>>Select...</option>
-												<% likelihoodOpts.forEach(function(option) { %>
-															<option value="<%= option %>" <%= threat.likelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
-														<% }); %>
-													</select>
-													
-													<div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
+										<div class="threat-item-list">
+											<% (group.threats && group.threats.length ? group.threats : [{}]).forEach(function(threat, threatIndex) { %>
+												<div class="threat-item custom-card mb-3">
+													<div class="sub-header-bar d-flex justify-content-between align-items-center py-2 px-3">
+														<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+															<i class="bi bi-arrow-repeat text-primary"></i>
+															Threat Assessment <span class="badge bg-primary rounded-pill threat-number ms-1"><%= threatIndex + 1 %></span>
+														</h6>
 														<div>
-															<div class="fw-bold text-dark" style="font-size: 0.9rem;">Total Risk</div>
+															<button type="button" class="btn btn-outline-danger btn-sm remove-threat-btn <%= threatIndex === 0 ? 'd-none' : '' %>">
+																<i class="bi bi-trash3 me-1"></i> Remove Threat
+															</button>
 														</div>
-														<span class="risk-rating-display fw-bold fs-6">
-															<%= threat.riskRating || 'None' %>
-														</span>
-														<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
 													</div>
-												</div>
-											</div>
+													<div class="threat-item-body p-4">
+														<div class="inner-card threat-item-card d-flex flex-column">
+															<div class="section-label">What is the threat and its possible consequences?</div>
+															<textarea name="threatDescription[]" class="form-control mb-3" style="min-height: 120px; resize: vertical;" required><%= threat.threats_possibleConsequences || '' %></textarea>
 
-											<!-- Card 6 - Proposed Control -->
-											<div class="col-12 col-md-6 col-lg-6">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Proposed Control Measure
-													</div>
-													<div class="inner-card-desc mb-2">What control measures are proposed?</div>
-													
-													<textarea name="proposedControl[]" class="form-control flex-grow-1" style="min-height: 100px; resize: vertical;" required><%= threat.proposedControl || '' %></textarea>
-												</div>
-											</div>
-
-											<!-- Card 7 - Type of Measure -->
-											<div class="col-12 col-md-6 col-lg-6">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Type of Measure
-													</div>
-													<div class="inner-card-desc mb-2">Select measure categories (select all that apply).</div>
-													
-													<div class="d-flex flex-column gap-2 mt-2">
-														<% measureTypeOpts.forEach(function(measureType) { %>
-															<div class="form-check">
-																<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" id="measureType_<%= index %>_<%= measureType %>"
-																	<% if (threat.typeOfMeasureArray && threat.typeOfMeasureArray.includes(measureType)) { %>checked<% } %>>
-																<label class="form-check-label" for="measureType_<%= index %>_<%= measureType %>">
-																	<%= measureType.replace(/_/g, ' ') %>
-																</label>
+															<div class="section-label">Type of Threat (select all that apply)</div>
+															<div class="d-flex flex-column gap-2 mb-3">
+																<% threatTypeOpts.forEach(function(threatType) { %>
+																	<div class="form-check custom-check">
+																		<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" data-kind="threatType" data-value="<%= threatType %>"
+																			<% if (threat.typeOfThreatsArray && threat.typeOfThreatsArray.includes(threatType)) { %>checked<% } %>>
+																		<label class="form-check-label"><%= threatType.replace(/_/g, ' ') %></label>
+																	</div>
+																<% }); %>
 															</div>
-														<% }); %>
-													</div>
-													<input type="hidden" name="measureType[]" class="measure-type-hidden" value="">
-												</div>
-											</div>
-										</div>
-									</div>
-								</div>
-								<% }); %>
-						<% } else { %>
-							<!-- Single Row Template (Empty) -->
-							<div class="threats-row border-0 custom-card mb-4">
-								<!-- Header (First Row Only) -->
-								<div class="custom-header threats-main-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-									<div class="d-flex align-items-center">
-										<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm" style="width: 40px; height: 40px;">
-											<i class="bi bi-exclamation-triangle-fill fs-5"></i>
-										</div>
-										<div>
-											<h5 class="mb-0 custom-header-title">Section E - Threats and Controls</h5>
-											<small class="text-muted">Identify potential threats and security controls.</small>
-										</div>
-									</div>
-									<button type="button" id="addRowBtn"
-										class="btn btn-primary btn-modern btn-sm shadow-sm add-row-btn">
-										<i class="bi bi-plus-lg me-1"></i> Add Row
-									</button>
-								</div>
-								<!-- Sub-header -->
-								<div class="sub-header-bar d-flex justify-content-between align-items-center py-3 px-4">
-									<h6 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-										<i class="bi bi-arrow-repeat text-primary fs-5"></i>
-										Threat Assessment <span class="badge bg-primary rounded-pill row-number ms-1">1</span>
-									</h6>
-									<div>
-										<button type="button" class="btn btn-primary btn-sm me-2 add-row-btn shadow-sm d-none" title="Add a new Threat Row">
-											<i class="bi bi-plus-lg"></i> Add Row
-										</button>
-										<button type="button" class="btn btn-sm btn-light text-secondary me-2 toggle-collapse-btn" title="Minimize/Maximize">
-											<i class="bi bi-chevron-up"></i>
-										</button>
-										<button type="button" class="btn btn-outline-danger btn-sm remove-row-btn d-none">
-											<i class="bi bi-trash3 me-1"></i> Remove Cycle
-										</button>
-									</div>
-								</div>
-								<div class="threats-row-body bg-white p-4">
-									<div class="row g-4">
-										<!-- Card 1 - Data Subject + Threat Description (combined) -->
-										<div class="col-12 col-md-6 col-lg-4">
-											<div class="inner-card d-flex flex-column h-100">
-												<div class="inner-card-title">
-													Data Subject & Threat
-												</div>
-												<div class="inner-card-desc mb-2">Impacted data subjects and threat details.</div>
-												
-												<div class="section-label">Who are the impacted data subject?</div>
-												<select name="dataSubjectId[]" class="form-select mb-3" required>
-													<option value="">Select...</option>
-													<% dataSubjectOptions.forEach(function(subject) { %>
-														<option value="<%= subject.id %>">
-															<%= subject.name %><%= subject.dataSubjectType ? ' (' + subject.dataSubjectType.dataSubjectType + ')' : '' %>
-														</option>
-													<% }); %>
-												</select>
-												
-												<div class="section-label mt-auto">What is the threat and its possible consequences?</div>
-												<textarea name="threatDescription[]" class="form-control" style="min-height: 140px; resize: vertical;" required></textarea>
-											</div>
-										</div>
+															<input type="hidden" name="threatType[]" class="threat-type-hidden" value="">
 
-										<!-- Card 3 - Type of Threat -->
-										<div class="col-12 col-md-6 col-lg-4">
-											<div class="inner-card d-flex flex-column h-100">
-												<div class="inner-card-title">
-													Type of Threat
-												</div>
-												<div class="inner-card-desc mb-2">Select threat category (select all that apply).</div>
-												
-												<div class="d-flex flex-column gap-2 mt-2">
-											<% threatTypeOpts.forEach(function(threatType) { %>
-													<div class="form-check custom-check">
-														<input class="form-check-input threat-type-checkbox" type="checkbox" value="<%= threatType %>" id="threatType_0_<%= threatType %>">
-														<label class="form-check-label" for="threatType_0_<%= threatType %>">
-															<%= threatType.replace(/_/g, ' ') %>
-														</label>
-													</div>
-												<% }); %>
-												</div>
-												<input type="hidden" name="threatType[]" class="threat-type-hidden" value="">
-											</div>
-										</div>
+															<div class="row g-3">
+																<div class="col-12 col-md-6">
+																	<div class="section-label">Severity Level</div>
+																	<select name="severityLevel[]" class="form-select" required>
+																		<option value="" <%= !threat.severityLevel ? 'selected' : '' %>>Select...</option>
+																		<% severityOpts.forEach(function(option) { %>
+																			<option value="<%= option %>" <%= threat.severityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+																		<% }); %>
+																	</select>
+																</div>
+																<div class="col-12 col-md-6">
+																	<div class="section-label">Likelihood Level</div>
+																	<select name="likelihoodLevel[]" class="form-select" required>
+																		<option value="" <%= !threat.likelihoodLevel ? 'selected' : '' %>>Select...</option>
+																		<% likelihoodOpts.forEach(function(option) { %>
+																			<option value="<%= option %>" <%= threat.likelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+																		<% }); %>
+																	</select>
+																</div>
+															</div>
+															<div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
+																<div class="fw-bold text-dark" style="font-size: 0.9rem;">Total Risk</div>
+																<span class="risk-rating-display fw-bold fs-6"><%= threat.riskRating || 'None' %></span>
+																<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
+															</div>
 
-										<!-- Card 4 & 5 - Risk Assessment & Rating -->
-										<div class="col-12 col-md-6 col-lg-4">
-											<div class="inner-card d-flex flex-column h-100">
-												<div class="inner-card-title">
-													Risk Assessment
-												</div>
-												<div class="inner-card-desc mb-2">Determine severity and likelihood.</div>
-												
-												<div class="section-label">Severity Level:</div>
-												<select name="severityLevel[]" class="form-select mb-3" required>
-													<option value="">Select...</option>
-												<% severityOpts.forEach(function(option) { %>
-														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
-													<% }); %>
-												</select>
-												
-												<div class="section-label">Likelihood Level:</div>
-												<select name="likelihoodLevel[]" class="form-select mb-3" required>
-													<option value="">Select...</option>
-												<% likelihoodOpts.forEach(function(option) { %>
-														<option value="<%= option %>"><%= option.replace(/_/g, ' ') %></option>
-													<% }); %>
-												</select>
-												
-												<div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between">
-													<div>
-														<div class="fw-bold text-dark" style="font-size: 0.9rem;">Total Risk</div>
-													</div>
-													<span class="risk-rating-display fw-bold fs-6 text-secondary">None</span>
-													<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="">
-												</div>
-											</div>
-										</div>
+															<div class="section-label mt-3">Proposed Control Measure</div>
+															<textarea name="proposedControl[]" class="form-control mb-3" style="min-height: 110px; resize: vertical;" required><%= threat.proposedControl || '' %></textarea>
 
-										<!-- Card 6 - Proposed Control -->
-										<div class="col-12 col-md-6 col-lg-6">
-											<div class="inner-card d-flex flex-column h-100">
-												<div class="inner-card-title">
-													Proposed Control Measure
-												</div>
-												<div class="inner-card-desc mb-2">What control measures are proposed?</div>
-												
-												<textarea name="proposedControl[]" class="form-control flex-grow-1" style="min-height: 100px; resize: vertical;" required></textarea>
-											</div>
-										</div>
-
-										<!-- Card 7 - Type of Measure -->
-										<div class="col-12 col-md-6 col-lg-6">
-											<div class="inner-card d-flex flex-column h-100">
-												<div class="inner-card-title">
-													Type of Measure
-												</div>
-												<div class="inner-card-desc mb-2">Select measure categories (select all that apply).</div>
-												
-												<div class="d-flex flex-column gap-2 mt-2">
-												<% measureTypeOpts.forEach(function(measureType) { %>
-														<div class="form-check custom-check">
-															<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" id="measureType_0_<%= measureType %>">
-															<label class="form-check-label" for="measureType_0_<%= measureType %>">
-																<%= measureType.replace(/_/g, ' ') %>
-															</label>
+															<div class="section-label">Type of Measure (select all that apply)</div>
+															<div class="d-flex flex-column gap-2">
+																<% measureTypeOpts.forEach(function(measureType) { %>
+																	<div class="form-check custom-check">
+																		<input class="form-check-input measure-type-checkbox" type="checkbox" value="<%= measureType %>" data-kind="measureType" data-value="<%= measureType %>"
+																			<% if (threat.typeOfMeasureArray && threat.typeOfMeasureArray.includes(measureType)) { %>checked<% } %>>
+																		<label class="form-check-label"><%= measureType.replace(/_/g, ' ') %></label>
+																	</div>
+																<% }); %>
+															</div>
+															<input type="hidden" name="measureType[]" class="measure-type-hidden" value="">
+															<input type="hidden" name="dataSubjectId[]" class="data-subject-hidden" value="">
 														</div>
-													<% }); %>
+													</div>
 												</div>
-												<input type="hidden" name="measureType[]" class="measure-type-hidden" value="">
-											</div>
+											<% }); %>
 										</div>
 									</div>
 								</div>
-							</div>
-						<% } %>
+							<% }); %>
 					</div>
 				</form>
 			</div>
 			<hr class="my-4 text-muted mx-auto" style="max-width: 1000px;">
 			<div class="d-flex justify-content-between align-items-center mt-2 mx-auto" style="max-width: 1000px;">
-				<a href="/assessment/personalinfoinventory?id=<%= assessmentId %>"
+				<button type="submit" form="threatsForm" name="redirectTo" value="previous"
 					class="btn btn-danger btn-modern shadow-sm">
 					<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
-				</a>
-				<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 5 of 6</span>
-				<button type="submit" form="threatsForm"
+				</button>
+				<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 5 of 7</span>
+				<button type="submit" form="threatsForm" name="redirectTo" value="next"
 					class="btn btn-primary btn-modern shadow-sm">
 					Next Page <i class="bi bi-arrow-right-short fs-5"></i>
 				</button>
@@ -510,56 +343,91 @@
 			}
 		};
 
-		const updateRowNumbers = () => {
-			const rows = container.querySelectorAll('.threats-row');
-			rows.forEach((row, index) => {
-				const rowNumber = row.querySelector('.row-number');
-				if (rowNumber) {
-					rowNumber.textContent = String(index + 1);
-				}
-
-				const removeButton = row.querySelector('.remove-row-btn');
-				if (removeButton) {
-					removeButton.classList.toggle('d-none', index === 0);
-				}
-				
-				const subHeaderAddBtn = row.querySelector('.sub-header-bar .add-row-btn');
-				if (subHeaderAddBtn) {
-					subHeaderAddBtn.classList.toggle('d-none', index === 0);
+		const updateCheckboxIds = (item, groupIndex, threatIndex) => {
+			item.querySelectorAll('input[data-kind]').forEach((input) => {
+				const kind = input.dataset.kind;
+				const value = input.dataset.value;
+				const id = `${kind}_${groupIndex}_${threatIndex}_${value}`;
+				input.id = id;
+				const label = input.closest('.form-check')?.querySelector('label');
+				if (label) {
+					label.setAttribute('for', id);
 				}
 			});
 		};
 
-		const syncCheckboxes = (row) => {
-			const threatCheckboxes = row.querySelectorAll('.threat-type-checkbox');
-			const threatHidden = row.querySelector('.threat-type-hidden');
+		const updateGroupNumbers = () => {
+			const groups = container.querySelectorAll('.data-subject-group');
+			groups.forEach((group, groupIndex) => {
+				const groupNumber = group.querySelector('.group-number');
+				if (groupNumber) {
+					groupNumber.textContent = String(groupIndex + 1);
+				}
+
+				const removeGroupBtn = group.querySelector('.remove-group-btn');
+				if (removeGroupBtn) {
+					removeGroupBtn.classList.toggle('d-none', groupIndex === 0);
+				}
+
+				const threatItems = group.querySelectorAll('.threat-item');
+				threatItems.forEach((item, threatIndex) => {
+					const threatNumber = item.querySelector('.threat-number');
+					if (threatNumber) {
+						threatNumber.textContent = String(threatIndex + 1);
+					}
+
+					const removeThreatBtn = item.querySelector('.remove-threat-btn');
+					if (removeThreatBtn) {
+						removeThreatBtn.classList.toggle('d-none', threatIndex === 0);
+					}
+
+					updateCheckboxIds(item, groupIndex, threatIndex);
+				});
+			});
+		};
+
+		const syncCheckboxes = (item) => {
+			const threatCheckboxes = item.querySelectorAll('.threat-type-checkbox');
+			const threatHidden = item.querySelector('.threat-type-hidden');
 			const selectedThreats = Array.from(threatCheckboxes)
 				.filter(cb => cb.checked)
 				.map(cb => cb.value)
 				.join(', ');
-			threatHidden.value = selectedThreats;
+			if (threatHidden) {
+				threatHidden.value = selectedThreats;
+			}
 
-			const measureCheckboxes = row.querySelectorAll('.measure-type-checkbox');
-			const measureHidden = row.querySelector('.measure-type-hidden');
+			const measureCheckboxes = item.querySelectorAll('.measure-type-checkbox');
+			const measureHidden = item.querySelector('.measure-type-hidden');
 			const selectedMeasures = Array.from(measureCheckboxes)
 				.filter(cb => cb.checked)
 				.map(cb => cb.value)
 				.join(', ');
-			measureHidden.value = selectedMeasures;
+			if (measureHidden) {
+				measureHidden.value = selectedMeasures;
+			}
 		};
 
-		const computeRiskForRow = (row) => {
-			const severitySelect = row.querySelector('select[name="severityLevel[]"]');
-			const likelihoodSelect = row.querySelector('select[name="likelihoodLevel[]"]');
-			const display = row.querySelector('.risk-rating-display');
-			const hidden = row.querySelector('.risk-rating-hidden');
+		const syncDataSubject = (group) => {
+			const subjectSelect = group.querySelector('.data-subject-select');
+			const subjectValue = subjectSelect ? subjectSelect.value : '';
+			group.querySelectorAll('.data-subject-hidden').forEach((input) => {
+				input.value = subjectValue;
+			});
+		};
 
-			let sevVal = severitySelect ? severitySelect.value : '';
-			let likVal = likelihoodSelect ? likelihoodSelect.value : '';
+		const computeRiskForItem = (item) => {
+			const severitySelect = item.querySelector('select[name="severityLevel[]"]');
+			const likelihoodSelect = item.querySelector('select[name="likelihoodLevel[]"]');
+			const display = item.querySelector('.risk-rating-display');
+			const hidden = item.querySelector('.risk-rating-hidden');
+
+			const sevVal = severitySelect ? severitySelect.value : '';
+			const likVal = likelihoodSelect ? likelihoodSelect.value : '';
 
 			const parseNumber = (val) => {
-				const m = String(val).match(/_(\d+)$/);
-				return m ? Number.parseInt(m[1], 10) : 0;
+				const match = String(val).match(/_(\d+)$/);
+				return match ? Number.parseInt(match[1], 10) : 0;
 			};
 
 			const sevNum = parseNumber(sevVal);
@@ -568,7 +436,7 @@
 
 			if (display) {
 				display.classList.remove('text-success', 'text-warning', 'text-danger', 'text-secondary', 'text-primary', 'bg-primary', 'bg-opacity-10', 'bg-success', 'bg-warning', 'bg-danger', 'text-white', 'text-dark', 'bg-light', 'border');
-				
+
 				if (!product) {
 					display.classList.add('text-secondary');
 					display.textContent = 'None';
@@ -583,92 +451,125 @@
 					display.textContent = product + ' (High)';
 				}
 			}
-			if (hidden) hidden.value = product;
+			if (hidden) {
+				hidden.value = product;
+			}
+		};
+
+		const resetThreatItem = (item) => {
+			item.querySelectorAll('input, select, textarea').forEach(createBlankValue);
+			const display = item.querySelector('.risk-rating-display');
+			const hidden = item.querySelector('.risk-rating-hidden');
+			if (display) {
+				display.textContent = 'None';
+				display.classList.remove('text-success', 'text-warning', 'text-danger');
+				display.classList.add('text-secondary');
+			}
+			if (hidden) hidden.value = '';
 		};
 
 		document.addEventListener('change', function (event) {
-			if (event.target.classList.contains('threat-type-checkbox') || event.target.classList.contains('measure-type-checkbox')) {
-				const row = event.target.closest('.threats-row');
-				if (row) {
-					syncCheckboxes(row);
+			if (event.target.classList.contains('data-subject-select')) {
+				const group = event.target.closest('.data-subject-group');
+				if (group) {
+					syncDataSubject(group);
 				}
 			}
 
-			// Recompute risk rating when severity or likelihood changes
+			if (event.target.classList.contains('threat-type-checkbox') || event.target.classList.contains('measure-type-checkbox')) {
+				const item = event.target.closest('.threat-item');
+				if (item) {
+					syncCheckboxes(item);
+				}
+			}
+
 			if (event.target && (event.target.name === 'severityLevel[]' || event.target.name === 'likelihoodLevel[]')) {
-				const row = event.target.closest('.threats-row');
-				if (row) computeRiskForRow(row);
+				const item = event.target.closest('.threat-item');
+				if (item) computeRiskForItem(item);
 			}
 		});
 
 		document.addEventListener('click', function (event) {
-			if (event.target.closest('.add-row-btn')) {
+			const addGroupBtn = event.target.closest('.add-group-btn');
+			if (addGroupBtn) {
 				event.preventDefault();
-
-				const firstRow = container.querySelector('.threats-row');
-				if (!firstRow) {
+				const firstGroup = container.querySelector('.data-subject-group');
+				if (!firstGroup) {
 					return;
 				}
 
-				const newRow = firstRow.cloneNode(true);
-				
-				// Delete the dark blue main header from the cloned row
-				const mainHeader = newRow.querySelector('.threats-main-header');
+				const newGroup = firstGroup.cloneNode(true);
+				const mainHeader = newGroup.querySelector('.threats-main-header');
 				if (mainHeader) mainHeader.remove();
 
-				// Reset toggle state to open
-				const body = newRow.querySelector('.threats-row-body');
-				if (body) body.style.display = 'block';
-				const toggleIcon = newRow.querySelector('.toggle-collapse-btn i');
+				const groupBody = newGroup.querySelector('.group-body');
+				if (groupBody) groupBody.style.display = 'block';
+				const toggleIcon = newGroup.querySelector('.toggle-collapse-btn i');
 				if (toggleIcon) {
 					toggleIcon.classList.remove('bi-chevron-down');
 					toggleIcon.classList.add('bi-chevron-up');
 				}
 
-				newRow.querySelectorAll('input, select, textarea').forEach(createBlankValue);
-				// clear computed displays for risk rating
-				const display = newRow.querySelector('.risk-rating-display');
-				const hidden = newRow.querySelector('.risk-rating-hidden');
-				if (display) display.textContent = '';
-				if (hidden) hidden.value = '';
-				const removeButton = newRow.querySelector('.remove-row-btn');
-				if (removeButton) {
-					removeButton.classList.remove('d-none');
-				}
-
-				// Update indices for cloned checkboxes
-				const rowIndex = container.querySelectorAll('.threats-row').length;
-				newRow.querySelectorAll('[id^="threatType_"], [id^="measureType_"]').forEach(element => {
-					const parts = element.id.split('_');
-					element.id = parts[0] + '_' + rowIndex + '_' + parts[2];
-					const label = newRow.querySelector(`label[for="${parts[0]}_${parts[1]}_${parts[2]}"]`);
-					if (label) {
-						label.setAttribute('for', element.id);
+				const threatItems = newGroup.querySelectorAll('.threat-item');
+				threatItems.forEach((item, index) => {
+					if (index === 0) {
+						resetThreatItem(item);
+					} else {
+						item.remove();
 					}
 				});
-
-				container.appendChild(newRow);
-				updateRowNumbers();
-				syncCheckboxes(newRow);
-				computeRiskForRow(newRow);
+				newGroup.querySelectorAll('select.data-subject-select').forEach(createBlankValue);
+				container.appendChild(newGroup);
+				updateGroupNumbers();
+				syncDataSubject(newGroup);
 			}
 
-			const removeButton = event.target.closest('.remove-row-btn');
-			if (removeButton) {
+			const addThreatBtn = event.target.closest('.add-threat-btn');
+			if (addThreatBtn) {
 				event.preventDefault();
+				const group = addThreatBtn.closest('.data-subject-group');
+				if (!group) {
+					return;
+				}
 
-				const row = removeButton.closest('.threats-row');
-				if (row) {
-					row.remove();
-					updateRowNumbers();
+				const firstThreat = group.querySelector('.threat-item');
+				const list = group.querySelector('.threat-item-list');
+				if (!firstThreat || !list) {
+					return;
+				}
+
+				const newThreat = firstThreat.cloneNode(true);
+				resetThreatItem(newThreat);
+				list.appendChild(newThreat);
+				updateGroupNumbers();
+				syncDataSubject(group);
+			}
+
+			const removeGroupBtn = event.target.closest('.remove-group-btn');
+			if (removeGroupBtn) {
+				event.preventDefault();
+				const group = removeGroupBtn.closest('.data-subject-group');
+				if (group) {
+					group.remove();
+					updateGroupNumbers();
+				}
+			}
+
+			const removeThreatBtn = event.target.closest('.remove-threat-btn');
+			if (removeThreatBtn) {
+				event.preventDefault();
+				const item = removeThreatBtn.closest('.threat-item');
+				if (item) {
+					item.remove();
+					updateGroupNumbers();
 				}
 			}
 
 			const toggleBtn = event.target.closest('.toggle-collapse-btn');
 			if (toggleBtn) {
-				const row = toggleBtn.closest('.threats-row');
-				if (row) {
-					const body = row.querySelector('.threats-row-body');
+				const group = toggleBtn.closest('.data-subject-group');
+				if (group) {
+					const body = group.querySelector('.group-body');
 					const icon = toggleBtn.querySelector('i');
 					if (body) {
 						if (body.style.display === 'none') {
@@ -685,22 +586,26 @@
 			}
 		});
 
-		// Initialize checkboxes on page load
-		container.querySelectorAll('.threats-row').forEach(row => {
-			syncCheckboxes(row);
-			computeRiskForRow(row);
+		container.querySelectorAll('.data-subject-group').forEach(group => {
+			syncDataSubject(group);
+			group.querySelectorAll('.threat-item').forEach(item => {
+				syncCheckboxes(item);
+				computeRiskForItem(item);
+			});
 		});
 
-		// Sync all rows before form submission
 		const form = document.getElementById('threatsForm');
 		if (form) {
-			form.addEventListener('submit', function (e) {
-				container.querySelectorAll('.threats-row').forEach(row => {
-					syncCheckboxes(row);
+			form.addEventListener('submit', function () {
+				container.querySelectorAll('.data-subject-group').forEach(group => {
+					syncDataSubject(group);
+					group.querySelectorAll('.threat-item').forEach(item => {
+						syncCheckboxes(item);
+					});
 				});
 			});
 		}
 
-		updateRowNumbers();
+		updateGroupNumbers();
 	})();
 </script>

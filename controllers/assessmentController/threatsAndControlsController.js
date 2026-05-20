@@ -89,6 +89,9 @@ const threatsAndControls = async (req, res) => {
 
 const saveThreatsAndControls = async (req, res) => {
   const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+  const redirectTarget = req.body?.redirectTo === 'previous'
+    ? `/assessment/personalinfoinventory?id=${piaAssessmentId}`
+    : `/assessment/securitymeasures?id=${piaAssessmentId}`;
   const threatDescriptions = toArray(req.body.threatDescription);
   const threatTypes = toArray(req.body.threatType);
   const severityLevels = toArray(req.body.severityLevel);
@@ -146,7 +149,7 @@ const saveThreatsAndControls = async (req, res) => {
       await prisma.threatsAndControl.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
       });
-      return res.redirect(`/assessment/securitymeasures?id=${piaAssessmentId}`);
+      return res.redirect(redirectTarget);
     }
 
     const validatedRows = [];
@@ -289,7 +292,7 @@ const saveThreatsAndControls = async (req, res) => {
       });
     }
 
-    return res.redirect(`/assessment/securitymeasures?id=${piaAssessmentId}`);
+    return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving threats and controls:', error);
     const dataSubjects = await prisma.piiDatasubject.findMany({

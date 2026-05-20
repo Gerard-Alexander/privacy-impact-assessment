@@ -256,13 +256,13 @@
 													<hr class="my-3 text-muted border-light">
 
 													<div class="inner-card-title">
-														Retention
+														Retention Period
 													</div>
 													<div class="inner-card-desc mb-2">How long is the data retained?</div>
-													<div class="section-label">Retention Period</div>
+
 													<input type="text" name="retentionPeriod[<%= index %>]" data-top-field="retentionPeriod" class="form-control mb-3" placeholder="e.g. 2 years after collection" value="<%= pdlc.retentionPeriod || '' %>" required>
 												
-													<div class="section-label">Indicate Date</div>
+													<div class="inner-card-desc mb-2">Indicate Date</div>
 													<input type="date" name="retentionDate[<%= index %>]" data-top-field="retentionDate" class="form-control" value="<%= pdlc.retentionDate ? new Date(pdlc.retentionDate).toISOString().split('T')[0] : '' %>" required>
 												</div>
 											</div>
@@ -887,7 +887,7 @@
 						class="btn btn-danger btn-modern shadow-sm">
 						<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
 					</a>
-					<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 3 of 5</span>
+					<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 3 of 7</span>
 					<button type="submit" form="pdlcForm"
 						class="btn btn-primary btn-modern shadow-sm">
 						Next Page <i class="bi bi-arrow-right-short fs-5"></i>
