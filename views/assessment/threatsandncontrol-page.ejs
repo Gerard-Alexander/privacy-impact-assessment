@@ -255,34 +255,60 @@
 
 															<div class="row g-3">
 																<div class="col-12 col-md-6">
-																	<div class="section-label">Severity Level</div>
-																	<select name="severityLevel[]" class="form-select" required>
-																		<option value="" <%= !threat.severityLevel ? 'selected' : '' %>>Select...</option>
+																	<div class="section-label">Current Severity Level</div>
+																	<select name="currentSeverityLevel[]" class="form-select" required>
+																		<option value="" <%= !threat.currentSeverityLevel ? 'selected' : '' %>>Select...</option>
 																		<% severityOpts.forEach(function(option) { %>
-																			<option value="<%= option %>" <%= threat.severityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+																			<option value="<%= option %>" <%= threat.currentSeverityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
 																		<% }); %>
 																	</select>
 																</div>
 																<div class="col-12 col-md-6">
-																	<div class="section-label">Likelihood Level</div>
-																	<select name="likelihoodLevel[]" class="form-select" required>
-																		<option value="" <%= !threat.likelihoodLevel ? 'selected' : '' %>>Select...</option>
+																	<div class="section-label">Current Likelihood Level</div>
+																	<select name="currentLikelihoodLevel[]" class="form-select" required>
+																		<option value="" <%= !threat.currentLikelihoodLevel ? 'selected' : '' %>>Select...</option>
 																		<% likelihoodOpts.forEach(function(option) { %>
-																			<option value="<%= option %>" <%= threat.likelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+																			<option value="<%= option %>" <%= threat.currentLikelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
 																		<% }); %>
 																	</select>
 																</div>
 															</div>
 															<div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
-																<div class="fw-bold text-dark" style="font-size: 0.9rem;">Total Risk</div>
-																<span class="risk-rating-display fw-bold fs-6"><%= threat.riskRating || 'None' %></span>
-																<input type="hidden" name="riskRating[]" class="risk-rating-hidden" value="<%= threat.riskRating || '' %>">
+																<div class="fw-bold text-dark" style="font-size: 0.9rem;">Current Total Risk</div>
+																<span class="risk-rating-display current-risk-rating-display fw-bold fs-6"><%= threat.currentRiskRating || 'None' %></span>
+																<input type="hidden" name="currentRiskRating[]" class="risk-rating-hidden current-risk-rating-hidden" value="<%= threat.currentRiskRating || '' %>">
 															</div>
 
 															<div class="section-label mt-3">Proposed Control Measure</div>
 															<textarea name="proposedControl[]" class="form-control mb-3" style="min-height: 110px; resize: vertical;" required><%= threat.proposedControl || '' %></textarea>
 
-															<div class="section-label">Type of Measure (select all that apply)</div>
+															<div class="row g-3">
+																<div class="col-12 col-md-6">
+																	<div class="section-label">After Severity Level</div>
+																	<select name="afterSeverityLevel[]" class="form-select" required>
+																		<option value="" <%= !threat.afterSeverityLevel ? 'selected' : '' %>>Select...</option>
+																		<% severityOpts.forEach(function(option) { %>
+																			<option value="<%= option %>" <%= threat.afterSeverityLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+																		<% }); %>
+																	</select>
+																</div>
+																<div class="col-12 col-md-6">
+																	<div class="section-label">After Likelihood Level</div>
+																	<select name="afterLikelihoodLevel[]" class="form-select" required>
+																		<option value="" <%= !threat.afterLikelihoodLevel ? 'selected' : '' %>>Select...</option>
+																		<% likelihoodOpts.forEach(function(option) { %>
+																			<option value="<%= option %>" <%= threat.afterLikelihoodLevel === option ? 'selected' : '' %>><%= option.replace(/_/g, ' ') %></option>
+																		<% }); %>
+																	</select>
+																</div>
+															</div>
+															<div class="mt-3 pt-3 border-top d-flex align-items-center justify-content-between">
+																<div class="fw-bold text-dark" style="font-size: 0.9rem;">After Total Risk</div>
+																<span class="risk-rating-display after-risk-rating-display fw-bold fs-6"><%= threat.afterRiskRating || 'None' %></span>
+																<input type="hidden" name="afterRiskRating[]" class="risk-rating-hidden after-risk-rating-hidden" value="<%= threat.afterRiskRating || '' %>">
+															</div>
+
+															<div class="section-label mt-3">Type of Measure (select all that apply)</div>
 															<div class="d-flex flex-column gap-2">
 																<% measureTypeOpts.forEach(function(measureType) { %>
 																	<div class="form-check custom-check">
@@ -416,19 +442,19 @@
 			});
 		};
 
-		const computeRiskForItem = (item) => {
-			const severitySelect = item.querySelector('select[name="severityLevel[]"]');
-			const likelihoodSelect = item.querySelector('select[name="likelihoodLevel[]"]');
-			const display = item.querySelector('.risk-rating-display');
-			const hidden = item.querySelector('.risk-rating-hidden');
+		const parseNumber = (val) => {
+			const match = String(val).match(/_(\d+)$/);
+			return match ? Number.parseInt(match[1], 10) : 0;
+		};
+
+		const computeRiskForItem = (item, config) => {
+			const severitySelect = item.querySelector(config.severitySelector);
+			const likelihoodSelect = item.querySelector(config.likelihoodSelector);
+			const display = item.querySelector(config.displaySelector);
+			const hidden = item.querySelector(config.hiddenSelector);
 
 			const sevVal = severitySelect ? severitySelect.value : '';
 			const likVal = likelihoodSelect ? likelihoodSelect.value : '';
-
-			const parseNumber = (val) => {
-				const match = String(val).match(/_(\d+)$/);
-				return match ? Number.parseInt(match[1], 10) : 0;
-			};
 
 			const sevNum = parseNumber(sevVal);
 			const likNum = parseNumber(likVal);
@@ -456,16 +482,30 @@
 			}
 		};
 
+		const computeCurrentRisk = (item) => computeRiskForItem(item, {
+			severitySelector: 'select[name="currentSeverityLevel[]"]',
+			likelihoodSelector: 'select[name="currentLikelihoodLevel[]"]',
+			displaySelector: '.current-risk-rating-display',
+			hiddenSelector: '.current-risk-rating-hidden'
+		});
+
+		const computeAfterRisk = (item) => computeRiskForItem(item, {
+			severitySelector: 'select[name="afterSeverityLevel[]"]',
+			likelihoodSelector: 'select[name="afterLikelihoodLevel[]"]',
+			displaySelector: '.after-risk-rating-display',
+			hiddenSelector: '.after-risk-rating-hidden'
+		});
+
 		const resetThreatItem = (item) => {
 			item.querySelectorAll('input, select, textarea').forEach(createBlankValue);
-			const display = item.querySelector('.risk-rating-display');
-			const hidden = item.querySelector('.risk-rating-hidden');
-			if (display) {
+			item.querySelectorAll('.risk-rating-display').forEach((display) => {
 				display.textContent = 'None';
 				display.classList.remove('text-success', 'text-warning', 'text-danger');
 				display.classList.add('text-secondary');
-			}
-			if (hidden) hidden.value = '';
+			});
+			item.querySelectorAll('.risk-rating-hidden').forEach((hidden) => {
+				hidden.value = '';
+			});
 		};
 
 		document.addEventListener('change', function (event) {
@@ -483,9 +523,14 @@
 				}
 			}
 
-			if (event.target && (event.target.name === 'severityLevel[]' || event.target.name === 'likelihoodLevel[]')) {
+			if (event.target && (event.target.name === 'currentSeverityLevel[]' || event.target.name === 'currentLikelihoodLevel[]')) {
 				const item = event.target.closest('.threat-item');
-				if (item) computeRiskForItem(item);
+				if (item) computeCurrentRisk(item);
+			}
+
+			if (event.target && (event.target.name === 'afterSeverityLevel[]' || event.target.name === 'afterLikelihoodLevel[]')) {
+				const item = event.target.closest('.threat-item');
+				if (item) computeAfterRisk(item);
 			}
 		});
 
@@ -590,7 +635,8 @@
 			syncDataSubject(group);
 			group.querySelectorAll('.threat-item').forEach(item => {
 				syncCheckboxes(item);
-				computeRiskForItem(item);
+				computeCurrentRisk(item);
+				computeAfterRisk(item);
 			});
 		});
 

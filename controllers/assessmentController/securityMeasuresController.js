@@ -72,6 +72,23 @@ const saveSecurityMeasures = async (req, res) => {
 
     const rowCount = Math.max(securityTypes.length, descriptions.length);
 
+    // Update the static questions in PiaAssessment even if no measures are submitted.
+    await prisma.piaAssessment.update({
+      where: { id: piaAssessmentId },
+      data: {
+        isDataTransferredOutsidePh,
+        hasDataSharingAgreement,
+        pipName,
+        isPublicFacing,
+        hasAutomatedDecisionMaking,
+        hasProfiling,
+        legalBasis,
+        otherLegalBasisInfo,
+        isConsentUsed,
+        consentProof
+      }
+    });
+
     if (!rowCount) {
       // Allow empty submission - clear existing
       await prisma.securityMeasures.deleteMany({
@@ -91,23 +108,21 @@ const saveSecurityMeasures = async (req, res) => {
       }
 
       if (!securityType || !description) {
-        const securityTypeOptions = ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];
-        return res.render('assessment/securitymeasures-page', {
-          title: 'Security Measures',
-          activePage: 'securitymeasures-page',
-          user: req.session.user,
-          piaAssessmentId,
-          securityData: null,
-          securityTypeOptions,
-          error: 'Please complete all fields in each Security Measures row before saving.',
-          success: null
-        });
+        // Skip incomplete rows so partial inputs don't block saving.
+        continue;
       }
 
       validatedRows.push({
         securityType,
         description
       });
+    }
+
+    if (!validatedRows.length) {
+      await prisma.securityMeasures.deleteMany({
+        where: { piaAssessment_id: piaAssessmentId }
+      });
+      return res.redirect('/dashboard');
     }
 
     // Delete existing
@@ -125,23 +140,6 @@ const saveSecurityMeasures = async (req, res) => {
         }
       });
     }
-
-    // Update the static questions in PiaAssessment
-    await prisma.piaAssessment.update({
-      where: { id: piaAssessmentId },
-      data: {
-        isDataTransferredOutsidePh,
-        hasDataSharingAgreement,
-        pipName,
-        isPublicFacing,
-        hasAutomatedDecisionMaking,
-        hasProfiling,
-        legalBasis,
-        otherLegalBasisInfo,
-        isConsentUsed,
-        consentProof
-      }
-    });
 
     return res.redirect('/dashboard');
   } catch (error) {

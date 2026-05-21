@@ -295,6 +295,57 @@ const savePersonalInfoInventory = async (req, res) => {
       });
     }
 
+    const normalizeRows = (rows) => {
+      const normalized = rows.map((row) => {
+        const dataSubjects = (row.dataSubjects || row.piiDatasubjects || [])
+          .map((subject) => ({
+            name: String(subject.name || '').trim(),
+            dataSubjectsType_id: Number.parseInt(subject.dataSubjectsType_id || subject.dataSubjectsType?.id || '', 10) || null
+          }))
+          .filter((subject) => subject.name)
+          .sort((a, b) => `${a.dataSubjectsType_id || 0}:${a.name}`.localeCompare(`${b.dataSubjectsType_id || 0}:${b.name}`));
+
+        const recipients = (row.recipients || row.recipientUsers || [])
+          .map((recipient) => ({
+            recipientName: String(recipient.recipientName || '').trim()
+          }))
+          .filter((recipient) => recipient.recipientName)
+          .sort((a, b) => a.recipientName.localeCompare(b.recipientName));
+
+        return {
+          formNo: Number.parseInt(row.formNo || '', 10) || 0,
+          formName: String(row.formName || '').trim(),
+          dataProcessing: row.dataProcessing || '',
+          piProcessBasisId: Number.parseInt(row.piProcessBasisId || row.piProcessBasis_id || '', 10) || null,
+          spiProcessBasisId: Number.parseInt(row.spiProcessBasisId || row.spiProcessBasis_id || '', 10) || null,
+          dataFormImagePath: row.dataFormImagePath || null,
+          dataSubjects,
+          recipients
+        };
+      });
+
+      return normalized.sort((a, b) => {
+        const keyA = `${a.formNo}:${a.formName}`;
+        const keyB = `${b.formNo}:${b.formName}`;
+        return keyA.localeCompare(keyB);
+      });
+    };
+
+    const existingPii = await prisma.pII.findMany({
+      where: { piaAssessment_id: piaAssessmentId },
+      include: {
+        piiDatasubjects: true,
+        recipientUsers: true
+      }
+    });
+
+    const normalizedExisting = normalizeRows(existingPii);
+    const normalizedIncoming = normalizeRows(validatedRows);
+
+    if (JSON.stringify(normalizedExisting) === JSON.stringify(normalizedIncoming)) {
+      return res.redirect(`/assessment/threatsandcontrols?id=${piaAssessmentId}`);
+    }
+
     // Delete dependent ThreatsAndControl records first to avoid FK violations
     await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
 

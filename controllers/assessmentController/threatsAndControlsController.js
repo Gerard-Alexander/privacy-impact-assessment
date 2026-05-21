@@ -89,15 +89,19 @@ const threatsAndControls = async (req, res) => {
 
 const saveThreatsAndControls = async (req, res) => {
   const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
-  const redirectTarget = req.body?.redirectTo === 'previous'
+  const isPrevious = req.body?.redirectTo === 'previous';
+  const redirectTarget = isPrevious
     ? `/assessment/personalinfoinventory?id=${piaAssessmentId}`
     : `/assessment/securitymeasures?id=${piaAssessmentId}`;
   const threatDescriptions = toArray(req.body.threatDescription);
   const threatTypes = toArray(req.body.threatType);
-  const severityLevels = toArray(req.body.severityLevel);
-  const likelihoodLevels = toArray(req.body.likelihoodLevel);
-  const riskRatings = toArray(req.body.riskRating);
+  const currentSeverityLevels = toArray(req.body.currentSeverityLevel);
+  const currentLikelihoodLevels = toArray(req.body.currentLikelihoodLevel);
+  const currentRiskRatings = toArray(req.body.currentRiskRating);
   const proposedControls = toArray(req.body.proposedControl);
+  const afterSeverityLevels = toArray(req.body.afterSeverityLevel);
+  const afterLikelihoodLevels = toArray(req.body.afterLikelihoodLevel);
+  const afterRiskRatings = toArray(req.body.afterRiskRating);
   const measureTypes = toArray(req.body.measureType);
   const dataSubjectIds = toArray(req.body.dataSubjectId);
   const pdlcIds = toArray(req.body.pdlcId);
@@ -106,10 +110,13 @@ const saveThreatsAndControls = async (req, res) => {
     piaAssessmentId,
     threatDescriptions: threatDescriptions.length,
     threatTypes: threatTypes.length,
-    severityLevels: severityLevels.length,
-    likelihoodLevels: likelihoodLevels.length,
-    riskRatings: riskRatings.length,
+    currentSeverityLevels: currentSeverityLevels.length,
+    currentLikelihoodLevels: currentLikelihoodLevels.length,
+    currentRiskRatings: currentRiskRatings.length,
     proposedControls: proposedControls.length,
+    afterSeverityLevels: afterSeverityLevels.length,
+    afterLikelihoodLevels: afterLikelihoodLevels.length,
+    afterRiskRatings: afterRiskRatings.length,
     measureTypes: measureTypes.length,
     dataSubjectIds: dataSubjectIds.length,
     pdlcIds: pdlcIds.length
@@ -122,13 +129,20 @@ const saveThreatsAndControls = async (req, res) => {
   try {
     req.session.currentAssessmentId = piaAssessmentId;
 
+    if (isPrevious) {
+      return res.redirect(redirectTarget);
+    }
+
     // Re-read arrays from body to ensure consistent values
     const threatDescriptions2 = toArray(req.body.threatDescription);
     const threatTypes2 = toArray(req.body.threatType);
-    const severityLevels2 = toArray(req.body.severityLevel);
-    const likelihoodLevels2 = toArray(req.body.likelihoodLevel);
-    const riskRatings2 = toArray(req.body.riskRating);
+    const currentSeverityLevels2 = toArray(req.body.currentSeverityLevel);
+    const currentLikelihoodLevels2 = toArray(req.body.currentLikelihoodLevel);
+    const currentRiskRatings2 = toArray(req.body.currentRiskRating);
     const proposedControls2 = toArray(req.body.proposedControl);
+    const afterSeverityLevels2 = toArray(req.body.afterSeverityLevel);
+    const afterLikelihoodLevels2 = toArray(req.body.afterLikelihoodLevel);
+    const afterRiskRatings2 = toArray(req.body.afterRiskRating);
     const measureTypes2 = toArray(req.body.measureType);
     const dataSubjectIds2 = toArray(req.body.dataSubjectId);
     const pdlcIds2 = toArray(req.body.pdlcId);
@@ -136,15 +150,22 @@ const saveThreatsAndControls = async (req, res) => {
     const rowCount = Math.max(
       threatDescriptions2.length,
       threatTypes2.length,
-      severityLevels2.length,
-      likelihoodLevels2.length,
-      riskRatings2.length,
+      currentSeverityLevels2.length,
+      currentLikelihoodLevels2.length,
+      currentRiskRatings2.length,
       proposedControls2.length,
+      afterSeverityLevels2.length,
+      afterLikelihoodLevels2.length,
+      afterRiskRatings2.length,
       measureTypes2.length,
       dataSubjectIds2.length
     );
 
     if (!rowCount) {
+      if (isPrevious) {
+        return res.redirect(redirectTarget);
+      }
+
       // Allow empty submission - just clear any existing threats
       await prisma.threatsAndControl.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
@@ -157,11 +178,15 @@ const saveThreatsAndControls = async (req, res) => {
     for (let index = 0; index < rowCount; index += 1) {
       const threatDesc = String(threatDescriptions[index] || '').trim();
       const threatType = String(threatTypes[index] || '').trim();
-      const severity = String(severityLevels[index] || '').trim();
-      const likelihood = String(likelihoodLevels[index] || '').trim();
-      const riskRatingStr = String(riskRatings[index] || '').trim();
-      const riskRating = riskRatingStr ? Number.parseInt(riskRatingStr, 10) : 0;
+      const currentSeverity = String(currentSeverityLevels[index] || '').trim();
+      const currentLikelihood = String(currentLikelihoodLevels[index] || '').trim();
+      const currentRiskRatingStr = String(currentRiskRatings[index] || '').trim();
+      const currentRiskRating = currentRiskRatingStr ? Number.parseInt(currentRiskRatingStr, 10) : 0;
       const proposedControl = String(proposedControls[index] || '').trim();
+      const afterSeverity = String(afterSeverityLevels[index] || '').trim();
+      const afterLikelihood = String(afterLikelihoodLevels[index] || '').trim();
+      const afterRiskRatingStr = String(afterRiskRatings[index] || '').trim();
+      const afterRiskRating = afterRiskRatingStr ? Number.parseInt(afterRiskRatingStr, 10) : 0;
       const measureType = String(measureTypes[index] || '').trim();
       const dataSubjectIdStr = String(dataSubjectIds[index] || '').trim();
       const dataSubjectId = dataSubjectIdStr ? Number.parseInt(dataSubjectIdStr, 10) : 0;
@@ -169,12 +194,15 @@ const saveThreatsAndControls = async (req, res) => {
       const pdlcId = pdlcIdStr ? Number.parseInt(pdlcIdStr, 10) : 0;
 
       // Skip completely empty rows
-      if (!threatDesc && !threatType && !severity && !likelihood && !proposedControl && !measureType && dataSubjectId === 0) {
+      if (!threatDesc && !threatType && !currentSeverity && !currentLikelihood && !proposedControl && !afterSeverity && !afterLikelihood && !measureType && dataSubjectId === 0) {
         continue;
       }
 
       // Validate that filled rows have all required fields
-      if (!threatDesc || !severity || !likelihood || riskRating === 0 || !proposedControl || dataSubjectId === 0) {
+      if (!threatDesc || !currentSeverity || !currentLikelihood || currentRiskRating === 0 || !proposedControl || !afterSeverity || !afterLikelihood || afterRiskRating === 0 || dataSubjectId === 0) {
+        if (isPrevious) {
+          continue;
+        }
         const dataSubjects = await prisma.piiDatasubject.findMany({
           where: {
             pii: {
@@ -216,14 +244,28 @@ const saveThreatsAndControls = async (req, res) => {
       validatedRows.push({
         threatDesc,
         threatType,
-        severity,
-        likelihood,
-        riskRating,
+        currentSeverity,
+        currentLikelihood,
+        currentRiskRating,
         proposedControl,
+        afterSeverity,
+        afterLikelihood,
+        afterRiskRating,
         measureType,
         dataSubjectId,
         pdlcId
       });
+    }
+
+    if (!validatedRows.length) {
+      if (isPrevious) {
+        return res.redirect(redirectTarget);
+      }
+
+      await prisma.threatsAndControl.deleteMany({
+        where: { piaAssessment_id: piaAssessmentId }
+      });
+      return res.redirect(redirectTarget);
     }
 
     // Determine fallback PDLC id (use first PDLC for this assessment if pdlc not provided)
@@ -283,10 +325,13 @@ const saveThreatsAndControls = async (req, res) => {
           pdlc_id: usePdlcId,
           threats_possibleConsequences: row.threatDesc,
           typeOfThreats: row.threatType,
-          severityLevel: row.severity,
-          likelihoodLevel: row.likelihood,
-          riskRating: row.riskRating,
+          currentSeverityLevel: row.currentSeverity,
+          currentLikelihoodLevel: row.currentLikelihood,
+          currentRiskRating: row.currentRiskRating,
           proposedControl: row.proposedControl,
+          afterSeverityLevel: row.afterSeverity,
+          afterLikelihoodLevel: row.afterLikelihood,
+          afterRiskRating: row.afterRiskRating,
           typeOfMeasure: row.measureType
         }
       });

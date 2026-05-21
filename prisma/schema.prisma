@@ -332,10 +332,14 @@ model ThreatsAndControl {
   // String to allow multi-select (e.g., "CONFIDENTIALITY, INTEGRITY")
   typeOfThreats                String          @db.VarChar(255) 
   
-  severityLevel                SeverityLevel   
-  likelihoodLevel              LikelihoodLevel 
-  riskRating                   Int             @db.Int
+  currentSeverityLevel         SeverityLevel   
+  currentLikelihoodLevel       LikelihoodLevel 
+  currentRiskRating            Int             @db.Int
   proposedControl              String          @db.VarChar(255)
+
+  afterSeverityLevel            SeverityLevel
+  afterLikelihoodLevel          LikelihoodLevel
+  afterRiskRating               Int             @db.Int
   
   // String to allow multi-select (e.g., "PHYSICAL, TECHNICAL")
   typeOfMeasure                String          @db.VarChar(255) 

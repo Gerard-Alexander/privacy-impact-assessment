@@ -168,7 +168,7 @@
 						.pii-image-controls {
 							display: none;
 						}
-						.pii-image-mode .pii-standard-fields {
+						.pii-image-mode .pii-form-fields {
 							display: none;
 						}
 						.pii-image-mode .pii-image-controls {
@@ -231,49 +231,47 @@
 															<i class="bi bi-image me-1"></i> Upload Image/URL
 														</button>
 													</div>
-													<div class="inner-card-desc mb-2">Form details and processing type.</div>
+													<div class="section-label mb-2">Form details and processing type.</div>
 											
 													<div class="pii-standard-fields">
-														<div class="section-label">Name of Data Capture</div>
-														<input type="text" name="formName[<%= index %>]" data-top-field="formName" class="form-control mb-3" value="<%= pii.formName || '' %>" required>
-												
-														<div class="section-label">Number of Data Capture</div>
-														<input type="text" name="formNo[<%= index %>]" data-top-field="formNo" class="form-control mb-3" value="<%= pii.formNo || '' %>" required>
-												
-														<div class="section-label">Data Processing</div>
-														<select name="dataProcessing[<%= index %>]" data-top-field="dataProcessing" class="form-select" required>
-															<option value="" <%= !pii.dataProcessingValue ? 'selected' : '' %>>Select...</option>
-															<% dataProcessingOptions.forEach(function(option) { %>
-																<option value="<%= option %>" <%= pii.dataProcessingValue === option ? 'selected' : '' %>><%= option.replace('_', ' ') %></option>
-															<% }); %>
-														</select>
+														<div class="pii-form-fields">
+															<div class="inner-card-desc">Name of Data Capture</div>
+															<input type="text" name="formName[<%= index %>]" data-top-field="formName" class="form-control mb-3" value="<%= pii.formName || '' %>" required>
+					
+															<div class="inner-card-desc">Number of Data Capture</div>
+															<input type="text" name="formNo[<%= index %>]" data-top-field="formNo" class="form-control mb-3" value="<%= pii.formNo || '' %>" required>
+														</div>
+														<div class="pii-image-controls mt-3">
+															<div class="inner-card-desc">Upload Data Form Name and Number (Optional)</div>
+															<input type="file" name="dataFormImage[<%= index %>]" data-top-field="dataFormImage" class="form-control" accept="image/*">
+															<div class="inner-card-desc mt-2">Image URL or File Path</div>
+															<input type="text" name="dataFormImagePath[<%= index %>]" data-top-field="dataFormImagePath" class="form-control" value="<%= pii.dataFormImagePath || '' %>">
+															<small class="text-muted d-none pii-image-warning">Choose either a file or a URL. The other option will be cleared.</small>
+															<input type="hidden" name="dataFormImageUploadedAt[<%= index %>]" data-top-field="dataFormImageUploadedAt" value="<%= pii.dataFormImageUploadedAt ? new Date(pii.dataFormImageUploadedAt).toISOString() : '' %>">
+															<% if (pii.dataFormImagePath) { %>
+																<% const imageLink = /^https?:\/\//i.test(pii.dataFormImagePath) ? pii.dataFormImagePath : '/' + pii.dataFormImagePath; %>
+																<small class="text-muted d-block mt-2">
+																	Current upload: <a href="<%= imageLink %>" target="_blank" rel="noopener noreferrer">View image</a>
+																</small>
+															<% } %>
+														</div>					
 													</div>
 
-													<div class="pii-image-controls mt-3">
-														<div class="section-label">Upload Data Form Image (Optional)</div>
-														<input type="file" name="dataFormImage[<%= index %>]" data-top-field="dataFormImage" class="form-control" accept="image/*">
-														<div class="section-label mt-2">Image URL or File Path</div>
-														<input type="text" name="dataFormImagePath[<%= index %>]" data-top-field="dataFormImagePath" class="form-control" value="<%= pii.dataFormImagePath || '' %>">
-														<small class="text-muted d-none pii-image-warning">Choose either a file or a URL. The other option will be cleared.</small>
-														<input type="hidden" name="dataFormImageUploadedAt[<%= index %>]" data-top-field="dataFormImageUploadedAt" value="<%= pii.dataFormImageUploadedAt ? new Date(pii.dataFormImageUploadedAt).toISOString() : '' %>">
-														<% if (pii.dataFormImagePath) { %>
-															<% const imageLink = /^https?:\/\//i.test(pii.dataFormImagePath) ? pii.dataFormImagePath : '/' + pii.dataFormImagePath; %>
-															<small class="text-muted d-block mt-2">
-																Current upload: <a href="<%= imageLink %>" target="_blank" rel="noopener noreferrer">View image</a>
-															</small>
-														<% } %>
-													</div>
 												</div>
 											</div>
 
 											<!-- Card 2: Processing Basis -->
 											<div class="col-12 col-md-6">
 												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Processing Basis
-													</div>
+													<div class="inner-card-title">Data Processing</div>
+													<select name="dataProcessing[<%= index %>]" data-top-field="dataProcessing" class="form-select" required>
+														<option value="" <%= !pii.dataProcessingValue ? 'selected' : '' %>>Select...</option>
+														<% dataProcessingOptions.forEach(function(option) { %>
+															<option value="<%= option %>" <%= pii.dataProcessingValue === option ? 'selected' : '' %>><%= option.replace('_', ' ') %></option>
+														<% }); %>
+													</select>
+													<div class="inner-card-title mt-3">Processing Basis</div>
 													<div class="inner-card-desc mb-2">Legal basis for processing.</div>
-											
 													<div class="pii-standard-fields">
 														<div class="section-label">PI Processing Basis</div>
 														<select name="piProcessBasisId[<%= index %>]" data-top-field="piProcessBasisId" class="form-select mb-3" required>
@@ -426,12 +424,14 @@
 													<div class="inner-card-desc mb-2">Form details and processing type.</div>
 											
 													<div class="pii-standard-fields">
-														<div class="section-label">Name of Data Capture</div>
-														<input type="text" name="formName[0]" data-top-field="formName" class="form-control mb-3" required>
-												
-														<div class="section-label">Number of Data Capture</div>
-														<input type="text" name="formNo[0]" data-top-field="formNo" class="form-control mb-3" required>
-												
+														<div class="pii-form-fields">
+															<div class="section-label">Name of Data Capture</div>
+															<input type="text" name="formName[0]" data-top-field="formName" class="form-control mb-3" required>
+					
+															<div class="section-label">Number of Data Capture</div>
+															<input type="text" name="formNo[0]" data-top-field="formNo" class="form-control mb-3" required>
+														</div>
+					
 														<div class="section-label">Data Processing</div>
 														<select name="dataProcessing[0]" data-top-field="dataProcessing" class="form-select" required>
 															<option value="">Select...</option>
@@ -443,6 +443,7 @@
 
 													<div class="pii-image-controls mt-3">
 														<div class="section-label">Upload Data Form Image (Optional)</div>
+														<small class="text-muted d-block mb-2">Use this for form name/number reference only.</small>
 														<input type="file" name="dataFormImage[0]" data-top-field="dataFormImage" class="form-control" accept="image/*">
 														<div class="section-label mt-2">Image URL or File Path</div>
 														<input type="text" name="dataFormImagePath[0]" data-top-field="dataFormImagePath" class="form-control" value="">
@@ -652,14 +653,6 @@
 			}
 		};
 
-		const isImageControlField = (field) => {
-			if (!field) return false;
-			if (field.type === 'hidden') return true;
-			if (field.closest('.pii-image-controls')) return true;
-			const fieldName = field.getAttribute('name') || '';
-			return fieldName.startsWith('dataFormImage');
-		};
-
 		const updateToggleButton = (row, enabled) => {
 			const button = row.querySelector('.toggle-image-mode-btn');
 			if (!button) return;
@@ -706,29 +699,25 @@
 			}
 		};
 
-		const setRowImageMode = (row, enabled) => {
-			row.classList.toggle('pii-image-mode', enabled);
-			const fields = row.querySelectorAll('input, select, textarea');
-			for (const field of fields) {
-				if (isImageControlField(field)) {
-					field.disabled = false;
-					continue;
-				}
-				if (enabled) {
-					if (!field.dataset.wasRequired) {
-						field.dataset.wasRequired = field.required ? '1' : '0';
-					}
-					field.required = false;
-					field.disabled = true;
-				} else {
-					field.disabled = false;
-					if (field.dataset.wasRequired === '1') {
-						field.required = true;
+			const setRowImageMode = (row, enabled) => {
+				row.classList.toggle('pii-image-mode', enabled);
+				const formFields = row.querySelectorAll('[data-top-field="formName"], [data-top-field="formNo"]');
+				for (const field of formFields) {
+					if (enabled) {
+						if (!field.dataset.wasRequired) {
+							field.dataset.wasRequired = field.required ? '1' : '0';
+						}
+						field.required = false;
+						field.disabled = true;
+					} else {
+						field.disabled = false;
+						if (field.dataset.wasRequired === '1') {
+							field.required = true;
+						}
 					}
 				}
-			}
-			updateToggleButton(row, enabled);
-		};
+				updateToggleButton(row, enabled);
+			};
 
 		const validateRow = (row) => {
 			const inputs = row.querySelectorAll('input, select, textarea');
