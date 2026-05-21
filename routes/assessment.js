@@ -33,4 +33,9 @@ router.post('/threatsandcontrols', requireAuth, threatsAndControlsController.sav
 router.get('/securitymeasures', requireAuth, securityMeasuresController.securityMeasures);
 router.post('/securitymeasures', requireAuth, securityMeasuresController.saveSecurityMeasures);
 
+const riskHeatmapController = require('../controllers/assessmentController/riskHeatmapController');
+
+// Router for Risk Heatmap - Step 7
+router.get('/riskheatmap', requireAuth, riskHeatmapController.riskHeatmap);
+
 module.exports = router;

@@ -94,7 +94,7 @@ const saveSecurityMeasures = async (req, res) => {
       await prisma.securityMeasures.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
       });
-      return res.redirect('/dashboard');
+      return res.redirect(`/assessment/riskheatmap?id=${piaAssessmentId}`);
     }
 
     const validatedRows = [];
@@ -122,7 +122,7 @@ const saveSecurityMeasures = async (req, res) => {
       await prisma.securityMeasures.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
       });
-      return res.redirect('/dashboard');
+      return res.redirect(`/assessment/riskheatmap?id=${piaAssessmentId}`);
     }
 
     // Delete existing
@@ -141,7 +141,7 @@ const saveSecurityMeasures = async (req, res) => {
       });
     }
 
-    return res.redirect('/dashboard');
+    return res.redirect(`/assessment/riskheatmap?id=${piaAssessmentId}`);
   } catch (error) {
     console.error('Error saving security measures:', error);
     const securityTypeOptions = ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];
