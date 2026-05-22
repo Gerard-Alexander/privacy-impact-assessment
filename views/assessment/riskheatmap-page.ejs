@@ -1,434 +1,434 @@
 <%- include('../layouts/head', { title: title }) %>
 	<div class="d-flex">
 		<%- include('../layouts/sidebar', { activePage: activePage }) %>
-			<div class="flex-grow-1 main-content-offset">
-				<%- include('../layouts/topbar', { title: title, user: user }) %>
-					<main class="container-fluid py-4 px-4">
-						<%- include('../layouts/stepper', { currentStep: 7, dpsTitle: 'Data Processing System' ,
-							authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' ,
-							personalInfoInventory: 'Personal Information Inventory' , user: user }) %>
+		<div class="flex-grow-1 main-content-offset">
+			<%- include('../layouts/topbar', { title: title, user: user }) %>
+			<main class="container-fluid py-4 px-4">
+				<%- include('../layouts/stepper', { currentStep: 7, dpsTitle: 'Data Processing System' ,
+					authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' ,
+					personalInfoInventory: 'Personal Information Inventory' , user: user }) %>
 
-							<div class="mx-auto" style="max-width: 935px;">
-								<style>
-									.custom-card {
-										border-radius: 1.25rem;
-										background: #ffffff;
-										box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-										overflow: hidden;
-										animation: fadeIn 0.5s ease-out;
-									}
+				<div class="mx-auto" style="max-width: 935px;">
+					<style>
+						.custom-card {
+							border-radius: 1.25rem;
+							background: #ffffff;
+							box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+							overflow: hidden;
+							animation: fadeIn 0.5s ease-out;
+						}
 
-									.custom-header {
-										background: linear-gradient(135deg, rgba(13, 27, 75, 0.05) 0%, transparent 100%);
-										border-bottom: 2px solid rgba(13, 27, 75, 0.1);
-										padding: 1.5rem 2rem;
-									}
+						.custom-header {
+							background: linear-gradient(135deg, rgba(13, 27, 75, 0.05) 0%, transparent 100%);
+							border-bottom: 2px solid rgba(13, 27, 75, 0.1);
+							padding: 1.5rem 2rem;
+						}
 
-									.custom-header-title {
-										color: #0d1b4b;
-										font-weight: 700;
-										letter-spacing: -0.5px;
-									}
+						.custom-header-title {
+							color: #0d1b4b;
+							font-weight: 700;
+							letter-spacing: -0.5px;
+						}
 
-									@keyframes fadeIn {
-										from { opacity: 0; transform: translateY(10px); }
-										to { opacity: 1; transform: translateY(0); }
-									}
+						@keyframes fadeIn {
+							from { opacity: 0; transform: translateY(10px); }
+							to { opacity: 1; transform: translateY(0); }
+						}
 
-									/* Modern Tabs Styling */
-									.nav-pills-modern {
-										background: #f1f5f9;
-										padding: 0.5rem;
-										border-radius: 1rem;
-										display: inline-flex;
-										border: 1px solid #e2e8f0;
-									}
-									.nav-pills-modern .nav-link {
-										color: #64748b;
-										font-weight: 600;
-										padding: 0.6rem 1.5rem;
-										border-radius: 0.75rem;
-										transition: all 0.3s ease;
-										border: none;
-									}
-									.nav-pills-modern .nav-link.active {
-										background: #ffffff;
-										color: #0d1b4b;
-										box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-									}
+						/* Modern Tabs Styling */
+						.nav-pills-modern {
+							background: #f1f5f9;
+							padding: 0.5rem;
+							border-radius: 1rem;
+							display: inline-flex;
+							border: 1px solid #e2e8f0;
+						}
+						.nav-pills-modern .nav-link {
+							color: #64748b;
+							font-weight: 600;
+							padding: 0.6rem 1.5rem;
+							border-radius: 0.75rem;
+							transition: all 0.3s ease;
+							border: none;
+						}
+						.nav-pills-modern .nav-link.active {
+							background: #ffffff;
+							color: #0d1b4b;
+							box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+						}
 
-									/* Heatmap Grid Layout */
-									.heatmap-outer {
-										max-width: 580px;
-										margin: 0 auto;
-										position: relative;
-										padding: 1rem;
-									}
-									.heatmap-title-side {
-										writing-mode: vertical-rl;
-										transform: rotate(180deg);
-										text-align: center;
-										font-weight: 700;
-										font-size: 0.8rem;
-										color: #94a3b8;
-										margin-right: 1.5rem;
-										letter-spacing: 2px;
-                                        text-transform: uppercase;
-									}
-									.heatmap-title-bottom {
-										text-align: center;
-										font-weight: 700;
-										font-size: 0.8rem;
-										color: #94a3b8;
-										margin-top: 1.5rem;
-										letter-spacing: 2px;
-                                        text-transform: uppercase;
-									}
+						/* Heatmap Grid Layout */
+						.heatmap-outer {
+							max-width: 580px;
+							margin: 0 auto;
+							position: relative;
+							padding: 1rem;
+						}
+						.heatmap-title-side {
+							writing-mode: vertical-rl;
+							transform: rotate(180deg);
+							text-align: center;
+							font-weight: 700;
+							font-size: 0.8rem;
+							color: #94a3b8;
+							margin-right: 1.5rem;
+							letter-spacing: 2px;
+							text-transform: uppercase;
+						}
+						.heatmap-title-bottom {
+							text-align: center;
+							font-weight: 700;
+							font-size: 0.8rem;
+							color: #94a3b8;
+							margin-top: 1.5rem;
+							letter-spacing: 2px;
+							text-transform: uppercase;
+						}
 
-									.heatmap-table-container {
-										display: grid;
-										grid-template-columns: auto 1fr;
-										grid-template-rows: 1fr auto;
-									}
+						.heatmap-table-container {
+							display: grid;
+							grid-template-columns: auto 1fr;
+							grid-template-rows: 1fr auto;
+						}
 
-									.y-axis-labels {
-										grid-column: 1;
-										grid-row: 1;
-										display: grid;
-										grid-template-rows: repeat(4, 1fr);
-										color: #64748b;
-										font-weight: 700;
-										margin-right: 1rem;
-										gap: 8px;
-									}
-									.y-label-cell {
-										display: flex;
-										align-items: center;
-										justify-content: flex-end;
-										font-size: 0.9rem;
-                                        min-width: 25px;
-									}
+						.y-axis-labels {
+							grid-column: 1;
+							grid-row: 1;
+							display: grid;
+							grid-template-rows: repeat(4, 1fr);
+							color: #64748b;
+							font-weight: 700;
+							margin-right: 1rem;
+							gap: 8px;
+						}
+						.y-label-cell {
+							display: flex;
+							align-items: center;
+							justify-content: flex-end;
+							font-size: 0.9rem;
+																	min-width: 25px;
+						}
 
-									.x-axis-labels {
-										grid-column: 2;
-										grid-row: 2;
-										display: grid;
-										grid-template-columns: repeat(4, 1fr);
-										color: #64748b;
-										font-weight: 700;
-										margin-top: 1rem;
-										gap: 8px;
-									}
-									.x-label-cell {
-										display: flex;
-										flex-direction: column;
-										align-items: center;
-										justify-content: center;
-									}
-									.x-label-cell span { font-size: 0.9rem; }
-									.x-label-cell small {
-										font-size: 0.6rem;
-										opacity: 0.7;
-										text-transform: uppercase;
-										text-align: center;
-                                        margin-top: 2px;
-									}
+						.x-axis-labels {
+							grid-column: 2;
+							grid-row: 2;
+							display: grid;
+							grid-template-columns: repeat(4, 1fr);
+							color: #64748b;
+							font-weight: 700;
+							margin-top: 1rem;
+							gap: 8px;
+						}
+						.x-label-cell {
+							display: flex;
+							flex-direction: column;
+							align-items: center;
+							justify-content: center;
+						}
+						.x-label-cell span { font-size: 0.9rem; }
+						.x-label-cell small {
+							font-size: 0.6rem;
+							opacity: 0.7;
+							text-transform: uppercase;
+							text-align: center;
+																	margin-top: 2px;
+						}
 
-									.heatmap-grid {
-										grid-column: 2;
-										grid-row: 1;
-										display: grid;
-										grid-template-columns: repeat(4, 1fr);
-										grid-template-rows: repeat(4, 1fr);
-										background: transparent;
-                                        gap: 8px;
-									}
-									.heatmap-cell {
-										position: relative;
-										display: flex;
-										align-items: center;
-										justify-content: center;
-										font-weight: 800;
-										font-size: 1.1rem;
-										color: rgba(0, 0, 0, 0.3);
-										aspect-ratio: 1 / 1;
-										border: 1px solid #ffffff;
-									}
+						.heatmap-grid {
+							grid-column: 2;
+							grid-row: 1;
+							display: grid;
+							grid-template-columns: repeat(4, 1fr);
+							grid-template-rows: repeat(4, 1fr);
+							background: transparent;
+																	gap: 8px;
+						}
+						.heatmap-cell {
+							position: relative;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							font-weight: 800;
+							font-size: 1.1rem;
+							color: rgba(0, 0, 0, 0.3);
+							aspect-ratio: 1 / 1;
+							border: 1px solid #ffffff;
+						}
 
-									/* Axis Label Containers */
-									.y-axis-labels {
-										grid-column: 1;
-										grid-row: 1;
-										display: grid;
-										grid-template-rows: repeat(4, 1fr);
-										background-color: #3b4b6b; /* Dark blue from original */
-										color: #ffffff;
-										font-weight: 700;
-										margin-right: 0;
-									}
-									.y-label-cell {
-										display: flex;
-										align-items: center;
-										justify-content: center;
-										font-size: 0.9rem;
-                                        min-width: 40px;
-										border-bottom: 1px solid rgba(255,255,255,0.1);
-									}
+						/* Axis Label Containers */
+						.y-axis-labels {
+							grid-column: 1;
+							grid-row: 1;
+							display: grid;
+							grid-template-rows: repeat(4, 1fr);
+							background-color: #3b4b6b; /* Dark blue from original */
+							color: #ffffff;
+							font-weight: 700;
+							margin-right: 0;
+						}
+						.y-label-cell {
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							font-size: 0.9rem;
+																	min-width: 40px;
+							border-bottom: 1px solid rgba(255,255,255,0.1);
+						}
 
-									.x-axis-labels {
-										grid-column: 2;
-										grid-row: 2;
-										display: grid;
-										grid-template-columns: repeat(4, 1fr);
-										background-color: #3b4b6b;
-										color: #ffffff;
-										font-weight: 700;
-										margin-top: 0;
-									}
-									.x-label-cell {
-										display: flex;
-										flex-direction: column;
-										align-items: center;
-										justify-content: center;
-										padding: 5px;
-										border-right: 1px solid rgba(255,255,255,0.1);
-									}
+						.x-axis-labels {
+							grid-column: 2;
+							grid-row: 2;
+							display: grid;
+							grid-template-columns: repeat(4, 1fr);
+							background-color: #3b4b6b;
+							color: #ffffff;
+							font-weight: 700;
+							margin-top: 0;
+						}
+						.x-label-cell {
+							display: flex;
+							flex-direction: column;
+							align-items: center;
+							justify-content: center;
+							padding: 5px;
+							border-right: 1px solid rgba(255,255,255,0.1);
+						}
 
-									/* Cell Colors - Restored to Original Tone */
-									.cell-white { background-color: #ffffff; }
-									.cell-yellow { background-color: #f2c94c; }
-									.cell-orange { background-color: #f2994a; }
-									.cell-red { background-color: #eb5757; }
+						/* Cell Colors - Restored to Original Tone */
+						.cell-white { background-color: #ffffff; }
+						.cell-yellow { background-color: #f2c94c; }
+						.cell-orange { background-color: #f2994a; }
+						.cell-red { background-color: #eb5757; }
 
-									.threat-marker {
-										position: absolute;
-										width: 32px;
-										height: 32px;
-										background: linear-gradient(135deg, #0d1b4b 0%, #1e293b 100%);
-										color: white;
-										border: 2px solid #ffffff;
-										border-radius: 50%;
-										display: flex;
-										align-items: center;
-										justify-content: center;
-										font-weight: 800;
-										font-size: 0.85rem;
-										box-shadow: 0 4px 12px rgba(13, 27, 75, 0.3);
-										z-index: 10;
-										cursor: help;
-                                        transition: all 0.3s ease;
-									}
-                                    .threat-marker:hover {
-                                        transform: scale(1.2) translateY(-2px);
-                                        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-                                    }
+						.threat-marker {
+							position: absolute;
+							width: 32px;
+							height: 32px;
+							background: linear-gradient(135deg, #0d1b4b 0%, #1e293b 100%);
+							color: white;
+							border: 2px solid #ffffff;
+							border-radius: 50%;
+							display: flex;
+							align-items: center;
+							justify-content: center;
+							font-weight: 800;
+							font-size: 0.85rem;
+							box-shadow: 0 4px 12px rgba(13, 27, 75, 0.3);
+							z-index: 10;
+							cursor: help;
+																	transition: all 0.3s ease;
+						}
+						.threat-marker:hover {
+								transform: scale(1.2) translateY(-2px);
+								background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+						}
 
-                                    /* Legend Styling */
-                                    .legend-item {
-                                        display: flex;
-                                        align-items: center;
-                                        gap: 0.5rem;
-                                        font-size: 0.85rem;
-                                        font-weight: 600;
-                                        color: #64748b;
-                                    }
-                                    .legend-box {
-                                        width: 16px;
-                                        height: 16px;
-                                        border-radius: 4px;
-                                    }
+						/* Legend Styling */
+						.legend-item {
+								display: flex;
+								align-items: center;
+								gap: 0.5rem;
+								font-size: 0.85rem;
+								font-weight: 600;
+								color: #64748b;
+						}
+						.legend-box {
+								width: 16px;
+								height: 16px;
+								border-radius: 4px;
+						}
 
-                                    .btn-modern {
-										border-radius: 0.75rem;
-										padding: 0.75rem 1.75rem;
-										font-weight: 600;
-										transition: all 0.3s ease;
-										display: inline-flex;
-										align-items: center;
-										gap: 0.5rem;
-										border: none;
-									}
-									.btn-danger.btn-modern {
-										background: #fff;
-										color: #ef4444;
-										border: 1px solid #fee2e2;
-										box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-									}
-									.btn-success.btn-modern {
-										background: linear-gradient(135deg, #10b981, #059669);
-										color: white;
-										box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-									}
-								</style>
+						.btn-modern {
+							border-radius: 0.75rem;
+							padding: 0.75rem 1.75rem;
+							font-weight: 600;
+							transition: all 0.3s ease;
+							display: inline-flex;
+							align-items: center;
+							gap: 0.5rem;
+							border: none;
+						}
+						.btn-danger.btn-modern {
+							background: #fff;
+							color: #ef4444;
+							border: 1px solid #fee2e2;
+							box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+						}
+						.btn-success.btn-modern {
+							background: linear-gradient(135deg, #10b981, #059669);
+							color: white;
+							box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+						}
+					</style>
 
-                                <!-- Page Header Info -->
-                                <div class="mb-4">
-                                    <h3 class="fw-bold text-dark">Risk Analysis Visualization</h3>
-                                    <p class="text-muted">Analyze the distribution of threats and the effectiveness of proposed security controls through our interactive heatmap matrix.</p>
-                                </div>
+					<!-- Page Header Info -->
+					<div class="mb-4">
+						<h3 class="fw-bold text-dark">Risk Analysis Visualization</h3>
+						<p class="text-muted">Analyze the distribution of threats and the effectiveness of proposed security controls through our interactive heatmap matrix.</p>
+					</div>
 
-								<div class="custom-card mb-4">
-									<div class="custom-header d-flex justify-content-between align-items-center">
-										<div class="d-flex align-items-center">
-											<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm"
-												style="width: 40px; height: 40px;">
-												<i class="bi bi-grid-3x3-gap-fill fs-5"></i>
-											</div>
-											<div>
-												<h5 class="mb-0 custom-header-title">Step 7 - Risk Heatmap</h5>
-												<small class="text-muted">Visual representation of risk assessment.</small>
-											</div>
-										</div>
-                                        <div class="nav nav-pills-modern" id="riskTabs" role="tablist">
-                                            <button class="nav-link active" id="before-tab" data-bs-toggle="pill" data-bs-target="#before-map" type="button" role="tab">
-                                                Before Map
-                                            </button>
-                                            <button class="nav-link" id="after-tab" data-bs-toggle="pill" data-bs-target="#after-map" type="button" role="tab">
-                                                After Map
-                                            </button>
-                                        </div>
-									</div>
-
-									<div class="p-4" style="background-color: #f8fafc;">
-										<div class="row g-4">
-                                            <!-- Main Heatmap Card -->
-                                            <div class="col-12 col-lg-7">
-                                                <div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle h-100">
-                                                    <div class="tab-content h-100 d-flex flex-column justify-content-center" id="riskTabsContent">
-                                                        <!-- Before Risk Map -->
-                                                        <div class="tab-pane fade show active" id="before-map" role="tabpanel">
-                                                            <div class="heatmap-outer">
-                                                                <div class="d-flex align-items-stretch w-100">
-                                                                    <div class="heatmap-title-side">SEVERITY LEVEL</div>
-                                                                    <div class="heatmap-table-container flex-grow-1">
-                                                                        <div class="y-axis-labels">
-                                                                            <div class="y-label-cell"><span>4</span></div>
-                                                                            <div class="y-label-cell"><span>3</span></div>
-                                                                            <div class="y-label-cell"><span>2</span></div>
-                                                                            <div class="y-label-cell"><span>1</span></div>
-                                                                        </div>
-                                                                        <div class="heatmap-grid" id="beforeGrid" style="border: 1px solid #3b4b6b;">
-                                                                            <% const yLabels=[4, 3, 2, 1]; const xLabels=[1, 2, 3, 4]; yLabels.forEach(s=> {
-                                                                                xLabels.forEach(l => {
-                                                                                let score = s * l;
-                                                                                let cellColor = 'cell-white';
-                                                                                if (score >= 12) cellColor = 'cell-red';
-                                                                                else if (score >= 6) cellColor = 'cell-orange';
-                                                                                else if (score >= 2) cellColor = 'cell-yellow';
-                                                                                else cellColor = 'cell-white';
-                                                                                %>
-                                                                                <div class="heatmap-cell <%= cellColor %>" data-severity="<%= s %>" data-likelihood="<%= l %>">
-                                                                                    <%= score %>
-                                                                                </div>
-                                                                            <% }); }); %>
-                                                                        </div>
-                                                                        <div class="x-axis-labels">
-                                                                            <div class="x-label-cell"><span>1</span><small>Unlikely</small></div>
-                                                                            <div class="x-label-cell"><span>2</span><small>Possible</small></div>
-                                                                            <div class="x-label-cell"><span>3</span><small>Likely</small></div>
-                                                                            <div class="x-label-cell"><span>4</span><small>Almost Certain</small></div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="heatmap-title-bottom">LIKELIHOOD</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- After Risk Map -->
-                                                        <div class="tab-pane fade" id="after-map" role="tabpanel">
-                                                            <div class="heatmap-outer">
-                                                                <div class="d-flex align-items-stretch w-100">
-                                                                    <div class="heatmap-title-side">SEVERITY LEVEL</div>
-                                                                    <div class="heatmap-table-container flex-grow-1">
-                                                                        <div class="y-axis-labels">
-                                                                            <div class="y-label-cell"><span>4</span></div>
-                                                                            <div class="y-label-cell"><span>3</span></div>
-                                                                            <div class="y-label-cell"><span>2</span></div>
-                                                                            <div class="y-label-cell"><span>1</span></div>
-                                                                        </div>
-                                                                        <div class="heatmap-grid" id="afterGrid" style="border: 1px solid #3b4b6b;">
-                                                                            <% yLabels.forEach(s=> {
-                                                                                xLabels.forEach(l => {
-                                                                                let score = s * l;
-                                                                                let cellColor = 'cell-white';
-                                                                                if (score >= 12) cellColor = 'cell-red';
-                                                                                else if (score >= 6) cellColor = 'cell-orange';
-                                                                                else if (score >= 2) cellColor = 'cell-yellow';
-                                                                                else cellColor = 'cell-white';
-                                                                                %>
-                                                                                <div class="heatmap-cell <%= cellColor %>" data-severity="<%= s %>" data-likelihood="<%= l %>">
-                                                                                    <%= score %>
-                                                                                </div>
-                                                                            <% }); }); %>
-                                                                        </div>
-                                                                        <div class="x-axis-labels">
-                                                                            <div class="x-label-cell"><span>1</span><small>Unlikely</small></div>
-                                                                            <div class="x-label-cell"><span>2</span><small>Possible</small></div>
-                                                                            <div class="x-label-cell"><span>3</span><small>Likely</small></div>
-                                                                            <div class="x-label-cell"><span>4</span><small>Almost Certain</small></div>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                                <div class="heatmap-title-bottom">LIKELIHOOD</div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <!-- Sidebar Cards -->
-                                            <div class="col-12 col-lg-5">
-                                                <!-- Legend Card -->
-                                                <div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-4">
-                                                    <h6 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
-                                                        <i class="bi bi-info-circle text-primary"></i> Risk Level Legend
-                                                    </h6>
-                                                    <div class="row row-cols-2 g-3">
-                                                        <div class="col">
-                                                            <div class="legend-item">
-                                                                <div class="legend-box cell-white border"></div>
-                                                                <span>Very Low (1)</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col">
-                                                            <div class="legend-item">
-                                                                <div class="legend-box cell-yellow"></div>
-                                                                <span>Low (2-4)</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col">
-                                                            <div class="legend-item">
-                                                                <div class="legend-box cell-orange"></div>
-                                                                <span>Medium (4-8)</span>
-                                                            </div>
-                                                        </div>
-                                                        <div class="col">
-                                                            <div class="legend-item">
-                                                                <div class="legend-box cell-red"></div>
-                                                                <span>High (9-16)</span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-									</div>
+					<div class="custom-card mb-4">
+						<div class="custom-header d-flex justify-content-between align-items-center">
+							<div class="d-flex align-items-center">
+								<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm"
+									style="width: 40px; height: 40px;">
+									<i class="bi bi-grid-3x3-gap-fill fs-5"></i>
 								</div>
-
-								<div class="d-flex justify-content-between align-items-center mt-4 mx-auto"
-									style="max-width: 935px;">
-									<a href="/assessment/securitymeasures?id=<%= piaAssessmentId %>"
-										class="btn btn-danger btn-modern shadow-sm">
-										<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
-									</a>
-									<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 7 of 7</span>
-									<a href="/dashboard" class="btn btn-success btn-modern shadow-sm">
-										<i class="bi bi-check-circle me-2"></i> Finish Assessment
-									</a>
+								<div>
+									<h5 class="mb-0 custom-header-title">Step 7 - Risk Heatmap</h5>
+									<small class="text-muted">Visual representation of risk assessment.</small>
 								</div>
 							</div>
-					</main>
-			</div>
+							<div class="nav nav-pills-modern" id="riskTabs" role="tablist">
+								<button class="nav-link active" id="before-tab" data-bs-toggle="pill" data-bs-target="#before-map" type="button" role="tab">
+									Before Map
+								</button>
+								<button class="nav-link" id="after-tab" data-bs-toggle="pill" data-bs-target="#after-map" type="button" role="tab">
+									After Map
+								</button>
+							</div>
+						</div>
+
+						<div class="p-4" style="background-color: #f8fafc;">
+							<div class="row g-4">
+								<!-- Main Heatmap Card -->
+								<div class="col-12 col-lg-7">
+									<div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle h-100">
+										<div class="tab-content h-100 d-flex flex-column justify-content-center" id="riskTabsContent">
+											<!-- Before Risk Map -->
+											<div class="tab-pane fade show active" id="before-map" role="tabpanel">
+												<div class="heatmap-outer">
+													<div class="d-flex align-items-stretch w-100">
+														<div class="heatmap-title-side">SEVERITY LEVEL</div>
+														<div class="heatmap-table-container flex-grow-1">
+															<div class="y-axis-labels">
+																<div class="y-label-cell"><span>4</span></div>
+																<div class="y-label-cell"><span>3</span></div>
+																<div class="y-label-cell"><span>2</span></div>
+																<div class="y-label-cell"><span>1</span></div>
+															</div>
+															<div class="heatmap-grid" id="beforeGrid" style="border: 1px solid #3b4b6b;">
+																<% const yLabels=[4, 3, 2, 1]; const xLabels=[1, 2, 3, 4]; yLabels.forEach(s=> {
+																	xLabels.forEach(l => {
+																	let score = s * l;
+																	let cellColor = 'cell-white';
+																	if (score >= 12) cellColor = 'cell-red';
+																	else if (score >= 6) cellColor = 'cell-orange';
+																	else if (score >= 2) cellColor = 'cell-yellow';
+																	else cellColor = 'cell-white';
+																	%>
+																	<div class="heatmap-cell <%= cellColor %>" data-severity="<%= s %>" data-likelihood="<%= l %>">
+																			<%= score %>
+																	</div>
+																<% }); }); %>
+															</div>
+															<div class="x-axis-labels">
+																<div class="x-label-cell"><span>1</span><small>Unlikely</small></div>
+																<div class="x-label-cell"><span>2</span><small>Possible</small></div>
+																<div class="x-label-cell"><span>3</span><small>Likely</small></div>
+																<div class="x-label-cell"><span>4</span><small>Almost Certain</small></div>
+															</div>
+														</div>
+													</div>
+													<div class="heatmap-title-bottom">LIKELIHOOD</div>
+												</div>
+											</div>
+
+											<!-- After Risk Map -->
+											<div class="tab-pane fade" id="after-map" role="tabpanel">
+												<div class="heatmap-outer">
+													<div class="d-flex align-items-stretch w-100">
+														<div class="heatmap-title-side">SEVERITY LEVEL</div>
+														<div class="heatmap-table-container flex-grow-1">
+															<div class="y-axis-labels">
+																<div class="y-label-cell"><span>4</span></div>
+																<div class="y-label-cell"><span>3</span></div>
+																<div class="y-label-cell"><span>2</span></div>
+																<div class="y-label-cell"><span>1</span></div>
+															</div>
+															<div class="heatmap-grid" id="afterGrid" style="border: 1px solid #3b4b6b;">
+																<% yLabels.forEach(s=> {
+																	xLabels.forEach(l => {
+																	let score = s * l;
+																	let cellColor = 'cell-white';
+																	if (score >= 12) cellColor = 'cell-red';
+																	else if (score >= 6) cellColor = 'cell-orange';
+																	else if (score >= 2) cellColor = 'cell-yellow';
+																	else cellColor = 'cell-white';
+																	%>
+																	<div class="heatmap-cell <%= cellColor %>" data-severity="<%= s %>" data-likelihood="<%= l %>">
+																			<%= score %>
+																	</div>
+																<% }); }); %>
+															</div>
+															<div class="x-axis-labels">
+																<div class="x-label-cell"><span>1</span><small>Unlikely</small></div>
+																<div class="x-label-cell"><span>2</span><small>Possible</small></div>
+																<div class="x-label-cell"><span>3</span><small>Likely</small></div>
+																<div class="x-label-cell"><span>4</span><small>Almost Certain</small></div>
+															</div>
+														</div>
+													</div>
+													<div class="heatmap-title-bottom">LIKELIHOOD</div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+
+								<!-- Sidebar Cards -->
+								<div class="col-12 col-lg-5">
+									<!-- Legend Card -->
+									<div class="bg-white p-4 rounded-4 shadow-sm border border-light-subtle mb-4">
+										<h6 class="fw-bold mb-3 text-dark d-flex align-items-center gap-2">
+											<i class="bi bi-info-circle text-primary"></i> Risk Level Legend
+										</h6>
+										<div class="row row-cols-2 g-3">
+											<div class="col">
+												<div class="legend-item">
+													<div class="legend-box cell-white border"></div>
+													<span>Very Low (1)</span>
+												</div>
+											</div>
+											<div class="col">
+												<div class="legend-item">
+													<div class="legend-box cell-yellow"></div>
+													<span>Low (2-4)</span>
+												</div>
+											</div>
+											<div class="col">
+												<div class="legend-item">
+													<div class="legend-box cell-orange"></div>
+													<span>Medium (4-8)</span>
+												</div>
+											</div>
+											<div class="col">
+												<div class="legend-item">
+													<div class="legend-box cell-red"></div>
+													<span>High (9-16)</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="d-flex justify-content-between align-items-center mt-4 mx-auto"
+						style="max-width: 935px;">
+						<a href="/assessment/securitymeasures?id=<%= piaAssessmentId %>"
+							class="btn btn-danger btn-modern shadow-sm">
+							<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
+						</a>
+						<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 7 of 7</span>
+						<a href="/assessment/finish?id=<%= piaAssessmentId %>" class="btn btn-success btn-modern shadow-sm">
+							<i class="bi bi-check-circle me-2"></i> Finish Assessment
+						</a>
+					</div>
+				</div>
+			</main>
+		</div>
 	</div>
 
 	<script>

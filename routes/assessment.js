@@ -6,11 +6,16 @@ const processDataLifeCycleController = require('../controllers/assessmentControl
 const personalInfoInventoryController = require('../controllers/assessmentController/personalInfoInventoryController');
 const threatsAndControlsController = require('../controllers/assessmentController/threatsAndControlsController');
 const securityMeasuresController = require('../controllers/assessmentController/securityMeasuresController');
+const { finishAssessment } = require('../controllers/assessmentController/finishAssessmentController');
 const { requireAuth } = require('../middleware/auth');
 const { dlcUpload } = require('../controllers/uploadController/uploadController');
 
 // Routes for Assessment Step 1 (DPS Information)
-router.get('/', requireAuth, dpsNameController.dpsName);
+router.get('/', (req, res, next) => {
+  // Ensure a fresh assessment starts (do not reuse previously selected one)
+  if (req.session) req.session.currentAssessmentId = null;
+  return next();
+}, requireAuth, dpsNameController.dpsName);
 router.post('/dpsname', requireAuth, dpsNameController.saveDpsName);
 
 // Routes for Assessment Step 2 (Authorized Parties) - Step 2
@@ -38,4 +43,8 @@ const riskHeatmapController = require('../controllers/assessmentController/riskH
 // Router for Risk Heatmap - Step 7
 router.get('/riskheatmap', requireAuth, riskHeatmapController.riskHeatmap);
 
+// Finish assessment (Step 7)
+router.get('/finish', requireAuth, finishAssessment);
+
 module.exports = router;
+

@@ -25,8 +25,9 @@ const dpsName = async (req, res) => {
 
     return res.render('assessment/dpsname-page', {
       title: res.locals.dpsTitle,
-      activePage: 'dpsname-page',
+      activePage: 'dpsname',
       piaAssessmentId: assessment?.id || req.session.currentAssessmentId || '',
+
       user: req.session.user,
       assessment: formatAssessmentForForm(assessment),
       error: null,

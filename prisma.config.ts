@@ -3,6 +3,25 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const buildDatabaseUrl = () => {
+  if (process.env.DATABASE_URL) {
+    return process.env.DATABASE_URL;
+  }
+
+  const host = process.env.DB_HOST || "localhost";
+  const port = process.env.DB_PORT || "3306";
+  const database = process.env.DB_DATABASE || "";
+  const username = process.env.DB_USERNAME || "";
+  const password = process.env.DB_PASSWORD ?? "";
+
+  const auth = username
+    ? `${encodeURIComponent(username)}:${encodeURIComponent(password)}`
+    : "";
+  const authSegment = auth ? `${auth}@` : "";
+
+  return `mysql://${authSegment}${host}:${port}/${encodeURIComponent(database)}`;
+};
+
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
@@ -10,6 +29,6 @@ export default defineConfig({
     seed: 'node prisma/seed.js',
   },
   datasource: {
-    url: process.env.DATABASE_URL,
+    url: buildDatabaseUrl(),
   },
 });

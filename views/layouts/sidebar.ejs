@@ -19,7 +19,7 @@
            data-bs-toggle="tooltip" title="Dashboard">
           <i class="bi bi-house-door-fill me-2"></i>Dashboard
         </a>
-        <a href="/assessment" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'dpsname' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
+				<a href="/assessment" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'dpsname' || activePage === 'assessment' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
            data-bs-toggle="tooltip" title="Start New Assessment">
           <i class="bi bi-file-earmark-plus-fill me-2"></i>New Assessment
         </a>
@@ -27,10 +27,30 @@
            data-bs-toggle="tooltip" title="View Reports">
           <i class="bi bi-bar-chart-line-fill me-2"></i>Reports
         </a>
-        <a href="/user-profile" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'profile' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
+				<a href="/user-profile" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'profile' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
            data-bs-toggle="tooltip" title="Account Profile">
           <i class="bi bi-person-circle me-2"></i>Account Profile
         </a>
+
+        <% if (user && user.role === 'ADMIN') { %>
+					<div class="mt-2 nav-link rounded-3  text-white-50 hover-bg <%= (activePage === 'create-user' || activePage === 'users-create') ? 'active bg-primary text-white shadow-sm' : '' %>">
+						<div class="dropdown w-100">
+							<button class="nav-link d-flex align-items-center justify-content-between w-100 rounded-3 <%= (activePage === 'create-user' || activePage === 'users-create') ? 'active text-white' : 'text-white-50' %>" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 500;">
+								<span class="d-flex align-items-center">
+									<i class="bi bi-three-dots me-2"></i>Settings
+								</span>
+								<i class="bi bi-chevron-down"></i>
+							</button>
+							<ul class="dropdown-menu dropdown-menu-dark w-100 border-0 shadow-lg">
+								<li>
+									<a class="dropdown-item rounded-3" href="/user-profile/create-user">
+										<i class="bi bi-person-plus me-2"></i>Add Account
+									</a>
+								</li>
+							</ul>
+						</div>
+					</div>
+        <% } %>
       </nav>
 
       <!-- Logout -->

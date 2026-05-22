@@ -5,6 +5,9 @@ const { requireAuth } = require('../middleware/auth');
 
 // Routes for User Profile Page
 router.get('/', requireAuth, userProfileController.profile);
-// Removed unused /logout-page (use /logout instead)
+
+// Admin-only: create new accounts
+router.get('/create-user', requireAuth, userProfileController.renderCreateUserPage);
+router.post('/create-user', requireAuth, userProfileController.createUserSubmit);
 
 module.exports = router;
