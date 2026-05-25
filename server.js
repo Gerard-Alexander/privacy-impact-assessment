@@ -15,6 +15,7 @@ const userProfileRoutes = require('./routes/userProfile');
 const dashboardRoutes = require('./routes/dashboard');
 const assessmentRoutes = require('./routes/assessment');
 const logoutRoutes = require('./routes/logout');
+const reportsRoutes = require('./routes/reports');
 
 
 const app = express();
@@ -66,6 +67,7 @@ app.use('/login', loginRoutes); // Login Routes
 app.use('/user-profile', userProfileRoutes); // User Profile Routes
 app.use('/dashboard', dashboardRoutes); // Dashboard Routes
 app.use('/assessment', assessmentRoutes); // Assessment Routes
+app.use('/reports', reportsRoutes); // Reports Routes
 app.use('/logout', logoutRoutes); // Logout Route
 
 // ===== ERROR HANDLING =====
