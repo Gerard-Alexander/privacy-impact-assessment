@@ -64,10 +64,67 @@ const saveProcessDataLifeCycle = async (req, res) => {
       return Number.isNaN(parsed.getTime()) ? null : parsed;
     };
 
-    // Delete dependent ThreatsAndControl records first to avoid FK violations,
-    // then delete PDLC records to overwrite with new ones
-    await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
-    await prisma.pDLC.deleteMany({ where: { piaAssessment_id: piaAssessmentId } });
+    const normalizeDate = (value) => {
+      if (!value) return '';
+      const date = value instanceof Date ? value : new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toISOString().slice(0, 10);
+    };
+
+    const normalizeText = (value) => String(value || '').trim();
+
+    const normalizePdlcRows = (rows) => {
+      const normalized = rows.map((row) => {
+        const collections = (row.collections || [])
+          .map((entry) => {
+            const collection = normalizeText(entry.collection);
+            const dateCollected = normalizeDate(entry.dateCollected);
+            if (!collection && !dateCollected) return null;
+            return { collection, dateCollected };
+          })
+          .filter(Boolean)
+          .sort((a, b) => `${a.collection}:${a.dateCollected}`.localeCompare(`${b.collection}:${b.dateCollected}`));
+
+        const uses = (row.uses || [])
+          .map((entry) => {
+            const useOfData = normalizeText(entry.useOfData);
+            const process = normalizeText(entry.process);
+            if (!useOfData && !process) return null;
+            return { useOfData, process };
+          })
+          .filter(Boolean)
+          .sort((a, b) => `${a.useOfData}:${a.process}`.localeCompare(`${b.useOfData}:${b.process}`));
+
+        const sharings = (row.sharings || [])
+          .map((entry) => {
+            const dataSharing = normalizeText(entry.dataSharing);
+            const sharedTo = normalizeText(entry.sharedTo);
+            if (!dataSharing && !sharedTo) return null;
+            return { dataSharing, sharedTo };
+          })
+          .filter(Boolean)
+          .sort((a, b) => `${a.dataSharing}:${a.sharedTo}`.localeCompare(`${b.dataSharing}:${b.sharedTo}`));
+
+        return {
+          stakeholderName: normalizeText(row.stakeholderName),
+          retentionPeriod: normalizeText(row.retentionPeriod),
+          retentionDate: normalizeDate(row.retentionDate),
+          disposalMethod: normalizeText(row.disposalMethod),
+          dlcDiagram: normalizeText(row.dlcDiagram),
+          collections,
+          uses,
+          sharings
+        };
+      });
+
+      return normalized
+        .filter((row) => row.stakeholderName || row.retentionPeriod || row.retentionDate || row.disposalMethod || row.dlcDiagram || row.collections.length || row.uses.length || row.sharings.length)
+        .sort((a, b) => {
+          const keyA = `${a.stakeholderName}:${a.retentionPeriod}:${a.retentionDate}:${a.disposalMethod}:${a.dlcDiagram}`;
+          const keyB = `${b.stakeholderName}:${b.retentionPeriod}:${b.retentionDate}:${b.disposalMethod}:${b.dlcDiagram}`;
+          return keyA.localeCompare(keyB);
+        });
+    };
 
     const dlcDiagramByIndex = new Map();
     if (Array.isArray(req.files)) {
@@ -82,19 +139,18 @@ const saveProcessDataLifeCycle = async (req, res) => {
       });
     }
 
-    // Check if there's any data to save
-    if (req.body.stakeholderName) {
-      const stakeholderNames = normalizeIndexedArray(req.body.stakeholderName);
-      const retentionPeriods = normalizeIndexedArray(req.body.retentionPeriod);
-      const retentionDates = normalizeIndexedArray(req.body.retentionDate);
-      const disposalMethods = normalizeIndexedArray(req.body.disposalMethod);
-      const dlcDiagramPaths = normalizeIndexedArray(req.body.dlcDiagramPath);
+    const stakeholderNames = normalizeIndexedArray(req.body.stakeholderName);
+    const retentionPeriods = normalizeIndexedArray(req.body.retentionPeriod);
+    const retentionDates = normalizeIndexedArray(req.body.retentionDate);
+    const disposalMethods = normalizeIndexedArray(req.body.disposalMethod);
+    const dlcDiagramPaths = normalizeIndexedArray(req.body.dlcDiagramPath);
 
-      const collectionsByRow = normalizeIndexedArray(req.body.collections);
-      const usesByRow = normalizeIndexedArray(req.body.uses);
-      const sharingsByRow = normalizeIndexedArray(req.body.sharings);
+    const collectionsByRow = normalizeIndexedArray(req.body.collections);
+    const usesByRow = normalizeIndexedArray(req.body.uses);
+    const sharingsByRow = normalizeIndexedArray(req.body.sharings);
 
-      const createOperations = stakeholderNames.map((name, index) => {
+    const incomingRows = stakeholderNames
+      .map((name, index) => {
         const collectionsRaw = normalizeIndexedArray(collectionsByRow[index]);
         const usesRaw = normalizeIndexedArray(usesByRow[index]);
         const sharingsRaw = normalizeIndexedArray(sharingsByRow[index]);
@@ -129,38 +185,71 @@ const saveProcessDataLifeCycle = async (req, res) => {
           })
           .filter(Boolean);
 
-        const data = {
-          piaAssessment_id: piaAssessmentId,
+        const row = {
           stakeholderName: String(name || '').trim(),
           retentionPeriod: String(retentionPeriods[index] || '').trim(),
           retentionDate: parseDateValue(retentionDates[index]),
           disposalMethod: String(disposalMethods[index] || '').trim(),
-          dlcDiagram: dlcDiagramByIndex.get(index) || String(dlcDiagramPaths[index] || '').trim() || null
+          dlcDiagram: dlcDiagramByIndex.get(index) || String(dlcDiagramPaths[index] || '').trim() || null,
+          collections,
+          uses,
+          sharings
         };
 
-        if (collections.length > 0) {
-          data.collections = { create: collections };
-        }
+        const hasData = row.stakeholderName || row.retentionPeriod || row.retentionDate || row.disposalMethod || row.dlcDiagram || collections.length || uses.length || sharings.length;
+        return hasData ? row : null;
+      })
+      .filter(Boolean);
 
-        if (uses.length > 0) {
-          data.uses = { create: uses };
-        }
+    const existingPdlc = await prisma.pDLC.findMany({
+      where: { piaAssessment_id: piaAssessmentId },
+      include: { collections: true, uses: true, sharings: true }
+    });
 
-        if (sharings.length > 0) {
-          data.sharings = { create: sharings };
-        }
-
-        return prisma.pDLC.create({ data });
-      });
-
-      if (createOperations.length > 0) {
-        await prisma.$transaction(createOperations);
-      }
-    }
+    const normalizedExisting = normalizePdlcRows(existingPdlc);
+    const normalizedIncoming = normalizePdlcRows(incomingRows);
 
     const redirectTarget = isPrevious
       ? `/assessment/authorizedparties?id=${piaAssessmentId}`
       : `/assessment/personalinfoinventory?id=${piaAssessmentId}`;
+
+    if (JSON.stringify(normalizedExisting) === JSON.stringify(normalizedIncoming)) {
+      return res.redirect(redirectTarget);
+    }
+
+    // Delete dependent ThreatsAndControl records first to avoid FK violations,
+    // then delete PDLC records to overwrite with new ones
+    await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
+    await prisma.pDLC.deleteMany({ where: { piaAssessment_id: piaAssessmentId } });
+
+    const createOperations = incomingRows.map((row) => {
+      const data = {
+        piaAssessment_id: piaAssessmentId,
+        stakeholderName: row.stakeholderName,
+        retentionPeriod: row.retentionPeriod,
+        retentionDate: row.retentionDate,
+        disposalMethod: row.disposalMethod,
+        dlcDiagram: row.dlcDiagram
+      };
+
+      if (row.collections.length > 0) {
+        data.collections = { create: row.collections };
+      }
+
+      if (row.uses.length > 0) {
+        data.uses = { create: row.uses };
+      }
+
+      if (row.sharings.length > 0) {
+        data.sharings = { create: row.sharings };
+      }
+
+      return prisma.pDLC.create({ data });
+    });
+
+    if (createOperations.length > 0) {
+      await prisma.$transaction(createOperations);
+    }
     return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving PDLC:', error);

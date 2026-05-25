@@ -166,7 +166,7 @@ const saveAuthorizedParties = async (req, res) => {
 
     req.session.currentAssessmentId = piaAssessment_id;
     const redirectTarget = isPrevious 
-      ? `/assessment/dpsname?id=${piaAssessment_id}` 
+      ? `/assessment?id=${piaAssessment_id}` 
       : `/assessment/processdatalifecycle?id=${piaAssessment_id}`;
     return res.redirect(redirectTarget);
   } catch (error) {

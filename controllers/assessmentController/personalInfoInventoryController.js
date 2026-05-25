@@ -203,7 +203,10 @@ const savePersonalInfoInventory = async (req, res) => {
     );
 
     if (!rowCount) {
-      return res.redirect(`/assessment/personalinfoinventory?id=${piaAssessmentId}`);
+      const redirectTarget = isPrevious
+        ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
+        : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
+      return res.redirect(redirectTarget);
     }
 
     const validatedRows = [];
