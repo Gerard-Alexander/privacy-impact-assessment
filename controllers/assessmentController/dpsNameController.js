@@ -1,5 +1,16 @@
 const prisma = require('../../store/prisma');
 
+const formatDateForInput = (value) => {
+  if (!value) return '';
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === 'string') {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+    const parsed = new Date(value);
+    return Number.isNaN(parsed.getTime()) ? '' : parsed.toISOString().slice(0, 10);
+  }
+  return '';
+};
+
 const formatAssessmentForForm = (assessment) => {
   if (!assessment) {
     return null;
@@ -7,8 +18,8 @@ const formatAssessmentForForm = (assessment) => {
 
   return {
     ...assessment,
-    piaStartDate: assessment.piaStartDate ? assessment.piaStartDate.toISOString().slice(0, 10) : '',
-    piaEndDate: assessment.piaEndDate ? assessment.piaEndDate.toISOString().slice(0, 10) : '',
+    piaStartDate: formatDateForInput(assessment.piaStartDate),
+    piaEndDate: formatDateForInput(assessment.piaEndDate),
     isOutsourced: assessment.isOutsourced ? '1' : '0'
   };
 };
