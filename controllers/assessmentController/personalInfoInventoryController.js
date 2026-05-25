@@ -128,6 +128,8 @@ const savePersonalInfoInventory = async (req, res) => {
 
     piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
+    const isPrevious = req.body?.redirectTo === 'previous';
+
     if (!Number.isInteger(piaAssessmentId)) {
       return res.redirect('/assessment');
     }
@@ -343,7 +345,10 @@ const savePersonalInfoInventory = async (req, res) => {
     const normalizedIncoming = normalizeRows(validatedRows);
 
     if (JSON.stringify(normalizedExisting) === JSON.stringify(normalizedIncoming)) {
-      return res.redirect(`/assessment/threatsandcontrols?id=${piaAssessmentId}`);
+      const redirectTarget = isPrevious
+        ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
+        : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
+      return res.redirect(redirectTarget);
     }
 
     // Delete dependent ThreatsAndControl records first to avoid FK violations
@@ -387,7 +392,10 @@ const savePersonalInfoInventory = async (req, res) => {
       }
     }
 
-    return res.redirect(`/assessment/threatsandcontrols?id=${piaAssessmentId}`);
+    const redirectTarget = isPrevious
+      ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
+      : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
+    return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving PII:', error);
     const dataSubjectTypes = await prisma.dataSubjectTypes.findMany({

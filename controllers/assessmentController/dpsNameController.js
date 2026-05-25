@@ -20,16 +20,31 @@ const dpsName = async (req, res) => {
 
     const piaAssessmentId = Number.parseInt(req.query.id || req.session.currentAssessmentId, 10);
     const assessment = Number.isInteger(piaAssessmentId)
-      ? await prisma.piaAssessment.findUnique({ where: { id: piaAssessmentId } })
+      ? await prisma.piaAssessment.findUnique({
+          where: { id: piaAssessmentId },
+          include: { sharedWith: { include: { user: true } } }
+        })
       : null;
+
+    // Fetch all users for the share modal (exclude current user)
+    const currentUserId = req.session.user?.id;
+    const allUsers = await prisma.user.findMany({
+      where: currentUserId ? { id: { not: currentUserId } } : {},
+      select: { id: true, firstName: true, lastName: true, emailAddress: true, userName: true },
+      orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }]
+    });
+
+    const sharedUserIds = assessment?.sharedWith?.map(s => s.user_id) || [];
 
     return res.render('assessment/dpsname-page', {
       title: res.locals.dpsTitle,
       activePage: 'dpsname',
       piaAssessmentId: assessment?.id || req.session.currentAssessmentId || '',
-
       user: req.session.user,
       assessment: formatAssessmentForForm(assessment),
+      allUsers,
+      sharedUserIds,
+      sharedUsers: assessment?.sharedWith?.map(s => s.user) || [],
       error: null,
       success: null
     });
@@ -41,6 +56,9 @@ const dpsName = async (req, res) => {
       piaAssessmentId: req.session.currentAssessmentId || '',
       user: req.session.user,
       assessment: null,
+      allUsers: [],
+      sharedUserIds: [],
+      sharedUsers: [],
       error: 'Failed to load assessment data.',
       success: null
     });
@@ -58,8 +76,12 @@ const saveDpsName = async (req, res) => {
     const parsedAssessmentId = Number.parseInt(piaAssessmentId || req.session.currentAssessmentId, 10);
     const normalizedAssessmentId = Number.isInteger(parsedAssessmentId) ? parsedAssessmentId : null;
 
-    // Validation for essential required fields
-    if (!systemName || !mandate || !dpsModality || !processingRole || !piaStartDate || !piaEndDate) {
+    const renderWithError = async (errorMsg) => {
+      const allUsers = await prisma.user.findMany({
+        where: req.session.user?.id ? { id: { not: req.session.user.id } } : {},
+        select: { id: true, firstName: true, lastName: true, emailAddress: true, userName: true },
+        orderBy: [{ firstName: 'asc' }, { lastName: 'asc' }]
+      }).catch(() => []);
       return res.render('assessment/dpsname-page', {
         title: 'Data Processing System',
         activePage: 'dpsname-page',
@@ -75,9 +97,17 @@ const saveDpsName = async (req, res) => {
           piaStartDate,
           piaEndDate
         }),
-        error: 'Please fill in all required fields.',
+        allUsers,
+        sharedUserIds: [],
+        sharedUsers: [],
+        error: errorMsg,
         success: null
       });
+    };
+
+    // Validation for essential required fields
+    if (!systemName || !mandate || !dpsModality || !processingRole || !piaStartDate || !piaEndDate) {
+      return renderWithError('Please fill in all required fields.');
     }
 
     if (normalizedAssessmentId) {
@@ -89,24 +119,7 @@ const saveDpsName = async (req, res) => {
       });
 
       if (duplicateAssessment) {
-        return res.render('assessment/dpsname-page', {
-          title: 'Data Processing System',
-          activePage: 'dpsname-page',
-          piaAssessmentId: normalizedAssessmentId,
-          user: req.session.user,
-          assessment: formatAssessmentForForm({
-            id: normalizedAssessmentId,
-            dpsName: systemName,
-            mandate,
-            dpsModality,
-            processingRole,
-            isOutsourced: isOutsourced === '1',
-            piaStartDate,
-            piaEndDate
-          }),
-          error: 'An assessment with this DPS name already exists.',
-          success: null
-        });
+        return renderWithError('An assessment with this DPS name already exists.');
       }
 
       const updatedAssessment = await prisma.piaAssessment.update({
@@ -127,32 +140,14 @@ const saveDpsName = async (req, res) => {
     }
 
     const existingAssessment = await prisma.piaAssessment.findFirst({
-      where: {
-        dpsName: systemName
-      }
+      where: { dpsName: systemName }
     });
 
     if (existingAssessment) {
-      return res.render('assessment/dpsname-page', {
-        title: 'Data Processing System',
-        activePage: 'dpsname-page',
-        piaAssessmentId: req.session.currentAssessmentId || '',
-        user: req.session.user,
-        assessment: formatAssessmentForForm({
-          id: existingAssessment.id,
-          dpsName: systemName,
-          mandate,
-          dpsModality,
-          processingRole,
-          isOutsourced: isOutsourced === '1',
-          piaStartDate,
-          piaEndDate
-        }),
-        error: 'An assessment with this DPS name already exists.',
-        success: null
-      });
+      return renderWithError('An assessment with this DPS name already exists.');
     }
 
+    const currentUserId = req.session.user?.id || null;
 
     const newAssessment = await prisma.piaAssessment.create({
       data: {
@@ -162,7 +157,8 @@ const saveDpsName = async (req, res) => {
         processingRole,
         isOutsourced: isOutsourced === '1',
         piaStartDate: new Date(piaStartDate),
-        piaEndDate: new Date(piaEndDate)
+        piaEndDate: new Date(piaEndDate),
+        creatorId: currentUserId
       }
     });
 
@@ -172,9 +168,9 @@ const saveDpsName = async (req, res) => {
     // Redirect to step 2 with assessment ID
     return res.redirect(`/assessment/authorizedparties?id=${newAssessment.id}`);
 
-
   } catch (error) {
     console.error('Error saving assessment:', error);
+    const { systemName, mandate, dpsModality, processingRole, isOutsourced, piaStartDate, piaEndDate } = req.body;
     return res.render('assessment/dpsname-page', {
         title: 'Data Processing System',
         activePage: 'dpsname-page',
@@ -189,6 +185,9 @@ const saveDpsName = async (req, res) => {
           piaStartDate,
           piaEndDate
         }),
+        allUsers: [],
+        sharedUserIds: [],
+        sharedUsers: [],
         error: 'Failed to save assessment. Please make sure all dates and fields are valid.',
         success: null
     });

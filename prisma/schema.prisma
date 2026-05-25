@@ -20,16 +20,21 @@ enum Role {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
-  firstName     String   @db.VarChar(255)
-  lastName      String   @db.VarChar(255)
-  userName      String   @unique @db.VarChar(255)
-  emailAddress  String   @unique @db.VarChar(255)
-  password      String
-  role          Role     @default(USER)
-  rememberToken String?  @db.Text
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id              Int               @id @default(autoincrement())
+  firstName       String            @db.VarChar(255)
+  lastName        String            @db.VarChar(255)
+  userName        String            @unique @db.VarChar(255)
+  emailAddress    String            @unique @db.VarChar(255)
+  password        String
+  role            Role              @default(USER)
+  rememberToken   String?           @db.Text
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  // Assessments created by this user
+  createdAssessments PiaAssessment[] @relation("AssessmentCreator")
+  // Assessments shared to this user
+  sharedAssessments  AssessmentShare[]
 }
 
 // --- ROOT TABLE: PIA ASSESSMENT --- //
@@ -44,6 +49,13 @@ model PiaAssessment {
   piaStartDate                DateTime
   piaEndDate                  DateTime
   status                      Status    @default(DRAFT)
+
+  // Creator / owner of this assessment
+  creatorId                   Int?
+  creator                     User?     @relation("AssessmentCreator", fields: [creatorId], references: [id])
+
+  // Users this assessment is shared with
+  sharedWith                  AssessmentShare[]
 
   // Privacy Notice Agreement
   privacyNoticeAcknowledged   Boolean  @default(false) 
@@ -69,6 +81,25 @@ model PiaAssessment {
 
   createdAt                   DateTime @default(now())
   updatedAt                   DateTime @updatedAt
+
+  @@index([creatorId])
+}
+
+// --- ASSESSMENT SHARING (many-to-many) --- //
+model AssessmentShare {
+  id               Int           @id @default(autoincrement())
+
+  piaAssessment_id Int
+  piaAssessment    PiaAssessment @relation(fields: [piaAssessment_id], references: [id], onDelete: Cascade)
+
+  user_id          Int
+  user             User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  createdAt        DateTime      @default(now())
+
+  @@unique([piaAssessment_id, user_id])
+  @@index([piaAssessment_id])
+  @@index([user_id])
 }
 
 enum Modality {
@@ -327,22 +358,22 @@ model ThreatsAndControl {
   pdlc_id                      Int
   pdlc                         PDLC            @relation(fields : [pdlc_id], references :[id])
 
-  threats_possibleConsequences String          @db.VarChar(255)
+  threats_possibleConsequences String?          @db.VarChar(255)
   
   // String to allow multi-select (e.g., "CONFIDENTIALITY, INTEGRITY")
-  typeOfThreats                String          @db.VarChar(255) 
+  typeOfThreats                String?          @db.VarChar(255) 
   
-  currentSeverityLevel         SeverityLevel   
-  currentLikelihoodLevel       LikelihoodLevel 
-  currentRiskRating            Int             @db.Int
-  proposedControl              String          @db.VarChar(255)
+  currentSeverityLevel         SeverityLevel?   
+  currentLikelihoodLevel       LikelihoodLevel? 
+  currentRiskRating            Int?             @db.Int
+  proposedControl              String?          @db.VarChar(255)
 
-  afterSeverityLevel            SeverityLevel
-  afterLikelihoodLevel          LikelihoodLevel
-  afterRiskRating               Int             @db.Int
+  afterSeverityLevel            SeverityLevel?
+  afterLikelihoodLevel          LikelihoodLevel?
+  afterRiskRating               Int?             @db.Int
   
   // String to allow multi-select (e.g., "PHYSICAL, TECHNICAL")
-  typeOfMeasure                String          @db.VarChar(255) 
+  typeOfMeasure                String?          @db.VarChar(255) 
   
   createdAt                    DateTime        @default(now())
   updatedAt                    DateTime        @updatedAt

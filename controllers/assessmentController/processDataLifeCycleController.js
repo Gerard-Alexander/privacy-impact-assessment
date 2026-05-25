@@ -38,6 +38,8 @@ const processDataLifeCycle = async (req, res) => {
 const saveProcessDataLifeCycle = async (req, res) => {
   const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
+  const isPrevious = req.body?.redirectTo === 'previous';
+
   if (!Number.isInteger(piaAssessmentId)) {
     return res.redirect('/assessment');
   }
@@ -156,7 +158,10 @@ const saveProcessDataLifeCycle = async (req, res) => {
       }
     }
 
-    return res.redirect(`/assessment/personalinfoinventory?id=${piaAssessmentId}`);
+    const redirectTarget = isPrevious
+      ? `/assessment/authorizedparties?id=${piaAssessmentId}`
+      : `/assessment/personalinfoinventory?id=${piaAssessmentId}`;
+    return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving PDLC:', error);
     return res.render('assessment/processdatalifecycle-page', {

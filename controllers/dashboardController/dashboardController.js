@@ -1,40 +1,68 @@
 const prisma = require('../../store/prisma');
 
 const dashboard = async (req, res) => {
-	try {
-		const totalAssessments = await prisma.piaAssessment.count();
-		const draftAssessments = await prisma.piaAssessment.count({ where: { status: 'DRAFT' } });
-		const completedAssessments = await prisma.piaAssessment.count({ where: { status: 'COMPLETED' } });
-		
-		const recentAssessments = await prisma.piaAssessment.findMany({
-			include: { authorizedParties: true },
-			orderBy: { updatedAt: 'desc' },
-			take: 5
-		});
+  try {
+    const currentUserId = req.session.user?.id;
+    const isAdmin = req.session.user?.role === 'ADMIN';
 
-		return res.render('dashboard', {
-			title: 'Dashboard',
-			activePage: 'dashboard',
-			user: req.session.user,
-			totalAssessments,
-			draftAssessments,
-			completedAssessments,
-			recentAssessments
-		});
-	} catch (error) {
-		console.error('Error loading dashboard data:', error);
-		return res.render('dashboard', {
-			title: 'Dashboard',
-			activePage: 'dashboard',
-			user: req.session.user,
-			totalAssessments: 0,
-			draftAssessments: 0,
-			completedAssessments: 0,
-			recentAssessments: []
-		});
-	}
+    // Build the WHERE filter based on role
+    // Admins see all assessments; regular users only see what they created or were shared with
+    const accessFilter = isAdmin
+      ? {}
+      : {
+          OR: [
+            { creatorId: currentUserId },
+            { sharedWith: { some: { user_id: currentUserId } } }
+          ]
+        };
+
+    const [totalAssessments, draftAssessments, completedAssessments, recentAssessments] = await Promise.all([
+      prisma.piaAssessment.count({ where: accessFilter }),
+      prisma.piaAssessment.count({ where: { ...accessFilter, status: 'DRAFT' } }),
+      prisma.piaAssessment.count({ where: { ...accessFilter, status: 'COMPLETED' } }),
+      prisma.piaAssessment.findMany({
+        where: accessFilter,
+        include: {
+          authorizedParties: true,
+          creator: {
+            select: { id: true, firstName: true, lastName: true, userName: true }
+          },
+          sharedWith: {
+            include: {
+              user: {
+                select: { id: true, firstName: true, lastName: true, emailAddress: true }
+              }
+            }
+          }
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 10
+      })
+    ]);
+
+    return res.render('dashboard', {
+      title: 'Dashboard',
+      activePage: 'dashboard',
+      user: req.session.user,
+      totalAssessments,
+      draftAssessments,
+      completedAssessments,
+      recentAssessments
+    });
+  } catch (error) {
+    console.error('Error loading dashboard data:', error);
+    return res.render('dashboard', {
+      title: 'Dashboard',
+      activePage: 'dashboard',
+      user: req.session.user,
+      totalAssessments: 0,
+      draftAssessments: 0,
+      completedAssessments: 0,
+      recentAssessments: []
+    });
+  }
 };
 
 module.exports = {
-	dashboard
+  dashboard
 };

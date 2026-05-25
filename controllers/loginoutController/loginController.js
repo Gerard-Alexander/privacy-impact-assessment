@@ -34,6 +34,7 @@ const loginSubmit = async (req, res) => {
       }
 
       req.session.user = {
+        id: user.id,
         username: user.userName,
         role: user.role,
         fullName: `${user.firstName} ${user.lastName}`.trim(),

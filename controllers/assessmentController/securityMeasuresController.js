@@ -51,6 +51,7 @@ const saveSecurityMeasures = async (req, res) => {
   const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
   const securityTypes = toArray(req.body.securityType);
   const descriptions = toArray(req.body.description);
+  const isPrevious = req.body?.redirectTo === 'previous';
 
   const isDataTransferredOutsidePh = req.body.isDataTransferredOutsidePh === 'true';
   const hasDataSharingAgreement = req.body.hasDataSharingAgreement === 'true';
@@ -94,7 +95,10 @@ const saveSecurityMeasures = async (req, res) => {
       await prisma.securityMeasures.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
       });
-      return res.redirect(`/assessment/riskheatmap?id=${piaAssessmentId}`);
+      const redirectTarget = isPrevious
+        ? `/assessment/threatsandcontrols?id=${piaAssessmentId}`
+        : `/assessment/riskheatmap?id=${piaAssessmentId}`;
+      return res.redirect(redirectTarget);
     }
 
     const validatedRows = [];
@@ -122,7 +126,10 @@ const saveSecurityMeasures = async (req, res) => {
       await prisma.securityMeasures.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
       });
-      return res.redirect(`/assessment/riskheatmap?id=${piaAssessmentId}`);
+      const redirectTarget = isPrevious
+        ? `/assessment/threatsandcontrols?id=${piaAssessmentId}`
+        : `/assessment/riskheatmap?id=${piaAssessmentId}`;
+      return res.redirect(redirectTarget);
     }
 
     // Delete existing
@@ -141,7 +148,10 @@ const saveSecurityMeasures = async (req, res) => {
       });
     }
 
-    return res.redirect(`/assessment/riskheatmap?id=${piaAssessmentId}`);
+    const redirectTarget = isPrevious
+      ? `/assessment/threatsandcontrols?id=${piaAssessmentId}`
+      : `/assessment/riskheatmap?id=${piaAssessmentId}`;
+    return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving security measures:', error);
     const securityTypeOptions = ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];

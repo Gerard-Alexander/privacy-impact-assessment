@@ -129,9 +129,7 @@ const saveThreatsAndControls = async (req, res) => {
   try {
     req.session.currentAssessmentId = piaAssessmentId;
 
-    if (isPrevious) {
-      return res.redirect(redirectTarget);
-    }
+
 
     // Re-read arrays from body to ensure consistent values
     const threatDescriptions2 = toArray(req.body.threatDescription);
@@ -172,7 +170,6 @@ const saveThreatsAndControls = async (req, res) => {
       });
       return res.redirect(redirectTarget);
     }
-
     const validatedRows = [];
 
     for (let index = 0; index < rowCount; index += 1) {
@@ -198,117 +195,30 @@ const saveThreatsAndControls = async (req, res) => {
         continue;
       }
 
-      // Validate that filled rows have all required fields
-      if (!threatDesc || !currentSeverity || !currentLikelihood || currentRiskRating === 0 || !proposedControl || !afterSeverity || !afterLikelihood || afterRiskRating === 0 || dataSubjectId === 0) {
-        if (isPrevious) {
-          continue;
-        }
-        const dataSubjects = await prisma.piiDatasubject.findMany({
-          where: {
-            pii: {
-              piaAssessment_id: piaAssessmentId
-            }
-          },
-          include: {
-            dataSubjectType: true,
-            pii: true
-          },
-          orderBy: { id: 'asc' }
-        });
-        const pdlcData = await prisma.pDLC.findMany({
-          where: { piaAssessment_id: piaAssessmentId }
-        });
-
-        const threatTypeOptions = ['CONFIDENTIALITY', 'INTEGRITY', 'AVAILABILITY', 'AUTHENTICITY', 'NON_REPUDIATION'];
-        const measureTypeOptions = ['PHYSICAL', 'TECHNICAL', 'ORGANIZATIONAL'];
-        const severityOptions = ['NEGLIGIBLE_1', 'LIMITED_2', 'SIGNIFICANT_3', 'EXTREME_4'];
-        const likelihoodOptions = ['UNLIKELY_1', 'POSSIBLE_2', 'LIKELY_3', 'ALMOST_CERTAIN_4'];
-
-        return res.render('assessment/threatsandncontrol-page', {
-          title: res.locals.threatsAndControls,
-          activePage: 'threatsandncontrol-page',
-          user: req.session.user,
-          piaAssessmentId,
-          threatsData: null,
-          dataSubjects,
-          pdlcData,
-          threatTypeOptions,
-          measureTypeOptions,
-          severityOptions,
-          likelihoodOptions,
-          error: 'Please complete all fields in each Threats and Controls row before saving.',
-          success: null
-        });
-      }
-
+      // Keep row even if partial, especially if we are navigating backward
       validatedRows.push({
         threatDesc,
         threatType,
-        currentSeverity,
-        currentLikelihood,
-        currentRiskRating,
+        currentSeverity: currentSeverity || null,
+        currentLikelihood: currentLikelihood || null,
+        currentRiskRating: currentRiskRating || 0,
         proposedControl,
-        afterSeverity,
-        afterLikelihood,
-        afterRiskRating,
+        afterSeverity: afterSeverity || null,
+        afterLikelihood: afterLikelihood || null,
+        afterRiskRating: afterRiskRating || 0,
         measureType,
-        dataSubjectId,
-        pdlcId
+        dataSubjectId: dataSubjectId || 0,
+        pdlcId: pdlcId || 0
       });
     }
 
-    if (!validatedRows.length) {
-      if (isPrevious) {
-        return res.redirect(redirectTarget);
-      }
-
-      await prisma.threatsAndControl.deleteMany({
-        where: { piaAssessment_id: piaAssessmentId }
-      });
-      return res.redirect(redirectTarget);
-    }
-
-    // Determine fallback PDLC id (use first PDLC for this assessment if pdlc not provided)
+    // Always clear and save if we have any pending data or if we are navigating
+    // This ensures that "Previous Page" button saves the current state.
+    // Even if validatedRows is empty, we delete and "save" nothing (effectively clearing).
+    
+    // Determine fallback PDLC id
     const firstPdlc = await prisma.pDLC.findFirst({ where: { piaAssessment_id: piaAssessmentId } });
     const defaultPdlcId = firstPdlc ? firstPdlc.id : null;
-
-    if (!defaultPdlcId && validatedRows.length > 0) {
-      // If no PDLC exists in DB and user did not supply pdlc, prompt to add one (DB requires this FK)
-      const dataSubjects = await prisma.piiDatasubject.findMany({
-        where: {
-          pii: {
-            piaAssessment_id: piaAssessmentId
-          }
-        },
-        include: {
-          dataSubjectType: true,
-          pii: true
-        },
-        orderBy: { id: 'asc' }
-      });
-      const pdlcData = await prisma.pDLC.findMany({ where: { piaAssessment_id: piaAssessmentId } });
-
-      const threatTypeOptions = ['CONFIDENTIALITY', 'INTEGRITY', 'AVAILABILITY', 'AUTHENTICITY', 'NON_REPUDIATION'];
-      const measureTypeOptions = ['PHYSICAL', 'TECHNICAL', 'ORGANIZATIONAL'];
-      const severityOptions = ['NEGLIGIBLE_1', 'LIMITED_2', 'SIGNIFICANT_3', 'EXTREME_4'];
-      const likelihoodOptions = ['UNLIKELY_1', 'POSSIBLE_2', 'LIKELY_3', 'ALMOST_CERTAIN_4'];
-
-      return res.render('assessment/threatsandncontrol-page', {
-        title: res.locals.threatsAndControls,
-        activePage: 'threatsandncontrol-page',
-        user: req.session.user,
-        piaAssessmentId,
-        threatsData: null,
-        dataSubjects,
-        pdlcData,
-        threatTypeOptions,
-        measureTypeOptions,
-        severityOptions,
-        likelihoodOptions,
-        error: 'No process (PDLC) found for this assessment. Please add at least one process before saving threats.',
-        success: null
-      });
-    }
 
     // Delete existing threats for this assessment
     await prisma.threatsAndControl.deleteMany({
@@ -317,22 +227,27 @@ const saveThreatsAndControls = async (req, res) => {
 
     // Create new threat records
     for (const row of validatedRows) {
+      // If we don't have a dataSubjectId, we can't save to DB because of FK constraint (unless we make it optional too, but let's assume it's needed)
+      if (row.dataSubjectId === 0) continue; 
+      
       const usePdlcId = row.pdlcId && Number.isInteger(row.pdlcId) ? row.pdlcId : defaultPdlcId;
+      if (!usePdlcId) continue; // Skip if no PDLC available yet
+
       await prisma.threatsAndControl.create({
         data: {
           piaAssessment_id: piaAssessmentId,
           dataSubject_id: row.dataSubjectId,
           pdlc_id: usePdlcId,
-          threats_possibleConsequences: row.threatDesc,
-          typeOfThreats: row.threatType,
+          threats_possibleConsequences: row.threatDesc || null,
+          typeOfThreats: row.threatType || null,
           currentSeverityLevel: row.currentSeverity,
           currentLikelihoodLevel: row.currentLikelihood,
           currentRiskRating: row.currentRiskRating,
-          proposedControl: row.proposedControl,
+          proposedControl: row.proposedControl || null,
           afterSeverityLevel: row.afterSeverity,
           afterLikelihoodLevel: row.afterLikelihood,
           afterRiskRating: row.afterRiskRating,
-          typeOfMeasure: row.measureType
+          typeOfMeasure: row.measureType || null
         }
       });
     }

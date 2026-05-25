@@ -81,6 +81,8 @@ const saveAuthorizedParties = async (req, res) => {
     const getFieldValue = (value) => (Array.isArray(value) ? value[0] : value || '');
     const piaAssessment_id = Number.parseInt(body.piaAssessment_id, 10);
 
+    const isPrevious = body.redirectTo === 'previous';
+
     if (!Number.isInteger(piaAssessment_id)) {
       return res.render('assessment/authorizedparties-page', {
         title: 'Authorized Parties',
@@ -143,24 +145,30 @@ const saveAuthorizedParties = async (req, res) => {
         dateSigned: body[dateField] ? new Date(body[dateField]) : null
       }));
 
-    if (!partyData.length) {
+    if (!partyData.length && !isPrevious) {
       return res.render('assessment/authorizedparties-page', {
         title: 'Authorized Parties',
         piaAssessmentId: body.piaAssessment_id,
         activePage: 'authorizedparties-page',
         user: req.session.user,
         error: 'Please complete at least one authorized party section.',
-        success: null
+        success: null,
+        authorizedPartiesData: {}
       });
     }
 
-    await prisma.$transaction([
-      prisma.authorizedParties.deleteMany({ where: { piaAssessment_id } }),
-      ...partyData.map((data) => prisma.authorizedParties.create({ data }))
-    ]);
+    if (partyData.length > 0) {
+      await prisma.$transaction([
+        prisma.authorizedParties.deleteMany({ where: { piaAssessment_id } }),
+        ...partyData.map((data) => prisma.authorizedParties.create({ data }))
+      ]);
+    }
 
     req.session.currentAssessmentId = piaAssessment_id;
-    return res.redirect(`/assessment/processdatalifecycle?id=${piaAssessment_id}`);
+    const redirectTarget = isPrevious 
+      ? `/assessment/dpsname?id=${piaAssessment_id}` 
+      : `/assessment/processdatalifecycle?id=${piaAssessment_id}`;
+    return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving authorized parties:', error);
     return res.render('assessment/authorizedparties-page', {

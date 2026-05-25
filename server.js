@@ -82,7 +82,11 @@ app.use((err, req, res, next) => {
 
 // 404 Handler
 app.use((req, res) => {
-  res.status(404).json({ error: 'Not found' });
+  res.status(404).render('403', {
+    title: 'Page Not Found',
+    user: req.session?.user || null,
+    message: 'The page you are looking for does not exist.'
+  });
 });
 
 
