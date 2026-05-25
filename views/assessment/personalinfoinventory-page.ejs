@@ -887,6 +887,12 @@
 		const piiForm = document.getElementById('piiForm');
 		if (piiForm) {
 			piiForm.addEventListener('submit', function (e) {
+				// Bypass validation if "Previous Page" was clicked
+				const submitter = e.submitter || document.activeElement;
+				if (submitter && submitter.name === 'redirectTo' && submitter.value === 'previous') {
+					return;
+				}
+
 				const rows = container.querySelectorAll('.pdlc-row');
 				for (let i = 0; i < rows.length; i += 1) {
 					if (!validateRow(rows[i])) {

@@ -202,10 +202,11 @@ const savePersonalInfoInventory = async (req, res) => {
       dataFormImageByIndex.size
     );
 
+    const redirectTarget = isPrevious
+      ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
+      : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
+
     if (!rowCount) {
-      const redirectTarget = isPrevious
-        ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
-        : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
       return res.redirect(redirectTarget);
     }
 
@@ -214,7 +215,7 @@ const savePersonalInfoInventory = async (req, res) => {
     const defaultDataSubjectTypeId = defaultDataSubjectType?.id || 1;
 
     for (let index = 0; index < rowCount; index += 1) {
-      const formName = formNames[index] || '';
+      const formName = (formNames[index] || '').trim();
       let formNo = Number.parseInt(formNos[index] || '', 10);
       if (Number.isNaN(formNo)) formNo = 0;
       const dataProcessing = dataProcessingValues[index] || '';
@@ -257,46 +258,76 @@ const savePersonalInfoInventory = async (req, res) => {
         })
         .filter(Boolean);
 
-      const hasImageInput = Boolean(dataFormImagePath);
-      const normalizedRow = {
-        formNo: formNo,
-        formName: formName,
-        dataProcessing: dataProcessing || (hasImageInput ? 'BOTH' : ''),
-        dataFormImagePath: dataFormImagePath || null,
-        dataFormImageUploadedAt: dataFormImageUploadedAt,
-        recipients,
-        dataSubjects,
-        piProcessBasisId: Number.isInteger(piProcessBasisId)
-          ? piProcessBasisId
-          : (hasImageInput ? (defaultPiBasis?.id || null) : null),
-        spiProcessBasisId: Number.isInteger(spiProcessBasisId)
-          ? spiProcessBasisId
-          : (hasImageInput ? (defaultSpiBasis?.id || null) : null)
-      };
+      // Check if row has any meaningful data to deserve saving
+      const hasMeaningfulData = formName || formNo > 0 || dataProcessing || dataFormImagePath || recipients.length > 0 || dataSubjects.length > 0;
+      if (!hasMeaningfulData) continue;
 
-      // Store submitted row for re-rendering if validation fails
+      const hasImageInput = Boolean(dataFormImagePath);
+      
+      // Determine final values
+      const finalDataProcessing = dataProcessing || (hasImageInput ? 'BOTH' : 'BOTH'); // Default to BOTH if missing
+      const finalPiBasisId = Number.isInteger(piProcessBasisId)
+        ? piProcessBasisId
+        : (defaultPiBasis?.id || null);
+      const finalSpiBasisId = Number.isInteger(spiProcessBasisId)
+        ? spiProcessBasisId
+        : (defaultSpiBasis?.id || null);
+
+      // A row is strictly complete if all mandatory fields are provided by user
+      const isStrictlyComplete = formName && dataProcessing && Number.isInteger(piProcessBasisId) && Number.isInteger(spiProcessBasisId);
+
+      if (!isStrictlyComplete && !isPrevious) {
+        // If mandatory fields are missing and we are moving forward, it's an error
+        const [dbDataSubjectTypes, dbProcessingBasis] = await Promise.all([
+          prisma.dataSubjectTypes.findMany({ orderBy: { id: 'asc' } }),
+          prisma.processingBasis.findMany({ orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }] })
+        ]);
+        const piOptions = dbProcessingBasis.filter(b => ['PI', 'BOTH'].includes(b.processingType));
+        const spiOptions = dbProcessingBasis.filter(b => ['SPI', 'BOTH'].includes(b.processingType));
+
+        return res.render('assessment/personalinfoinventory-page', {
+          title: res.locals.personalInfoInventory,
+          activePage: 'personalinfoinventory-page',
+          user: req.session.user,
+          piaAssessmentId,
+          piiData: null,
+          pdlcData: null,
+          dataSubjectTypes: dbDataSubjectTypes,
+          piProcessingBasisOptions: piOptions,
+          spiProcessingBasisOptions: spiOptions,
+          error: 'Please complete all required fields for row ' + (index + 1),
+          success: null
+        });
+      }
+
+      // We save if it's strictly complete OR if we are just going back (to preserve progress)
+      // Note: We still need a formName or image to avoid creating totally empty records
+      if (isStrictlyComplete || isPrevious) {
+        validatedRows.push({
+          formNo,
+          formName: formName || 'Draft Form',
+          dataProcessing: finalDataProcessing,
+          dataFormImagePath,
+          dataFormImageUploadedAt,
+          dataSubjects,
+          recipients,
+          piProcessBasisId: finalPiBasisId,
+          spiProcessBasisId: finalSpiBasisId
+        });
+      }
+
+
+      // Store submitted row for re-rendering if needed
       submittedRows.push({
         formNo: formNos[index] || '',
         formName,
         dataProcessingValue: dataProcessing,
         piProcessBasisId: piProcessBasisId || '',
         spiProcessBasisId: spiProcessBasisId || '',
-        dataFormImagePath: dataFormImagePath || '',
-        dataFormImageUploadedAt: dataFormImageUploadedAt,
-        dataSubjects: dataSubjects,
-        recipients: recipients
-      });
-
-      validatedRows.push({
-        formNo: normalizedRow.formNo,
-        formName: normalizedRow.formName,
-        dataProcessing: normalizedRow.dataProcessing,
-        dataFormImagePath: normalizedRow.dataFormImagePath,
-        dataFormImageUploadedAt: normalizedRow.dataFormImageUploadedAt,
-        dataSubjects: normalizedRow.dataSubjects,
-        recipients: normalizedRow.recipients,
-        piProcessBasisId: normalizedRow.piProcessBasisId,
-        spiProcessBasisId: normalizedRow.spiProcessBasisId
+        dataFormImagePath,
+        dataFormImageUploadedAt,
+        dataSubjects,
+        recipients
       });
     }
 
@@ -348,9 +379,6 @@ const savePersonalInfoInventory = async (req, res) => {
     const normalizedIncoming = normalizeRows(validatedRows);
 
     if (JSON.stringify(normalizedExisting) === JSON.stringify(normalizedIncoming)) {
-      const redirectTarget = isPrevious
-        ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
-        : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
       return res.redirect(redirectTarget);
     }
 
@@ -395,9 +423,6 @@ const savePersonalInfoInventory = async (req, res) => {
       }
     }
 
-    const redirectTarget = isPrevious
-      ? `/assessment/processdatalifecycle?id=${piaAssessmentId}`
-      : `/assessment/threatsandcontrols?id=${piaAssessmentId}`;
     return res.redirect(redirectTarget);
   } catch (error) {
     console.error('Error saving PII:', error);

@@ -38,7 +38,7 @@ const securityMeasures = async (req, res) => {
       securityData: existingSecurityMeasures.length > 0 ? existingSecurityMeasures : null,
       assessment: existingAssessment,
       securityTypeOptions,
-      error: null,
+      error: req.query.error || null,
       success: req.query.saved === '1' ? 'Security Measures saved successfully!' : null
     });
   } catch (error) {
@@ -90,47 +90,40 @@ const saveSecurityMeasures = async (req, res) => {
       }
     });
 
-    if (!rowCount) {
-      // Allow empty submission - clear existing
-      await prisma.securityMeasures.deleteMany({
-        where: { piaAssessment_id: piaAssessmentId }
-      });
-      const redirectTarget = isPrevious
-        ? `/assessment/threatsandcontrols?id=${piaAssessmentId}`
-        : `/assessment/riskheatmap?id=${piaAssessmentId}`;
-      return res.redirect(redirectTarget);
-    }
-
     const validatedRows = [];
 
     for (let index = 0; index < rowCount; index += 1) {
       const securityType = String(securityTypes[index] || '').trim();
       const description = String(descriptions[index] || '').trim();
 
-      if (!securityType && !description) {
-        continue;
+      if (securityType && description) {
+        validatedRows.push({ securityType, description });
       }
+    }
 
-      if (!securityType || !description) {
-        // Skip incomplete rows so partial inputs don't block saving.
-        continue;
-      }
-
-      validatedRows.push({
-        securityType,
-        description
+    if (!validatedRows.length && !isPrevious) {
+      const dbAssessment = await prisma.piaAssessment.findUnique({ where: { id: piaAssessmentId } });
+      const securityTypeOptions = ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];
+      return res.render('assessment/securitymeasures-page', {
+        title: 'Security Measures',
+        activePage: 'securitymeasures-page',
+        user: req.session.user,
+        piaAssessmentId,
+        securityData: null,
+        assessment: dbAssessment,
+        securityTypeOptions,
+        error: 'Please select at least one security type and provide its description.',
+        success: null
       });
     }
 
-    if (!validatedRows.length) {
+    if (!validatedRows.length && isPrevious) {
       await prisma.securityMeasures.deleteMany({
         where: { piaAssessment_id: piaAssessmentId }
       });
-      const redirectTarget = isPrevious
-        ? `/assessment/threatsandcontrols?id=${piaAssessmentId}`
-        : `/assessment/riskheatmap?id=${piaAssessmentId}`;
-      return res.redirect(redirectTarget);
+      return res.redirect(`/assessment/threatsandcontrols?id=${piaAssessmentId}`);
     }
+
 
     // Delete existing
     await prisma.securityMeasures.deleteMany({
@@ -155,12 +148,15 @@ const saveSecurityMeasures = async (req, res) => {
   } catch (error) {
     console.error('Error saving security measures:', error);
     const securityTypeOptions = ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];
+    const dbAssessment = await prisma.piaAssessment.findUnique({ where: { id: piaAssessmentId } }).catch(() => null);
+    
     return res.render('assessment/securitymeasures-page', {
       title: 'Security Measures',
       activePage: 'securitymeasures-page',
       user: req.session.user,
       piaAssessmentId,
       securityData: null,
+      assessment: dbAssessment,
       securityTypeOptions,
       error: 'An error occurred while saving. Please try again.',
       success: null

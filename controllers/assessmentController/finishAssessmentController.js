@@ -11,6 +11,15 @@ const finishAssessment = async (req, res) => {
   try {
     req.session.currentAssessmentId = piaAssessmentId;
 
+    // Verify Section F (Security Measures) is filled
+    const securityMeasuresCount = await prisma.securityMeasures.count({
+      where: { piaAssessment_id: piaAssessmentId }
+    });
+
+    if (securityMeasuresCount === 0) {
+      return res.redirect(`/assessment/securitymeasures?id=${piaAssessmentId}&error=Section F (Security Measures) must be filled before finishing the assessment.`);
+    }
+
     await prisma.piaAssessment.update({
       where: { id: piaAssessmentId },
       data: {
