@@ -25,14 +25,14 @@
            data-bs-toggle="tooltip" title="Dashboard">
           <i class="bi bi-house-door-fill me-2"></i>Dashboard
         </a>
-				<a href="/assessment" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'dpsname' || activePage === 'assessment' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
-           data-bs-toggle="tooltip" title="Start New Assessment">
-          <i class="bi bi-file-earmark-plus-fill me-2"></i>New Assessment
-        </a>
         <a href="/dashboard/all" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'all-assessments' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
            data-bs-toggle="tooltip" title="All Assessments">
-          <i class="bi bi-collection-fill me-2"></i>All Assessment
+          <i class="bi bi-collection-fill me-2"></i>All Assessments
         </a>
+    		<a href="/assessment" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'dpsname' || activePage === 'assessment' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
+               data-bs-toggle="tooltip" title="Start New Assessment">
+              <i class="bi bi-file-earmark-plus-fill me-2"></i>New Assessment
+            </a>
         <a href="/reports" class="nav-link rounded-3 px-3 py-2 <%= activePage === 'reports' ? 'active bg-primary text-white shadow-sm' : 'text-white-50 hover-bg' %>" 
            data-bs-toggle="tooltip" title="View Reports">
           <i class="bi bi-bar-chart-line-fill me-2"></i>Reports

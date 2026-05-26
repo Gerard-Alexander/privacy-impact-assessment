@@ -164,6 +164,9 @@
 													<%= assessment.status %>
 												</span>
 												<a href="/assessment?id=<%= assessment.id %>" class="btn btn-outline-primary btn-sm">Open</a>
+													<a href="/export/assessment?id=<%= assessment.id %>" class="btn btn-outline-success btn-sm" title="Export Excel">
+														<i class="bi bi-file-earmark-spreadsheet me-1"></i>Export
+													</a>
 											</div>
 										</div>
 									<% }) %>

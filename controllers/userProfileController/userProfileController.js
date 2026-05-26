@@ -131,15 +131,20 @@ const createUserSubmit = async (req, res) => {
     userName,
     emailAddress,
     role,
-    password
+    password,
+    confirmPassword
   } = req.body || {};
 
-  if (!firstName || !lastName || !userName || !emailAddress || !role || !password) {
+  if (!firstName || !lastName || !userName || !emailAddress || !role || !password || !confirmPassword) {
     return res.redirect('/user-profile/create-user?error=missing');
   }
 
   if (String(password).length < 6) {
     return res.redirect('/user-profile/create-user?error=password');
+  }
+
+  if (String(password) !== String(confirmPassword)) {
+    return res.redirect('/user-profile/create-user?error=confirm');
   }
 
   const normalizedUsername = String(userName).trim();

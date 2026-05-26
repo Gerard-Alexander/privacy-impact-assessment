@@ -5,7 +5,7 @@ async function test() {
     const record = await prisma.piaAssessment.findFirst({
       include: { sharedWith: true, creator: { select: { id: true, userName: true } } }
     });
-    console.log('✅ DB connection OK');
+    console.log('DB connection OK');
     if (record) {
       console.log('Sample assessment id:', record.id);
       console.log('creatorId:', record.creatorId);
@@ -22,9 +22,9 @@ async function test() {
     const shareCount = await prisma.assessmentShare.count();
     console.log('AssessmentShare rows:', shareCount);
 
-    console.log('\n✅ All checks passed. Schema is correct.');
+    console.log('\nAll checks passed. Schema is correct.');
   } catch (e) {
-    console.error('❌ Error:', e.message);
+    console.error('Error:', e.message);
   } finally {
     await prisma.$disconnect();
   }

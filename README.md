@@ -35,6 +35,9 @@ Other Tools: Nodemon (development)
     When resetting your db
       prisma migrate reset = npm run migrate:reset || npm run migrate:fresh 
 
+    When migrating latest/newly added mmigration in your db
+      npx prisma migrate dev = npm run migrate:dev
+
     Command to create your Prisma Client:
       prisma generate = npm run generate
 

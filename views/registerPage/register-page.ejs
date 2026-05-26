@@ -1,6 +1,6 @@
 <%- include('../layouts/head') %>
 <main class="container min-vh-100 d-flex align-items-center justify-content-center py-4">
-  <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5">
+  <div class="col-12 col-sm-10 col-md-9 col-lg-8 col-xl-7">
     <div class="card shadow border-0">
       <div class="card-body p-4 p-md-5">
         <div class="text-center mb-4">
@@ -21,6 +21,12 @@
           </div>
         <% } %>
 
+        <% if (typeof error !== 'undefined' && error === 'confirm') { %>
+          <div class="alert alert-warning" role="alert">
+            Passwords do not match.
+          </div>
+        <% } %>
+
         <% if (typeof error !== 'undefined' && error === 'exists') { %>
           <div class="alert alert-warning" role="alert">
             Username is already registered. Please choose another username.
@@ -34,22 +40,34 @@
         <% } %>
 
         <form action="/register-page" method="POST">
-          <div class="mb-3">
-            <label class="form-label">Full Name</label>
-            <input type="text" name="fullName" class="form-control" placeholder="Enter your full name" required>
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <label class="form-label">First Name</label>
+              <input type="text" name="firstName" class="form-control" placeholder="Enter your first name" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Last Name</label>
+              <input type="text" name="lastName" class="form-control" placeholder="Enter your last name" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Username</label>
+              <input type="text" name="username" class="form-control" placeholder="Create a username" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Password</label>
+              <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" name="confirmPassword" class="form-control" placeholder="Re-enter your password" required>
+            </div>
           </div>
 
-          <div class="mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" name="username" class="form-control" placeholder="Create a username" required>
-          </div>
-
-          <div class="mb-4">
-            <label class="form-label">Password</label>
-            <input type="password" name="password" class="form-control" placeholder="Minimum 6 characters" required>
-          </div>
-
-          <button type="submit" class="btn btn-primary w-100">Register</button>
+          <button type="submit" class="btn btn-primary w-100 mt-4">Register</button>
         </form>
 
         <p class="text-center mt-3 mb-0 small">

@@ -36,9 +36,9 @@ const registerPage = (req, res) => {
 };
 
 const registerSubmit = async (req, res) => {
-  const { fullName, username, password } = req.body;
+  const { firstName, lastName, username, password, confirmPassword } = req.body;
 
-  if (!fullName || !username || !password) {
+  if (!firstName || !lastName || !username || !password || !confirmPassword) {
     return res.redirect('/register-page?error=missing');
   }
 
@@ -46,10 +46,13 @@ const registerSubmit = async (req, res) => {
     return res.redirect('/register-page?error=password');
   }
 
+  if (String(password) !== String(confirmPassword)) {
+    return res.redirect('/register-page?error=confirm');
+  }
+
   const normalizedUsername = username.trim();
-  const normalizedFullName = fullName.trim().replace(/\s+/g, ' ');
-  const [firstName, ...rest] = normalizedFullName.split(' ');
-  const lastName = rest.join(' ') || '-';
+  const normalizedFirstName = String(firstName).trim();
+  const normalizedLastName = String(lastName).trim();
 
   try {
     const existingUser = await prisma.user.findUnique({
@@ -63,8 +66,8 @@ const registerSubmit = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
+        firstName: normalizedFirstName,
+        lastName: normalizedLastName,
         userName: normalizedUsername,
         password: hashedPassword
       }
