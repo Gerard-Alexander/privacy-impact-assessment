@@ -10,12 +10,103 @@ const requireAdmin = (req, res) => {
   return null;
 };
 
-const profile = (req, res) => {
-  return res.render('users/user-profile-page', {
-    title: 'User Profile',
-    activePage: 'profile',
-    user: req.session.user
-  });
+const profile = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const fullUser = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    return res.render('users/user-profile-page', {
+      title: 'Account Profile',
+      activePage: 'profile',
+      user: fullUser 
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error);
+    return res.render('users/user-profile-page', {
+      title: 'Account Profile',
+      activePage: 'profile',
+      user: req.session.user 
+    });
+  }
+};
+
+const editProfile = async (req, res) => {
+  try {
+    const userId = req.session.user.id;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    
+    return res.render('users/edit-profile-page', {
+      title: 'Edit Profile',
+      activePage: 'profile',
+      user,
+      error: req.query.error || null,
+      success: req.query.success || null
+    });
+  } catch (error) {
+    res.redirect('/user-profile');
+  }
+};
+
+const updateProfileSubmit = async (req, res) => {
+  const userId = req.session.user.id;
+  const { firstName, lastName, userName, emailAddress } = req.body;
+
+  try {
+    // Uniqueness check for username if it's being changed
+    if (userName) {
+        const existing = await prisma.user.findUnique({ where: { userName: userName.trim() } });
+        if (existing && existing.id !== userId) {
+            return res.redirect('/user-profile/edit?error=username-exists');
+        }
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        userName: userName.trim(),
+        emailAddress: emailAddress.trim().toLowerCase()
+      }
+    });
+
+    // Update session data
+    if (req.session.user) {
+        req.session.user.username = updatedUser.userName;
+        req.session.user.firstName = updatedUser.firstName;
+        req.session.user.lastName = updatedUser.lastName;
+        req.session.user.fullName = `${updatedUser.firstName} ${updatedUser.lastName}`.trim();
+        req.session.user.emailAddress = updatedUser.emailAddress;
+    }
+
+    return res.redirect('/user-profile?updated=1');
+  } catch (error) {
+    console.error('Update profile error:', error);
+    return res.redirect('/user-profile/edit?error=1');
+  }
+};
+
+const manageUsers = async (req, res) => {
+  const redirectResp = requireAdmin(req, res);
+  if (redirectResp) return;
+
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { createdAt: 'desc' }
+    });
+
+    return res.render('users/manage-users-page', {
+      title: 'Manage User Accounts',
+      activePage: 'manage-users',
+      user: req.session.user,
+      users
+    });
+  } catch (error) {
+    console.error('List users error:', error);
+    return res.redirect('/dashboard');
+  }
 };
 
 const renderCreateUserPage = (req, res) => {
@@ -55,23 +146,17 @@ const createUserSubmit = async (req, res) => {
   const normalizedEmail = String(emailAddress).trim().toLowerCase();
 
   try {
-    // uniqueness checks
     const [existingUserByUsername, existingUserByEmail] = await Promise.all([
       prisma.user.findUnique({ where: { userName: normalizedUsername } }),
       prisma.user.findUnique({ where: { emailAddress: normalizedEmail } })
     ]);
 
-    if (existingUserByUsername) {
-      return res.redirect('/user-profile/create-user?error=username');
-    }
-
-    if (existingUserByEmail) {
-      return res.redirect('/user-profile/create-user?error=email');
-    }
+    if (existingUserByUsername) return res.redirect('/user-profile/create-user?error=username');
+    if (existingUserByEmail) return res.redirect('/user-profile/create-user?error=email');
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const createdUser = await prisma.user.create({
+    await prisma.user.create({
       data: {
         firstName: String(firstName).trim(),
         lastName: String(lastName).trim(),
@@ -82,7 +167,7 @@ const createUserSubmit = async (req, res) => {
       }
     });
 
-    return res.redirect('/user-profile?created=1');
+    return res.redirect('/user-profile/manage-users?created=1');
   } catch (err) {
     console.error('Create user error:', err);
     return res.redirect('/user-profile/create-user?error=server');
@@ -91,7 +176,9 @@ const createUserSubmit = async (req, res) => {
 
 module.exports = {
   profile,
+  editProfile,
+  updateProfileSubmit,
+  manageUsers,
   renderCreateUserPage,
   createUserSubmit
 };
-

@@ -1,0 +1,71 @@
+<%- include('../layouts/head', { title: title }) %>
+
+<div class="d-flex">
+  <!-- SIDEBAR -->
+  <%- include('../layouts/sidebar', { activePage: 'profile' }) %>
+  
+  <!-- MAIN AREA -->
+  <div class="flex-grow-1 main-content-offset">
+    <!-- TOPBAR -->
+    <%- include('../layouts/topbar', { title: title, user: user }) %>
+
+    <!-- PAGE CONTENT -->
+    <main class="container-fluid py-4">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white py-3 border-bottom border-light">
+                        <h5 class="fw-bold mb-0 text-primary">Edit Account Profile</h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <% if (error) { %>
+                            <div class="alert alert-danger border-0 rounded-3 small fw-bold mb-4">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>Failed to update profile. Please try again.
+                            </div>
+                        <% } %>
+
+                        <form action="/user-profile/edit" method="POST">
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">First Name</label>
+                                    <input type="text" name="firstName" class="form-control rounded-3" value="<%= user.firstName %>" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Last Name</label>
+                                    <input type="text" name="lastName" class="form-control rounded-3" value="<%= user.lastName %>" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Email Address</label>
+                                    <input type="email" name="emailAddress" class="form-control rounded-3" value="<%= user.emailAddress %>" required>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Username</label>
+                                    <input type="text" name="userName" class="form-control rounded-3" value="<%= user.userName %>" required>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mt-4 pt-3 border-top border-light">
+                                <button type="submit" class="btn btn-primary px-4 rounded-pill fw-bold">Save Changes</button>
+                                <a href="/user-profile" class="btn btn-outline-secondary px-4 rounded-pill fw-bold">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+  </div>
+</div>
+
+<style>
+    .main-content-offset {
+        background-color: #f1f5f9;
+        min-height: 100vh;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

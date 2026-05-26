@@ -1,0 +1,103 @@
+<%- include('../layouts/head', { title: title }) %>
+
+<div class="d-flex">
+  <!-- SIDEBAR -->
+  <%- include('../layouts/sidebar', { activePage: 'manage-users' }) %>
+  
+  <!-- MAIN AREA -->
+  <div class="flex-grow-1 main-content-offset">
+    <!-- TOPBAR -->
+    <%- include('../layouts/topbar', { title: title, user: user }) %>
+
+    <!-- PAGE CONTENT -->
+    <main class="container-fluid py-4">
+        <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom border-light">
+                <h5 class="fw-bold mb-0 text-primary">Manage User Accounts</h5>
+                <a href="/user-profile/create-user" class="btn btn-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-person-plus me-1"></i> Add Account
+                </a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 border-0 py-3 small text-uppercase fw-bold text-muted" style="letter-spacing: 0.5px;">User</th>
+                                <th class="border-0 py-3 small text-uppercase fw-bold text-muted" style="letter-spacing: 0.5px;">Username</th>
+                                <th class="border-0 py-3 small text-uppercase fw-bold text-muted" style="letter-spacing: 0.5px;">Role</th>
+                                <th class="border-0 py-3 small text-uppercase fw-bold text-muted" style="letter-spacing: 0.5px;">Date Created</th>
+                                <th class="border-0 py-3 small text-uppercase fw-bold text-muted text-center" style="letter-spacing: 0.5px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% if (typeof users !== 'undefined' && users.length > 0) { %>
+                                <% users.forEach(u => { 
+                                    let initials = ((u.firstName||'')[0]+(u.lastName||'')[0]).toUpperCase() || 'U';
+                                %>
+                                    <tr>
+                                        <td class="ps-4 py-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold me-3" style="width: 38px; height: 38px; font-size: 0.8rem;">
+                                                    <%= initials %>
+                                                </div>
+                                                <div>
+                                                    <div class="fw-bold text-dark"><%= u.firstName %> <%= u.lastName %></div>
+                                                    <div class="small text-muted"><%= u.emailAddress %></div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="small fw-semibold text-dark">@<%= u.userName %></td>
+                                        <td>
+                                            <span class="badge bg-<%= u.role === 'ADMIN' ? 'danger' : 'info' %> bg-opacity-10 text-<%= u.role === 'ADMIN' ? 'danger' : 'info' %> rounded-pill px-2 py-1 small fw-bold" style="font-size: 0.7rem;">
+                                                <%= u.role %>
+                                            </span>
+                                        </td>
+                                        <td class="text-muted small">
+                                            <%= new Date(u.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="d-flex justify-content-center gap-2">
+                                                <a href="/user-profile/manage-users/edit/<%= u.id %>" class="btn btn-outline-primary btn-sm rounded-3 p-1 px-2 shadow-sm-hover" title="Edit Account">
+                                                    <i class="bi bi-person-gear" style="font-size: 0.85rem;"></i>
+                                                </a>
+                                                <form action="/user-profile/manage-users/delete/<%= u.id %>" method="POST" onsubmit="return confirm('WARNING: Are you sure you want to delete this user? This cannot be undone.')" class="d-inline">
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm rounded-3 p-1 px-2 shadow-sm-hover" title="Delete Account">
+                                                        <i class="bi bi-person-x" style="font-size: 0.85rem;"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <% }) %>
+                            <% } else { %>
+                                <tr>
+                                    <td colspan="5" class="text-center py-5 text-muted">No user accounts found.</td>
+                                </tr>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+  </div>
+</div>
+
+<style>
+    .main-content-offset {
+        background-color: #f1f5f9;
+        min-height: 100vh;
+    }
+    .shadow-sm-hover:hover {
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075)!important;
+        transform: translateY(-1px);
+    }
+    tr {
+        transition: background-color 0.15s ease;
+    }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

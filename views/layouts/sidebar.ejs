@@ -5,9 +5,15 @@
 
       <!-- Logo/Brand -->
       <div class="mb-4 text-center">
-        <span class="d-inline-flex align-items-center justify-content-center bg-light text-dark rounded-circle border shadow-sm"
-              style="width: 50px; height: 50px; font-weight: 600; font-size: 1.1rem;">
-          SLU
+        <span class="d-inline-flex align-items-center justify-content-center bg-white text-primary rounded-circle border shadow-sm fw-bold"
+              style="width: 50px; height: 50px; font-size: 1.2rem;">
+          <% if (user && user.firstName && user.lastName) { %>
+            <%= (user.firstName[0] + user.lastName[0]).toUpperCase() %>
+          <% } else if (user && user.username) { %>
+            <%= user.username.substring(0, 2).toUpperCase() %>
+          <% } else { %>
+            U
+          <% } %>
         </span>
         <h6 class="mt-2 mb-1 fw-semibold">PIA Portal</h6>
         <small class="opacity-75">Privacy Impact Assessment</small>
@@ -46,6 +52,11 @@
 								<i class="bi bi-chevron-down"></i>
 							</button>
 							<ul class="dropdown-menu dropdown-menu-dark w-100 border-0 shadow-lg">
+								<li>
+									<a class="dropdown-item rounded-3" href="/user-profile/manage-users">
+										<i class="bi bi-people me-2"></i>Edit Accounts
+									</a>
+								</li>
 								<li>
 									<a class="dropdown-item rounded-3" href="/user-profile/create-user">
 										<i class="bi bi-person-plus me-2"></i>Add Account
