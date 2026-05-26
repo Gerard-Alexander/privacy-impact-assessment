@@ -1,0 +1,321 @@
+<%- include('../layouts/head', { title: title }) %>
+
+<div class="d-flex">
+	<%- include('../layouts/sidebar', { activePage: activePage }) %>
+
+	<div class="flex-grow-1 main-content-offset">
+		<%- include('../layouts/topbar', { title: title, user: user }) %>
+		<main class="container-fluid py-4">
+			<div class="card border-0 shadow-sm">
+				<div class="card-body">
+					<div class="d-flex justify-content-between align-items-center mb-4">
+						<h4 class="fw-bold text-primary mb-0">Record Management</h4>
+						<a href="/assessment" class="btn btn-primary fw-bold text-uppercase px-4">
+							<i class="bi bi-plus-lg me-2"></i>Create New
+						</a>
+					</div>
+
+					<div class="card border-0 shadow-sm rounded overflow-hidden">
+                        <!-- Header with Tabs -->
+						<div class="p-3 px-4" style="background-color: #0d1b4b; border-radius: 0.375rem 0.375rem 0 0 !important;">
+							<div class="nav nav-pills d-inline-flex gap-1">
+								<a href="/dashboard/all?status=ALL" class="nav-link tab-item <%= currentStatus === 'ALL' ? 'active' : '' %>">
+									All
+								</a>
+								<a href="/dashboard/all?status=COMPLETED" class="nav-link tab-item <%= currentStatus === 'COMPLETED' ? 'active' : '' %>">
+									Completed
+								</a>
+								<a href="/dashboard/all?status=DRAFT" class="nav-link tab-item <%= currentStatus === 'DRAFT' ? 'active' : '' %>">
+									Drafts
+								</a>
+								<a href="/dashboard/all?status=ARCHIVED" class="nav-link tab-item <%= currentStatus === 'ARCHIVED' ? 'active' : '' %>">
+									Archive
+								</a>
+							</div>
+						</div>
+
+						<!-- Table Header -->
+						<div class="row g-0 p-3 px-lg-4" style="background-color: #d6e4f0;">
+							<div class="col-3 col-lg-3">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">DPS Name</small>
+							</div>
+							<div class="col-2 col-lg-2">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Office / Owner</small>
+							</div>
+							<div class="col-2 col-lg-2">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Shared With</small>
+							</div>
+							<div class="col-2 col-lg-2">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Last Updated</small>
+							</div>
+							<div class="col-2 col-lg-2 text-center">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Status</small>
+							</div>
+							<div class="col-1 col-lg-1 text-end">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Actions</small>
+							</div>
+						</div>
+
+						<% if (typeof assessments !== 'undefined' && assessments.length > 0) { %>
+							<div class="list-group list-group-flush">
+								<% assessments.forEach(assessment => { 
+									let headOffice = assessment.authorizedParties ? assessment.authorizedParties.find(p => p.userType === 'HEAD_OFFICE') : null;
+									let ownerName = headOffice ? headOffice.name : 'Not Specified';
+									let statusColor = assessment.status === 'COMPLETED' ? 'success' : (assessment.status === 'ARCHIVED' ? 'secondary' : 'warning');
+									let isOwner = assessment.creatorId === (user && user.id);
+									let isSharedToMe = !isOwner && assessment.sharedWith && assessment.sharedWith.some(s => s.user_id === (user && user.id));
+									let sharedUsers = assessment.sharedWith || [];
+								%>
+								<div class="list-group-item px-3 px-lg-4 py-3 border-bottom assessment-row" data-id="<%= assessment.id %>"
+									style="transition: background-color 0.2s;"
+									onmouseover="this.style.backgroundColor='#f8f9fa'"
+									onmouseout="this.style.backgroundColor='white'">
+									<div class="row g-0 align-items-center">
+
+										<!-- DPS Name + access badge -->
+										<div class="col-3 col-lg-3 pe-2">
+											<div class="fw-bold text-dark text-truncate" style="font-size: 0.875rem;">
+												<%= assessment.dpsName || 'Untitled Assessment' %>
+											</div>
+											<% if (isOwner) { %>
+											<span class="badge rounded-pill px-2 py-1 mt-1"
+												style="font-size: 0.6rem; background: rgba(26,58,107,0.1); color: #1a3a6b; border: 1px solid rgba(26,58,107,0.2);">
+												<i class="bi bi-person-circle me-1"></i>Owner
+											</span>
+											<% } else if (isSharedToMe) { %>
+											<span class="badge rounded-pill px-2 py-1 mt-1"
+												style="font-size: 0.6rem; background: rgba(46,158,80,0.1); color: #1d6b38; border: 1px solid rgba(46,158,80,0.25);">
+												<i class="bi bi-share me-1"></i>Shared with me
+											</span>
+											<% } %>
+										</div>
+
+										<!-- Owner -->
+										<div class="col-2 col-lg-2 text-muted text-truncate pe-2 small">
+											<%= ownerName %>
+										</div>
+
+										<!-- Shared-with avatars -->
+										<div class="col-2 col-lg-2 pe-2">
+											<% if (sharedUsers.length > 0) { %>
+											<div class="d-flex align-items-center gap-1 flex-wrap">
+												<% sharedUsers.slice(0, 3).forEach(s => { 
+													let u2 = s.user;
+													if (!u2) return;
+													let initials = ((u2.firstName||'')[0]+(u2.lastName||'')[0]).toUpperCase();
+												%>
+												<span class="d-inline-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
+													style="width:24px;height:24px;font-size:0.55rem;background:linear-gradient(135deg,#0d1b4b,#2d4e8a);flex-shrink:0;"
+													title="<%= u2.firstName %> <%= u2.lastName %> (<%= u2.emailAddress %>)">
+													<%= initials %>
+												</span>
+												<% }) %>
+												<% if (sharedUsers.length > 3) { %>
+												<span class="text-muted" style="font-size:0.7rem;">+<%= sharedUsers.length - 3 %></span>
+												<% } %>
+											</div>
+											<% } else { %>
+											<span class="text-muted" style="font-size:0.75rem;">—</span>
+											<% } %>
+										</div>
+
+										<!-- Last updated -->
+										<div class="col-2 col-lg-2 text-muted small">
+											<%= new Date(assessment.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+										</div>
+
+										<!-- Status -->
+										<div class="col-2 col-lg-2 text-center">
+											<span class="badge bg-<%= statusColor %> bg-opacity-10 text-<%= statusColor %> border border-<%= statusColor %> border-opacity-25 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
+												<%= assessment.status %>
+											</span>
+										</div>
+
+										<!-- Actions -->
+										<div class="col-1 col-lg-1 text-end">
+											<div class="btn-group gap-2">
+												<% if (assessment.status !== 'ARCHIVED') { %>
+													<a href="/assessment?id=<%= assessment.id %>" class="btn btn-outline-primary btn-sm p-1 px-2" title="View / Edit">
+														<i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>
+													</a>
+													<button type="button" class="btn btn-outline-danger btn-sm p-1 px-2 archive-btn" 
+														data-id="<%= assessment.id %>" 
+														data-status="<%= assessment.status %>"
+														title="Archive">
+														<i class="bi bi-trash3" style="font-size: 0.85rem;"></i>
+													</button>
+												<% } else { %>
+													<button type="button" class="btn btn-outline-success btn-sm p-1 px-2 restore-btn" 
+														data-id="<%= assessment.id %>" title="Restore to Drafts">
+														<i class="bi bi-arrow-counterclockwise" style="font-size: 0.85rem;"></i>
+													</button>
+													<button type="button" class="btn btn-outline-danger btn-sm p-1 px-2 delete-permanent-btn" 
+														data-id="<%= assessment.id %>" title="Permanent Delete">
+														<i class="bi bi-x-circle" style="font-size: 0.85rem;"></i>
+													</button>
+												<% } %>
+											</div>
+										</div>
+
+									</div>
+								</div>
+								<% }) %>
+							</div>
+						<% } else { %>
+							<div class="d-flex flex-column align-items-center justify-content-center py-5 px-3 px-md-4 text-center text-muted">
+								<svg style="width: 40px; height: 50px; opacity: 0.75;" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<rect x="2" y="2" width="28" height="36" rx="2" fill="#e0e0e0" stroke="#bbb" stroke-width="1.5"/>
+									<rect x="8" y="8" width="16" height="2" rx="1" fill="#bbb"/>
+									<rect x="8" y="13" width="12" height="2" rx="1" fill="#bbb"/>
+									<rect x="8" y="18" width="14" height="2" rx="1" fill="#bbb"/>
+									<rect x="6" y="10" width="28" height="36" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="1.5"/>
+									<rect x="12" y="18" width="16" height="2" rx="1" fill="#ccc"/>
+									<rect x="12" y="23" width="12" height="2" rx="1" fill="#ccc"/>
+									<rect x="12" y="28" width="14" height="2" rx="1" fill="#ccc"/>
+								</svg>
+								<span style="font-size: 0.875rem;" class="mt-3">No assessments found in this category.</span>
+							</div>
+						<% } %>
+					</div>
+				</div>
+			</div>
+		</main>
+	</div>
+</div>
+
+<style>
+.tab-item {
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1.25rem !important;
+    transition: all 0.2s ease;
+    border-radius: 6px !important;
+}
+.tab-item:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.tab-item.active {
+    background-color: #2d4e8a !important; /* Slightly lighter blue for active tab */
+    color: white !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+.btn-group .btn {
+    border-radius: 6px !important;
+    margin: 0 2px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+	const archiveButtons = document.querySelectorAll('.archive-btn');
+	const restoreButtons = document.querySelectorAll('.restore-btn');
+	const deletePermanentButtons = document.querySelectorAll('.delete-permanent-btn');
+	
+	// Helper for animations
+	const fadeOutRow = (row) => {
+		row.style.transition = 'all 0.5s ease';
+		row.style.opacity = '0';
+		row.style.transform = 'translateX(20px)';
+		setTimeout(() => {
+			row.remove();
+			if (document.querySelectorAll('.assessment-row').length === 0) {
+				location.reload();
+			}
+		}, 500);
+	};
+
+	// Archive Handler
+	archiveButtons.forEach(button => {
+		button.addEventListener('click', async function() {
+			const id = this.getAttribute('data-id');
+			const status = this.getAttribute('data-status');
+			const row = this.closest('.assessment-row');
+			
+			const message = status === 'COMPLETED' 
+					? 'Are you sure you want to archive this completed assessment?'
+					: 'Are you sure you want to archive this draft?';
+
+			if (confirm(message)) {
+				try {
+					const response = await fetch('/dashboard/archive', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ id: id })
+					});
+					const result = await response.json();
+					if (result.success) {
+						fadeOutRow(row);
+					} else {
+						alert('Error: ' + (result.message || 'Failed to archive'));
+					}
+				} catch (error) {
+					console.error('Error:', error);
+					alert('An error occurred.');
+				}
+			}
+		});
+	});
+
+	// Restore Handler
+	restoreButtons.forEach(button => {
+		button.addEventListener('click', async function() {
+			const id = this.getAttribute('data-id');
+			const row = this.closest('.assessment-row');
+			
+			if (confirm('Restore this assessment to your Drafts list?')) {
+				try {
+					const response = await fetch('/dashboard/restore', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ id: id })
+					});
+					const result = await response.json();
+					if (result.success) {
+						fadeOutRow(row);
+					} else {
+						alert('Error: ' + (result.message || 'Failed to restore'));
+					}
+				} catch (error) {
+					console.error('Error:', error);
+					alert('An error occurred.');
+				}
+			}
+		});
+	});
+
+	// Permanent Delete Handler
+	deletePermanentButtons.forEach(button => {
+		button.addEventListener('click', async function() {
+			const id = this.getAttribute('data-id');
+			const row = this.closest('.assessment-row');
+			
+			if (confirm('WARNING: PERMANENT DELETE\n\nThis will completely remove this assessment and all its data. This action cannot be undone. \n\nProceed?')) {
+				try {
+					const response = await fetch('/dashboard/delete-permanent', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify({ id: id })
+					});
+					const result = await response.json();
+					if (result.success) {
+						fadeOutRow(row);
+					} else {
+						alert('Error: ' + (result.message || 'Failed to delete'));
+					}
+				} catch (error) {
+					console.error('Error:', error);
+					alert('An error occurred.');
+				}
+			}
+		});
+	});
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

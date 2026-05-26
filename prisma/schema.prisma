@@ -115,6 +115,7 @@ enum RoleType {
 enum Status {
   DRAFT
   COMPLETED
+  ARCHIVED
 }
 
 enum PublicFacing {
