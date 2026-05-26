@@ -5,7 +5,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  engineType = "binary"
 }
 
 datasource db {
@@ -49,6 +48,7 @@ model PiaAssessment {
   piaStartDate                DateTime
   piaEndDate                  DateTime
   status                      Status    @default(DRAFT)
+  statusBeforeArchive         Status? 
 
   // Creator / owner of this assessment
   creatorId                   Int?

@@ -93,7 +93,10 @@ const archiveAssessment = async (req, res) => {
 
     await prisma.piaAssessment.update({
       where: { id: parsedId },
-      data: { status: 'ARCHIVED' }
+      data: { 
+        status: 'ARCHIVED',
+        statusBeforeArchive: assessment.status
+      }
     });
 
     return res.json({ success: true, message: 'Assessment archived successfully.' });
@@ -121,10 +124,13 @@ const restoreAssessment = async (req, res) => {
 
     await prisma.piaAssessment.update({
       where: { id: parsedId },
-      data: { status: 'DRAFT' } // Restore to Draft so it can be reviewed
+      data: { 
+        status: assessment.statusBeforeArchive || 'DRAFT',
+        statusBeforeArchive: null
+      }
     });
 
-    return res.json({ success: true, message: 'Assessment restored to Drafts.' });
+    return res.json({ success: true, message: `Assessment restored to ${assessment.statusBeforeArchive || 'DRAFT'}.` });
   } catch (error) {
     return res.status(500).json({ success: false, message: error.message });
   }
