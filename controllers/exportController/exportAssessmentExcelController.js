@@ -79,184 +79,150 @@ const exportAssessmentExcel = async (req, res) => {
 
 		const workbook = new ExcelJS.Workbook();
 		await workbook.xlsx.readFile(templatePath);
+		const sheet = workbook.getWorksheet(1); // Template has only 1 sheet named "Maintenance Log" (or something weird)
 
-		addSheet(
-			workbook,
-			'Summary',
-			['Field', 'Value'],
-			[
-				['DPS Name', assessment.dpsName],
-				['Mandate', assessment.mandate],
-				['Modality', assessment.dpsModality],
-				['Processing Role', assessment.processingRole],
-				['Outsourced', assessment.isOutsourced ? 'Yes' : 'No'],
-				['PIA Start Date', assessment.piaStartDate],
-				['PIA End Date', assessment.piaEndDate],
-				['Status', assessment.status],
-				['Privacy Notice Acknowledged', assessment.privacyNoticeAcknowledged ? 'Yes' : 'No'],
-				['Data Transferred Outside PH', assessment.isDataTransferredOutsidePh ? 'Yes' : 'No'],
-				['Data Sharing Agreement', assessment.hasDataSharingAgreement ? 'Yes' : 'No'],
-				['PIP Name', assessment.pipName || ''],
-				['Public Facing', assessment.isPublicFacing || ''],
-				['Automated Decision', assessment.hasAutomatedDecisionMaking ? 'Yes' : 'No'],
-				['Profiling', assessment.hasProfiling ? 'Yes' : 'No'],
-				['Legal Basis', assessment.legalBasis || ''],
-				['Other Legal Basis', assessment.otherLegalBasisInfo || ''],
-				['Consent Used', assessment.isConsentUsed ? 'Yes' : 'No'],
-				['Consent Proof', assessment.consentProof || '']
-			]
-		);
+		// 1. Basic Info
+		sheet.getCell('B2').value = assessment.dpsName || '';
+		sheet.getCell('B3').value = assessment.mandate || '';
 
-		addSheet(
-			workbook,
-			'Authorized Parties',
-			['Name', 'Position', 'Office Unit', 'Email', 'Role', 'Date Signed'],
-			assessment.authorizedParties.map((party) => [
-				party.name,
-				party.position,
-				party.officeUnit,
-				party.email,
-				party.userType,
-				party.dateSigned || ''
-			])
-		);
+		// Modality
+		if (assessment.dpsModality === 'MANUAL') {
+			sheet.getCell('C4').value = '☑ Manual';
+		} else if (assessment.dpsModality === 'ELECTRONIC') {
+			sheet.getCell('E4').value = '☑ Electronic / Automated';
+		} else if (assessment.dpsModality === 'BOTH') {
+			sheet.getCell('G4').value = '☑ Both';
+		}
 
-		addSheet(
-			workbook,
-			'PDLC',
-			['Stakeholder', 'Retention Period', 'Retention Date', 'Disposal Method'],
-			assessment.pdlc.map((pdlc) => [
-				pdlc.stakeholderName,
-				pdlc.retentionPeriod,
-				pdlc.retentionDate || '',
-				pdlc.disposalMethod
-			])
-		);
+		// Role
+		if (assessment.processingRole === 'PIC') {
+			sheet.getCell('C5').value = '☑ Personal Information Controller (PIC)';
+		} else if (assessment.processingRole === 'PIP') {
+			sheet.getCell('F5').value = '☑ Personal Information Processor (PIP)';
+		}
 
-		addSheet(
-			workbook,
-			'PDLC Collections',
-			['Stakeholder', 'Collection', 'Date Collected'],
-			assessment.pdlc.flatMap((pdlc) =>
-				(pdlc.collections || []).map((item) => [
-					pdlc.stakeholderName,
-					item.collection,
-					item.dateCollected || ''
-				])
-			)
-		);
+		// Outsourced
+		if (assessment.isOutsourced === true) {
+			sheet.getCell('C6').value = '☑ Yes';
+		} else if (assessment.isOutsourced === false) {
+			sheet.getCell('F6').value = '☑ No';
+		}
 
-		addSheet(
-			workbook,
-			'PDLC Uses',
-			['Stakeholder', 'Use Of Data', 'Process'],
-			assessment.pdlc.flatMap((pdlc) =>
-				(pdlc.uses || []).map((item) => [
-					pdlc.stakeholderName,
-					item.useOfData,
-					item.process
-				])
-			)
-		);
+		sheet.getCell('B7').value = assessment.piaStartDate ? new Date(assessment.piaStartDate).toLocaleDateString() : '';
+		sheet.getCell('B8').value = assessment.piaEndDate ? new Date(assessment.piaEndDate).toLocaleDateString() : '';
 
-		addSheet(
-			workbook,
-			'PDLC Sharing',
-			['Stakeholder', 'Data Sharing', 'Shared To'],
-			assessment.pdlc.flatMap((pdlc) =>
-				(pdlc.sharings || []).map((item) => [
-					pdlc.stakeholderName,
-					item.dataSharing,
-					item.sharedTo
-				])
-			)
-		);
+		// 2. Authorized Parties
+		const headOffice = assessment.authorizedParties.find(p => p.userType === 'HEAD_OFFICE');
+		if (headOffice) {
+			sheet.getCell('B11').value = headOffice.name || '';
+			sheet.getCell('B12').value = headOffice.position || '';
+			sheet.getCell('B13').value = headOffice.officeUnit || '';
+			sheet.getCell('B16').value = headOffice.dateSigned ? new Date(headOffice.dateSigned).toLocaleDateString() : '';
+		}
 
-		addSheet(
-			workbook,
-			'PII',
-			['Form No', 'Form Name', 'Processing Type', 'PI Basis', 'SPI Basis', 'Form Image'],
-			assessment.pii.map((pii) => [
-				pii.formNo,
-				pii.formName,
-				pii.dataProcessing,
-				pii.piProcessBasis?.keyword || '',
-				pii.spiProcessBasis?.keyword || '',
-				pii.dataFormImagePath || ''
-			])
-		);
+		const complianceOfficer = assessment.authorizedParties.find(p => p.userType === 'COMPLIANCE_OFFICER');
+		if (complianceOfficer) {
+			sheet.getCell('F11').value = complianceOfficer.name || '';
+			sheet.getCell('F12').value = complianceOfficer.position || '';
+			sheet.getCell('F13').value = complianceOfficer.email || '';
+			sheet.getCell('F16').value = complianceOfficer.dateSigned ? new Date(complianceOfficer.dateSigned).toLocaleDateString() : '';
+		}
 
-		addSheet(
-			workbook,
-			'PII Data Subjects',
-			['Form Name', 'Data Subject Type', 'Name'],
-			assessment.pii.flatMap((pii) =>
-				(pii.piiDatasubjects || []).map((subject) => [
-					pii.formName,
-					subject.dataSubjectType?.dataSubjectType || '',
-					subject.name
-				])
-			)
-		);
+		const reviewer = assessment.authorizedParties.find(p => p.userType === 'REVIEWER');
+		if (reviewer) {
+			sheet.getCell('B19').value = reviewer.name || '';
+			sheet.getCell('B20').value = reviewer.position || 'DATA PROTECTION OFFICER';
+			sheet.getCell('B23').value = reviewer.dateSigned ? new Date(reviewer.dateSigned).toLocaleDateString() : '';
+		}
 
-		addSheet(
-			workbook,
-			'Recipients',
-			['Form Name', 'Recipient Name'],
-			assessment.pii.flatMap((pii) =>
-				(pii.recipientUsers || []).map((recipient) => [
-					pii.formName,
-					recipient.recipientName
-				])
-			)
-		);
+		const approvedBy = assessment.authorizedParties.find(p => p.userType === 'APPROVED_BY');
+		if (approvedBy) {
+			sheet.getCell('F19').value = approvedBy.name || '';
+			sheet.getCell('F20').value = approvedBy.position || 'UNIVERSITY PRESIDENT';
+			sheet.getCell('F23').value = approvedBy.dateSigned ? new Date(approvedBy.dateSigned).toLocaleDateString() : '';
+		}
 
-		addSheet(
-			workbook,
-			'Threats & Controls',
-			[
-				'Assessment',
-				'Data Subject',
-				'Data Subject Type',
-				'Stakeholder',
-				'Consequence',
-				'Threat Types',
-				'Severity',
-				'Likelihood',
-				'Risk Rating',
-				'Proposed Control',
-				'After Severity',
-				'After Likelihood',
-				'After Risk Rating',
-				'Measure Type'
-			],
-			assessment.threatsAndControls.map((threat) => [
-				assessment.dpsName,
-				threat.dataSubjects?.name || '',
-				threat.dataSubjects?.dataSubjectType?.dataSubjectType || '',
-				threat.pdlc?.stakeholderName || '',
-				threat.threats_possibleConsequences || '',
-				threat.typeOfThreats || '',
-				threat.currentSeverityLevel || '',
-				threat.currentLikelihoodLevel || '',
-				threat.currentRiskRating || '',
-				threat.proposedControl || '',
-				threat.afterSeverityLevel || '',
-				threat.afterLikelihoodLevel || '',
-				threat.afterRiskRating || '',
-				threat.typeOfMeasure || ''
-			])
-		);
+		// 3. A. PROCESS DATA LIFE CYCLE
+		let pdlcRow = 37;
+		assessment.pdlc.forEach(item => {
+			sheet.getCell(`A${pdlcRow}`).value = item.stakeholderName || '';
+			sheet.getCell(`C${pdlcRow}`).value = (item.collections || []).map(c => `${c.collection}${c.dateCollected ? ' (' + new Date(c.dateCollected).toLocaleDateString() + ')' : ''}`).join('\n');
+			sheet.getCell(`D${pdlcRow}`).value = (item.uses || []).map(u => `${u.useOfData}: ${u.process}`).join('\n');
+			sheet.getCell(`E${pdlcRow}`).value = item.retentionPeriod || '';
+			sheet.getCell(`F${pdlcRow}`).value = (item.sharings || []).map(s => `${s.dataSharing} to ${s.sharedTo}`).join('\n');
+			sheet.getCell(`G${pdlcRow}`).value = item.disposalMethod || '';
+			pdlcRow++;
+		});
 
-		addSheet(
-			workbook,
-			'Security Measures',
-			['Security Type', 'Description'],
-			assessment.securityMeasures.map((measure) => [
-				measure.securityType,
-				measure.description
-			])
-		);
+		// 4. B. PERSONAL INFORMATION INVENTORY
+		let piiRow = 98;
+		assessment.pii.forEach(item => {
+			sheet.getCell(`A${piiRow}`).value = `${item.formNo || ''} / ${item.formName || ''}`;
+			sheet.getCell(`B${piiRow}`).value = item.dataProcessing || '';
+			sheet.getCell(`C${piiRow}`).value = (item.piiDatasubjects || []).map(s => s.dataSubjectType?.dataSubjectType || '').join('\n');
+			sheet.getCell(`D${piiRow}`).value = (item.piiDatasubjects || []).map(s => s.name || '').join('\n');
+			sheet.getCell(`E${piiRow}`).value = (item.recipientUsers || []).map(r => r.recipientName || '').join('\n');
+			sheet.getCell(`F${piiRow}`).value = item.piProcessBasis?.keyword || '';
+			sheet.getCell(`G${piiRow}`).value = item.spiProcessBasis?.keyword || '';
+			sheet.getCell(`H${piiRow}`).value = ''; // Processing Purpose not explicitly in model?
+			piiRow++;
+		});
+
+		// 5. C. THREATS AND CONTROL MEASURES
+		let threatRow = 129;
+		assessment.threatsAndControls.forEach(item => {
+			sheet.getCell(`A${threatRow}`).value = item.dataSubjects?.name || '';
+			sheet.getCell(`B${threatRow}`).value = item.threats_possibleConsequences || '';
+			sheet.getCell(`C${threatRow}`).value = item.typeOfThreats || '';
+			sheet.getCell(`D${threatRow}`).value = item.currentSeverityLevel || '';
+			sheet.getCell(`E${threatRow}`).value = item.currentLikelihoodLevel || '';
+			sheet.getCell(`F${threatRow}`).value = item.currentRiskRating || '';
+			sheet.getCell(`G${threatRow}`).value = item.proposedControl || '';
+			sheet.getCell(`H${threatRow}`).value = item.typeOfMeasure || '';
+			threatRow++;
+		});
+
+		// 6. D. SECURITY MEASURES
+		const orgMeasures = assessment.securityMeasures.filter(m => m.securityType === 'ORGANIZATIONAL').map(m => m.description).join('\n');
+		const physMeasures = assessment.securityMeasures.filter(m => m.securityType === 'PHYSICAL').map(m => m.description).join('\n');
+		const techMeasures = assessment.securityMeasures.filter(m => m.securityType === 'TECHNICAL').map(m => m.description).join('\n');
+
+		sheet.getCell('A159').value = orgMeasures;
+		sheet.getCell('D159').value = physMeasures;
+		sheet.getCell('F159').value = techMeasures;
+
+		// 7. Checklist Footer
+		if (assessment.isDataTransferredOutsidePh === true) sheet.getCell('G166').value = '☑ Yes';
+		else if (assessment.isDataTransferredOutsidePh === false) sheet.getCell('H166').value = '☑ No';
+
+		if (assessment.hasDataSharingAgreement === true) sheet.getCell('G167').value = '☑ Yes';
+		else if (assessment.hasDataSharingAgreement === false) sheet.getCell('H167').value = '☑ No';
+
+		if (assessment.isConsentUsed === true) sheet.getCell('G168').value = '☑ Yes';
+		else if (assessment.isConsentUsed === false) sheet.getCell('H168').value = '☑ No';
+
+		if (assessment.consentProof === 'CONSENT_FORM') sheet.getCell('F169').value = '☑ Consent Form';
+		else if (assessment.consentProof === 'OTHER_PROOF') sheet.getCell('G169').value = '☑ Other proof of obtaining consent';
+		else if (assessment.consentProof === 'BOTH') sheet.getCell('H169').value = '☑ Both';
+
+		sheet.getCell('G170').value = assessment.pipName || '';
+
+		if (assessment.isPublicFacing === 'EXTERNAL') sheet.getCell('F171').value = '☑ External';
+		else if (assessment.isPublicFacing === 'INTERNAL') sheet.getCell('G171').value = '☑ Internal';
+		else if (assessment.isPublicFacing === 'BOTH') sheet.getCell('H171').value = '☑ Both';
+
+		if (assessment.hasAutomatedDecisionMaking) sheet.getCell('F172').value = '☑ Automated Decision Making';
+		if (assessment.hasProfiling) {
+			const currentVal = sheet.getCell('G172').value || '';
+			sheet.getCell('G172').value = (currentVal ? currentVal + ' ' : '') + '☑ Profiling';
+		}
+		// If both were selected, Row 172 Col 8 is ALSO an option in template
+		if (assessment.hasAutomatedDecisionMaking && assessment.hasProfiling) {
+			sheet.getCell('H172').value = '☑ Both';
+		}
+
+		sheet.getCell('G173').value = assessment.legalBasis || '';
+		sheet.getCell('G174').value = assessment.otherLegalBasisInfo || '';
 
 		const fileBaseName = sanitizeFileName(assessment.dpsName || `assessment_${assessment.id}`);
 		const fileName = `${fileBaseName}_${assessment.id}.xlsx`;

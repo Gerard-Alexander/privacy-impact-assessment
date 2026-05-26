@@ -148,9 +148,14 @@
 
 										<!-- Actions -->
 										<div class="col-1 col-lg-1 text-end">
-											<a href="/assessment?id=<%= assessment.id %>" class="btn btn-outline-primary btn-sm p-1 px-2" title="View / Edit">
-												<i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>
-											</a>
+											<div class="btn-group gap-2">
+												<a href="/assessment?id=<%= assessment.id %>" class="btn btn-outline-primary btn-sm p-1 px-2" title="View / Edit">
+													<i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>
+												</a>
+												<a href="/export/assessment?id=<%= assessment.id %>" class="btn btn-outline-success btn-sm p-1 px-2" title="Export Excel">
+													<i class="bi bi-file-earmark-spreadsheet" style="font-size: 0.85rem;"></i>
+												</a>
+											</div>
 										</div>
 
 									</div>
