@@ -41,9 +41,11 @@ router.get('/securitymeasures', requireAuth, requireAssessmentAccess, securityMe
 router.post('/securitymeasures', requireAuth, requireAssessmentAccess, securityMeasuresController.saveSecurityMeasures);
 
 const riskHeatmapController = require('../controllers/assessmentController/riskHeatmapController');
+const heatmapUploadController = require('../controllers/uploadController/heatmapUploadController');
 
 // Router for Risk Heatmap - Step 7
 router.get('/riskheatmap', requireAuth, requireAssessmentAccess, riskHeatmapController.riskHeatmap);
+router.post('/saveheatmap', requireAuth, heatmapUploadController.saveHeatmap);
 
 // Finish assessment
 router.get('/finish', requireAuth, requireAssessmentAccess, finishAssessment);

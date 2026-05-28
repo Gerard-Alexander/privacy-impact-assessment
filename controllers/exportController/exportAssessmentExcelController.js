@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const ExcelJS = require('exceljs');
 const prisma = require('../../store/prisma');
 
@@ -82,8 +83,8 @@ const exportAssessmentExcel = async (req, res) => {
 		const sheet = workbook.getWorksheet(1); // Template has only 1 sheet named "Maintenance Log" (or something weird)
 
 		// 1. Basic Info
-		sheet.getCell('B2').value = assessment.dpsName || '';
-		sheet.getCell('B3').value = assessment.mandate || '';
+		sheet.getCell('C2').value = assessment.dpsName || '';
+		sheet.getCell('C3').value = assessment.mandate || '';
 
 		// Modality
 		if (assessment.dpsModality === 'MANUAL') {
@@ -108,8 +109,8 @@ const exportAssessmentExcel = async (req, res) => {
 			sheet.getCell('F6').value = '☑ No';
 		}
 
-		sheet.getCell('B7').value = assessment.piaStartDate ? new Date(assessment.piaStartDate).toLocaleDateString() : '';
-		sheet.getCell('B8').value = assessment.piaEndDate ? new Date(assessment.piaEndDate).toLocaleDateString() : '';
+		sheet.getCell('C7').value = assessment.piaStartDate ? new Date(assessment.piaStartDate).toLocaleDateString() : '';
+		sheet.getCell('C8').value = assessment.piaEndDate ? new Date(assessment.piaEndDate).toLocaleDateString() : '';
 
 		// 2. Authorized Parties
 		const headOffice = assessment.authorizedParties.find(p => p.userType === 'HEAD_OFFICE');
@@ -148,23 +149,86 @@ const exportAssessmentExcel = async (req, res) => {
 			sheet.getCell(`A${pdlcRow}`).value = item.stakeholderName || '';
 			sheet.getCell(`C${pdlcRow}`).value = (item.collections || []).map(c => `${c.collection}${c.dateCollected ? ' (' + new Date(c.dateCollected).toLocaleDateString() + ')' : ''}`).join('\n');
 			sheet.getCell(`D${pdlcRow}`).value = (item.uses || []).map(u => `${u.useOfData}: ${u.process}`).join('\n');
-			sheet.getCell(`E${pdlcRow}`).value = item.retentionPeriod || '';
+			const retentionDateStr = item.retentionDate ? new Date(item.retentionDate).toLocaleDateString() : '';
+			sheet.getCell(`E${pdlcRow}`).value = item.retentionPeriod
+				? (retentionDateStr ? `${item.retentionPeriod} (${retentionDateStr})` : item.retentionPeriod)
+				: retentionDateStr;
 			sheet.getCell(`F${pdlcRow}`).value = (item.sharings || []).map(s => `${s.dataSharing} to ${s.sharedTo}`).join('\n');
 			sheet.getCell(`G${pdlcRow}`).value = item.disposalMethod || '';
 			pdlcRow++;
 		});
 
+		// Merge G37:H62 (disposal method column covers both G and H)
+		for (let r = 37; r <= 62; r++) {
+			try { sheet.mergeCells(`G${r}:H${r}`); } catch (_) { /* already merged in template */ }
+		}
+
+		// DLC Diagram image → rows 65–90, col A–H
+		let dlcImageInserted = false;
+		const dlcItem = assessment.pdlc.find(item => item.dlcDiagram);
+		if (dlcItem && dlcItem.dlcDiagram) {
+			try {
+				// dlcDiagram may be stored as a full relative path or just the filename
+				const rawDiagram = dlcItem.dlcDiagram;
+				const uploadsBase = path.join(__dirname, '..', '..', 'uploads', 'dlc');
+				// Support both "uploads/dlc/file.png" and bare "file.png"
+				const imgFileName = path.basename(rawDiagram);
+				const imgPath = path.join(uploadsBase, imgFileName);
+
+				if (fs.existsSync(imgPath)) {
+					const ext = path.extname(imgFileName).replace('.', '').toLowerCase();
+					const mimeMap = { png: 'png', jpg: 'jpeg', jpeg: 'jpeg', gif: 'gif' };
+					const imageType = mimeMap[ext] || 'png';
+
+					const imageId = workbook.addImage({
+						filename: imgPath,
+						extension: imageType
+					});
+
+					sheet.addImage(imageId, {
+						tl: { col: 0, row: 64 }, // A65 (0-indexed)
+						br: { col: 8, row: 90 }, // H90 (0-indexed, exclusive)
+						editAs: 'oneCell'
+					});
+					dlcImageInserted = true; // flag so blank-row hider can skip these rows
+				} else {
+					console.warn(`DLC image not found: ${imgPath}`);
+				}
+			} catch (imgErr) {
+				console.error('Failed to insert DLC image:', imgErr);
+			}
+		}
+
 		// 4. B. PERSONAL INFORMATION INVENTORY
-		let piiRow = 98;
+		// One row per PII item. Multi-value fields (C, D, E) are comma-separated in a single cell.
+		let piiRow = 97;
 		assessment.pii.forEach(item => {
+			const subjects   = item.piiDatasubjects || [];
+			const recipients = item.recipientUsers  || [];
+
+			// Col A – Data Capture Form No. / Name
 			sheet.getCell(`A${piiRow}`).value = `${item.formNo || ''} / ${item.formName || ''}`;
+
+			// Col B – Data Processing
 			sheet.getCell(`B${piiRow}`).value = item.dataProcessing || '';
-			sheet.getCell(`C${piiRow}`).value = (item.piiDatasubjects || []).map(s => s.dataSubjectType?.dataSubjectType || '').join('\n');
-			sheet.getCell(`D${piiRow}`).value = (item.piiDatasubjects || []).map(s => s.name || '').join('\n');
-			sheet.getCell(`E${piiRow}`).value = (item.recipientUsers || []).map(r => r.recipientName || '').join('\n');
+
+			// Col C – Data Subjects (type), comma-separated
+			sheet.getCell(`C${piiRow}`).value = subjects.map(s => s.dataSubjectType?.dataSubjectType || '').filter(Boolean).join(', ');
+
+			// Col D – Personal Information of Data Subjects, comma-separated
+			sheet.getCell(`D${piiRow}`).value = subjects.map(s => s.name || '').filter(Boolean).join(', ');
+
+			// Col E – Recipients / Users, comma-separated
+			sheet.getCell(`E${piiRow}`).value = recipients.map(r => r.recipientName || '').filter(Boolean).join(', ');
+
+			// Col F – Basis of Processing PI
 			sheet.getCell(`F${piiRow}`).value = item.piProcessBasis?.keyword || '';
+
+			// Col G – Basis of Processing SPI
 			sheet.getCell(`G${piiRow}`).value = item.spiProcessBasis?.keyword || '';
-			sheet.getCell(`H${piiRow}`).value = ''; // Processing Purpose not explicitly in model?
+
+			// Col H – Processing Purpose (not stored in model — leave cell untouched)
+
 			piiRow++;
 		});
 
@@ -213,8 +277,7 @@ const exportAssessmentExcel = async (req, res) => {
 
 		if (assessment.hasAutomatedDecisionMaking) sheet.getCell('F172').value = '☑ Automated Decision Making';
 		if (assessment.hasProfiling) {
-			const currentVal = sheet.getCell('G172').value || '';
-			sheet.getCell('G172').value = (currentVal ? currentVal + ' ' : '') + '☑ Profiling';
+			sheet.getCell('G172').value = '☑ Profiling';
 		}
 		// If both were selected, Row 172 Col 8 is ALSO an option in template
 		if (assessment.hasAutomatedDecisionMaking && assessment.hasProfiling) {
@@ -224,11 +287,156 @@ const exportAssessmentExcel = async (req, res) => {
 		sheet.getCell('G173').value = assessment.legalBasis || '';
 		sheet.getCell('G174').value = assessment.otherLegalBasisInfo || '';
 
+		// ── 8. E. RISK MAP ───────────────────────────────────────────────────────
+		const heatmapBase = path.join(__dirname, '..', '..', 'exports', 'heatmaps');
+		const beforeMapPath = path.join(heatmapBase, `${assessment.id}-before.png`);
+		const afterMapPath = path.join(heatmapBase, `${assessment.id}-after.png`);
+
+		// Force E. RISK MAP section to a new page
+		sheet.getRow(189).addPageBreak();
+		sheet.getCell('A189').value = 'E. RISK MAP';
+		sheet.getCell('A189').font = { bold: true, size: 14, color: { argb: 'FF0D1B4B' } };
+
+		// Shared row range for both maps: Row 191 to 204 (0-indexed: row 190 to 204)
+		const startGridRow = 190;
+		const endGridRow = 204;
+
+		// Before Map (A-D)
+		if (fs.existsSync(beforeMapPath)) {
+			sheet.getCell('A190').value = 'BEFORE CONTROLS';
+			sheet.getCell('A190').font = { bold: true, size: 10 };
+
+			try {
+				const imgId = workbook.addImage({
+					filename: beforeMapPath,
+					extension: 'png'
+				});
+				sheet.addImage(imgId, {
+					tl: { col: 0, row: startGridRow }, // Col A
+					br: { col: 4, row: endGridRow },   // Col D (end of D is col 4)
+					editAs: 'oneCell'
+				});
+			} catch (err) {
+				console.error('Error adding before heatmap:', err);
+			}
+		}
+
+		// After Map (F-H)
+		if (fs.existsSync(afterMapPath)) {
+			sheet.getCell('F190').value = 'AFTER CONTROLS';
+			sheet.getCell('F190').font = { bold: true, size: 10 };
+
+			try {
+				const imgId = workbook.addImage({
+					filename: afterMapPath,
+					extension: 'png'
+				});
+				sheet.addImage(imgId, {
+					tl: { col: 5, row: startGridRow }, // Col F
+					br: { col: 8, row: endGridRow },   // Col H (end of H is col 8)
+					editAs: 'oneCell'
+				});
+			} catch (err) {
+				console.error('Error adding after heatmap:', err);
+			}
+		}
+
 		const fileBaseName = sanitizeFileName(assessment.dpsName || `assessment_${assessment.id}`);
 		const fileName = `${fileBaseName}_${assessment.id}.xlsx`;
 
 		res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
 		res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+
+		// ── POST-FILL FORMATTING ─────────────────────────────────────────────────
+		// Goal: apply wrap-text / top-alignment only to cells that have real data;
+		//       expand row height proportionally; lock print area; preserve template
+		//       column widths (do NOT override them — the template owns those).
+
+		const LINE_HEIGHT_PT = 14; // approximate points per wrapped text line
+
+		sheet.eachRow({ includeEmpty: false }, (row) => {
+			let hasContent = false;
+			let maxLines   = 1;
+
+			for (let c = 1; c <= 8; c++) {
+				const cell = row.getCell(c);
+				const val  = cell.value;
+
+				// Skip truly empty cells and ExcelJS merge-slave cells (type === 6)
+				if (val === null || val === undefined || val === '') continue;
+				if (cell.type === 6) continue; // non-master cell of a merge
+
+				hasContent = true;
+
+				// Apply wrap-text + top-left alignment
+				cell.alignment = {
+					wrapText:   true,
+					vertical:   'top',
+					horizontal: 'left'
+				};
+
+				// Estimate line count using the column's actual character width
+				// (falls back to 20 if the template hasn't set one)
+				const colWidth = sheet.getColumn(c).width || 20;
+				const txt = String(val);
+				const lines = txt.split('\n').reduce((sum, line) => {
+					return sum + Math.max(1, Math.ceil(line.length / colWidth));
+				}, 0);
+				maxLines = Math.max(maxLines, lines);
+			}
+
+			// Expand the row if content needs more space — never shrink template rows
+			if (hasContent) {
+				const needed = Math.max(maxLines * LINE_HEIGHT_PT, 15);
+				if (needed > (row.height || 0)) {
+					row.height = Math.min(needed, 409); // 409 pt = Excel's max row height
+				}
+			}
+		});
+
+		// ── HIDE BLANK TEMPLATE ROWS ──────────────────────────────────────────────────
+		// The template pre-allocates rows for each data section. Any row in those
+		// zones that was NOT written to is hidden so it disappears from both the
+		// file view and from print / PDF export (hidden rows are never printed).
+
+		const hideRows = (from, to) => {
+			for (let r = from; r <= to; r++) {
+				sheet.getRow(r).hidden = true;
+			}
+		};
+
+		// PDLC data zone: template allocates rows 37–62
+		if (pdlcRow <= 62) hideRows(pdlcRow, 62);
+
+		// DLC diagram zone: template allocates rows 65–90
+		// Only hide if no image was actually inserted
+		if (!dlcImageInserted) hideRows(65, 90);
+
+		// PII data zone: template allocates rows 97–124
+		if (piiRow <= 124) hideRows(piiRow, 124);
+
+		// Threats data zone: template allocates rows 129–155
+		if (threatRow <= 155) hideRows(threatRow, 155);
+		// ─────────────────────────────────────────────────────────────────────────
+
+		// ── PRINT / PAGE SETUP ──────────────────────────────────────────────────
+		const lastDataRow = sheet.lastRow?.number || 300;
+		sheet.pageSetup = {
+			...sheet.pageSetup,       // preserve template's header/footer references
+			paperSize:          9,    // A4
+			orientation:        'landscape',
+			fitToPage:          true,
+			fitToWidth:         1,    // always 1 page wide
+			fitToHeight:        0,    // unlimited pages tall
+			horizontalCentered: true,
+			printArea:          `A1:H${lastDataRow}`,
+			margins: {
+				left:   0.5,  right:  0.5,
+				top:    0.75, bottom: 0.75,
+				header: 0.3,  footer: 0.3
+			}
+		};
+		// ─────────────────────────────────────────────────────────────────────────
 
 		await workbook.xlsx.write(res);
 		res.end();
