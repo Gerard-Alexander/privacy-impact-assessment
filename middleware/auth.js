@@ -27,6 +27,26 @@ const requireAssessmentAccess = async (req, res, next) => {
       return next();
     }
 
+    const assessment = await prisma.piaAssessment.findUnique({
+      where: { id: piaAssessmentId },
+      select: {
+        creatorId: true,
+        sharedWith: { select: { user_id: true } },
+        status: true
+      }
+    });
+
+    if (!assessment) {
+      return res.status(404).render('403', {
+        title: 'Assessment Not Found',
+        user: req.session.user,
+        message: 'The assessment you are looking for does not exist.'
+      });
+    }
+
+    // Pass data to res.locals for view use
+    res.locals.piaAssessmentStatus = assessment.status;
+
     const isAdmin = req.session.user?.role === 'ADMIN';
     if (isAdmin) return next();
 
@@ -42,22 +62,6 @@ const requireAssessmentAccess = async (req, res, next) => {
         // Upgrade session silently so future requests don't need to look up
         req.session.user.id = dbUser.id;
       }
-    }
-
-    const assessment = await prisma.piaAssessment.findUnique({
-      where: { id: piaAssessmentId },
-      select: {
-        creatorId: true,
-        sharedWith: { select: { user_id: true } }
-      }
-    });
-
-    if (!assessment) {
-      return res.status(404).render('403', {
-        title: 'Assessment Not Found',
-        user: req.session.user,
-        message: 'The assessment you are looking for does not exist.'
-      });
     }
 
     // Legacy assessments (no creator assigned) — accessible to all authenticated users

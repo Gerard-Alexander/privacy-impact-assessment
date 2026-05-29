@@ -216,41 +216,37 @@ const saveThreatsAndControls = async (req, res) => {
     // This ensures that "Previous Page" button saves the current state.
     // Even if validatedRows is empty, we delete and "save" nothing (effectively clearing).
     
-    // Determine fallback PDLC id
+    // Determine fallback PDLC id if any threats missing it
     const firstPdlc = await prisma.pDLC.findFirst({ where: { piaAssessment_id: piaAssessmentId } });
     const defaultPdlcId = firstPdlc ? firstPdlc.id : null;
 
-    // Delete existing threats for this assessment
-    await prisma.threatsAndControl.deleteMany({
-      where: { piaAssessment_id: piaAssessmentId }
-    });
-
-    // Create new threat records
-    for (const row of validatedRows) {
-      // If we don't have a dataSubjectId, we can't save to DB because of FK constraint (unless we make it optional too, but let's assume it's needed)
-      if (row.dataSubjectId === 0) continue; 
-      
-      const usePdlcId = row.pdlcId && Number.isInteger(row.pdlcId) ? row.pdlcId : defaultPdlcId;
-      if (!usePdlcId) continue; // Skip if no PDLC available yet
-
-      await prisma.threatsAndControl.create({
-        data: {
-          piaAssessment_id: piaAssessmentId,
-          dataSubject_id: row.dataSubjectId,
-          pdlc_id: usePdlcId,
-          threats_possibleConsequences: row.threatDesc || null,
-          typeOfThreats: row.threatType || null,
-          currentSeverityLevel: row.currentSeverity,
-          currentLikelihoodLevel: row.currentLikelihood,
-          currentRiskRating: row.currentRiskRating,
-          proposedControl: row.proposedControl || null,
-          afterSeverityLevel: row.afterSeverity,
-          afterLikelihoodLevel: row.afterLikelihood,
-          afterRiskRating: row.afterRiskRating,
-          typeOfMeasure: row.measureType || null
-        }
-      });
-    }
+    // Use a transaction to ensure atomic delete and create
+    await prisma.$transaction([
+      // Delete existing threats for this assessment
+      prisma.threatsAndControl.deleteMany({
+        where: { piaAssessment_id: piaAssessmentId }
+      }),
+      // Create new threat records
+      ...validatedRows
+        .filter(row => row.dataSubjectId !== 0 && (row.pdlcId || defaultPdlcId))
+        .map(row => prisma.threatsAndControl.create({
+          data: {
+            piaAssessment_id: piaAssessmentId,
+            dataSubject_id: row.dataSubjectId,
+            pdlc_id: row.pdlcId && Number.isInteger(row.pdlcId) ? row.pdlcId : defaultPdlcId,
+            threats_possibleConsequences: row.threatDesc || null,
+            typeOfThreats: row.threatType || null,
+            currentSeverityLevel: row.currentSeverity,
+            currentLikelihoodLevel: row.currentLikelihood,
+            currentRiskRating: row.currentRiskRating,
+            proposedControl: row.proposedControl || null,
+            afterSeverityLevel: row.afterSeverity,
+            afterLikelihoodLevel: row.afterLikelihood,
+            afterRiskRating: row.afterRiskRating,
+            typeOfMeasure: row.measureType || null
+          }
+        }))
+    ]);
 
     return res.redirect(redirectTarget);
   } catch (error) {

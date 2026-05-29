@@ -10,8 +10,8 @@
 				const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : '';
 			%>
 			<%- include('../layouts/stepper', { currentStep: 6, dpsTitle: 'Data Processing System' ,
-				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
-			}) %>
+				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user,
+				piaAssessmentId: assessmentId }) %>
 			
 			<% if (error) { %>
 				<div class="alert alert-danger mx-auto" style="max-width: 1000px;">

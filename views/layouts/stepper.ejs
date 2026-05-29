@@ -82,15 +82,53 @@
     { title: 'Security Measures' },
     { title: 'Risk Heatmap' }
     ]; %>
+    <% 
+    const stepRoutes = [
+      '/assessment',
+      '/assessment/authorizedparties',
+      '/assessment/processdatalifecycle',
+      '/assessment/personalinfoinventory',
+      '/assessment/threatsandcontrols',
+      '/assessment/securitymeasures',
+      '/assessment/riskheatmap'
+    ];
+    
+    // Attempt to get assessment ID from variables passed to the view
+    const assessmentIdForLink = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : '';
+    %>
+
     <% steps.forEach((step, i) => {
     const stepNum = i + 1;
     const isDone = currentStep > stepNum;
     const isActive = currentStep === stepNum;
     const cls = isDone ? 'done' : (isActive ? 'active' : '');
+    
+    // Only make clickable if form is completed (done) and it's not the current step
+    const isFormCompleted = (typeof piaAssessmentStatus !== 'undefined' && piaAssessmentStatus === 'COMPLETED');
+    const canNavigate = assessmentIdForLink && isFormCompleted && !isActive;
+    const stepUrl = canNavigate ? `${stepRoutes[i]}?id=${assessmentIdForLink}` : 'javascript:void(0)';
     %>
     <div class="custom-step-item <%= cls %>">
-        <div class="custom-step-circle"><%= isDone ? '✓' : stepNum %></div>
-        <div class="custom-step-label"><%= step.title %></div>
+        <a href="<%= stepUrl %>" class="text-decoration-none d-flex flex-column align-items-center" 
+           style="<%= canNavigate ? 'cursor: pointer;' : 'cursor: default;' %>">
+            <div class="custom-step-circle">
+                <%= isDone ? '✓' : stepNum %>
+            </div>
+            <div class="custom-step-label"><%= step.title %></div>
+        </a>
     </div>
     <% }) %>
 </div>
+
+<style>
+/* Add hover effect for clickable steps */
+.custom-step-item:not(.active) a[href^="/"]:hover .custom-step-circle {
+    background: #0d1b4b !important;
+    color: #fff !important;
+    transform: scale(1.1);
+}
+.custom-step-item:not(.active) a[href^="/"]:hover .custom-step-label {
+    color: #0d1b4b !important;
+}
+</style>
+

@@ -146,22 +146,18 @@ const permanentDeleteAssessment = async (req, res) => {
 
     const parsedId = parseInt(id);
     const assessment = await prisma.piaAssessment.findUnique({ 
-        where: { id: parsedId },
-        include: {
-            authorizedParties: true,
-            personalInformation: true,
-            threatAssessments: true,
-            sharedWith: true
-        }
+        where: { id: parsedId }
     });
 
     if (!assessment) return res.status(404).json({ success: false, message: 'Not found.' });
     if (!isAdmin && assessment.creatorId != currentUserId) return res.status(403).json({ success: false, message: 'Unauthorized.' });
 
-    // Permanent delete
-    await prisma.piaAssessment.delete({
-      where: { id: parsedId }
-    });
+    // Delete ThreatsAndControl first — it references both PiiDatasubject and PDLC
+    // without onDelete: Cascade, so it must be removed before those parent rows are deleted.
+    await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: parsedId } });
+
+    // Now safe to permanently delete the assessment (all other children have Cascade defined)
+    await prisma.piaAssessment.delete({ where: { id: parsedId } });
 
     return res.json({ success: true, message: 'Assessment permanently deleted.' });
   } catch (error) {

@@ -5,8 +5,8 @@
 		<%- include('../layouts/topbar', { title: title, user: user }) %>
 		<main class="container-fluid py-4 px-4">
 			<%- include('../layouts/stepper', { currentStep: 3, dpsTitle: 'Data Processing System' ,
-				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , user: user
-			}) %>
+				authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , user: user,
+				piaAssessmentId: piaAssessmentId  }) %>
 			<% if (error) { %>
 			<div class="alert alert-danger mx-auto" style="max-width: 1000px;">
 				<%= error %>

@@ -24,7 +24,8 @@
 							%>
 							<%- include('../layouts/stepper', { currentStep: 5, dpsTitle: 'Data Processing System' ,
 								authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' ,
-								personalInfoInventory: 'Personal Information Inventory' , user: user }) %>
+								personalInfoInventory: 'Personal Information Inventory' , user: user,
+								piaAssessmentId: assessmentId }) %>
 
 								<% if (error) { %>
 									<div class="alert alert-danger mx-auto" style="max-width: 1000px;">
@@ -619,7 +620,14 @@
 																									<input type="hidden"
 																										name="dataSubjectId[]"
 																										class="data-subject-hidden"
-																										value="">
+																										value="<%= group.dataSubjectId %>">
+																									<% 
+																										let threatPdlcId = threat.pdlc_id || (pdlcData && pdlcData.length > 0 ? pdlcData[0].id : '');
+																									%>
+																									<input type="hidden"
+																										name="pdlcId[]"
+																										class="pdlc-id-hidden"
+																										value="<%= threatPdlcId %>">
 																								</div>
 																							</div>
 																						</div>
@@ -646,22 +654,22 @@
 																			</div>
 																</div>
 																<% }); %>
-															<hr class="my-4 text-muted mx-auto" style="max-width: 1000px;">
-															<div class="d-flex justify-content-between align-items-center mt-2 mx-auto"
-																style="max-width: 1000px;">
-																<button type="submit" name="redirectTo"
-																	value="previous" formnovalidate
-																	class="btn btn-danger btn-modern shadow-sm">
-																	<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
-																</button>
-																<span
-																	class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step
-																	5 of 7</span>
-																<button type="submit" name="redirectTo"
-																	value="next" class="btn btn-primary btn-modern shadow-sm">
-																	Next Page <i class="bi bi-arrow-right-short fs-5"></i>
-																</button>
-															</div>
+														</div>
+														<hr class="my-4 text-muted mx-auto" style="max-width: 1000px;">
+														<div class="d-flex justify-content-between align-items-center mt-2 mx-auto"
+															style="max-width: 1000px;">
+															<button type="submit" name="redirectTo"
+																value="previous" formnovalidate
+																class="btn btn-danger btn-modern shadow-sm">
+																<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
+															</button>
+															<span
+																class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step
+																5 of 7</span>
+															<button type="submit" name="redirectTo"
+																value="next" class="btn btn-primary btn-modern shadow-sm">
+																Next Page <i class="bi bi-arrow-right-short fs-5"></i>
+															</button>
 														</div>
 													</form>
 												</div>
@@ -881,11 +889,17 @@
 					threatItems.forEach((item, index) => {
 						if (index === 0) {
 							resetThreatItem(item);
+							syncCheckboxes(item);
+							computeCurrentRisk(item);
+							computeAfterRisk(item);
 						} else {
 							item.remove();
 						}
 					});
 					newGroup.querySelectorAll('select.data-subject-select').forEach(createBlankValue);
+					
+					// Crucial: Append BEFORE the buttons if they were in the container, 
+					// but since I moved buttons out, appending to container is fine now.
 					container.appendChild(newGroup);
 					updateGroupNumbers();
 					syncDataSubject(newGroup);
@@ -910,6 +924,9 @@
 					list.appendChild(newThreat);
 					updateGroupNumbers();
 					syncDataSubject(group);
+					syncCheckboxes(newThreat);
+					computeCurrentRisk(newThreat);
+					computeAfterRisk(newThreat);
 				}
 
 				const removeGroupBtn = event.target.closest('.remove-group-btn');
@@ -992,6 +1009,39 @@
 						});
 					});
 				});
+
+				// Auto-expand sections that have validation errors so the user can see them
+				form.addEventListener('invalid', function (event) {
+					const field = event.target;
+					
+					// Expand threat item
+					const threatItem = field.closest('.threat-item');
+					if (threatItem) {
+						const body = threatItem.querySelector('.threat-item-body');
+						const icon = threatItem.querySelector('.toggle-threat-collapse-btn i');
+						if (body && body.style.display === 'none') {
+							body.style.display = 'block';
+							if (icon) {
+								icon.classList.remove('bi-chevron-down');
+								icon.classList.add('bi-chevron-up');
+							}
+						}
+					}
+
+					// Expand data subject group
+					const group = field.closest('.data-subject-group');
+					if (group) {
+						const body = group.querySelector('.group-body');
+						const icon = group.querySelector('.toggle-collapse-btn i');
+						if (body && body.style.display === 'none') {
+							body.style.display = 'block';
+							if (icon) {
+								icon.classList.remove('bi-chevron-down');
+								icon.classList.add('bi-chevron-up');
+							}
+						}
+					}
+				}, true);
 			}
 
 			updateGroupNumbers();

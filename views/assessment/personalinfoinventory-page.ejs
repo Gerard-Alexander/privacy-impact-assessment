@@ -13,7 +13,8 @@
 						const assessmentId = typeof piaAssessmentId !== 'undefined' ? piaAssessmentId : (typeof piiAssessmentId !== 'undefined' ? piiAssessmentId : '');
 					%>
 					<%- include('../layouts/stepper', { currentStep: 4, dpsTitle: 'Data Processing System' ,
-						authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user
+						authParties: 'Authorized Parties' , processDataCycle: 'Process Data LifeCycle' , personalInfoInventory: 'Personal Information Inventory' , user: user,
+						piaAssessmentId: assessmentId
 					}) %>
 					
 					<% if (error) { %>
