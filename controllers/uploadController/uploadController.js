@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 
-const dlcUploadDir = path.join(__dirname, '..', '..', 'uploads', 'dlc');
+const dlcUploadDir = path.join(__dirname, '..', '..', 'exports', 'dlc');
 fs.mkdirSync(dlcUploadDir, { recursive: true });
 
 const piiUploadDir = path.join(__dirname, '..', '..', 'uploads', 'pii');

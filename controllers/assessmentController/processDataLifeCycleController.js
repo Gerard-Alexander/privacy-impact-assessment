@@ -133,7 +133,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
         if (!match) return;
         const index = Number.parseInt(match[1], 10);
         if (!Number.isNaN(index)) {
-          const relativePath = path.join('uploads', 'dlc', file.filename).replace(/\\/g, '/');
+          const relativePath = path.join('exports', 'dlc', file.filename).replace(/\\/g, '/');
           dlcDiagramByIndex.set(index, relativePath);
         }
       });

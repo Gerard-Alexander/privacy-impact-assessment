@@ -1,0 +1,31 @@
+--- Row 36 (PDLC Headers) ---
+C1: Who are the individuals involved
+in the processing of information?
+C2: Who are the individuals involved
+in the processing of information?
+C3: When is the data collected?
+What is the manner of collecring data?
+C4: What is the use of the personal 
+data being collected? 
+How is it processed?
+C5: What is the retention period
+(with reckoning date / time)?
+C6: How is the data being shared?
+To whom is it shared?
+C7: What is the disposal / destruction / deletion procedure?
+C8: What is the disposal / destruction / deletion procedure?
+
+--- Row 96 (PII Headers) ---
+C1: Data Capture Form No. / Name
+
+C2: Data Processing
+C3: Data Subjects
+C4: Personal Information 
+of Data Subjects
+C5: Recipients / Users of Personal Information
+
+C6: Basis of Processing 
+PI
+C7: Basis of Processing
+SPI 
+C8: Processing Purpose

@@ -69,18 +69,18 @@
 							writing-mode: vertical-rl;
 							transform: rotate(180deg);
 							text-align: center;
-							font-weight: 700;
-							font-size: 0.8rem;
-							color: #94a3b8;
+							font-weight: 800;
+							font-size: 0.95rem;
+							color: #0d1b4b;
 							margin-right: 1.5rem;
 							letter-spacing: 2px;
 							text-transform: uppercase;
 						}
 						.heatmap-title-bottom {
 							text-align: center;
-							font-weight: 700;
-							font-size: 0.8rem;
-							color: #94a3b8;
+							font-weight: 800;
+							font-size: 0.95rem;
+							color: #0d1b4b;
 							margin-top: 1.5rem;
 							letter-spacing: 2px;
 							text-transform: uppercase;
@@ -532,7 +532,12 @@
                 }
 
                 try {
-                    const canvas = await html2canvas(element, { backgroundColor: '#ffffff' });
+                    const canvas = await html2canvas(element, { 
+                        backgroundColor: '#ffffff',
+                        scale: 2, // Double the scale for higher resolution/clarity
+                        useCORS: true,
+                        logging: false
+                    });
                     const base64Image = canvas.toDataURL('image/png');
                     
                     await fetch('/assessment/saveheatmap', {

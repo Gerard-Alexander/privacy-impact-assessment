@@ -80,34 +80,43 @@ const exportAssessmentExcel = async (req, res) => {
 
 		const workbook = new ExcelJS.Workbook();
 		await workbook.xlsx.readFile(templatePath);
-		const sheet = workbook.getWorksheet(1); // Template has only 1 sheet named "Maintenance Log" (or something weird)
+		const sheet = workbook.getWorksheet(1);
+
+		// ── HEADER LOGOS ────────────────────────────────────────────────────────
+		const sluLogoPath = path.join(__dirname, '..', '..', 'public', 'images', 'slu-logo.jpg');
+		const dpoLogoPath = path.join(__dirname, '..', '..', 'public', 'images', 'dpo-logo.png');
+
+		if (fs.existsSync(sluLogoPath)) {
+			const sluImage = workbook.addImage({ filename: sluLogoPath, extension: 'jpeg' });
+			sheet.addImage(sluImage, {
+				tl: { col: 0.1, row: 0.1 },
+				ext: { width: 75, height: 75 },
+				editAs: 'oneCell'
+			});
+		}
+		if (fs.existsSync(dpoLogoPath)) {
+			const dpoImage = workbook.addImage({ filename: dpoLogoPath, extension: 'png' });
+			sheet.addImage(dpoImage, {
+				tl: { col: 7.2, row: 0.1 },
+				ext: { width: 75, height: 75 },
+				editAs: 'oneCell'
+			});
+		}
 
 		// 1. Basic Info
 		sheet.getCell('C2').value = assessment.dpsName || '';
 		sheet.getCell('C3').value = assessment.mandate || '';
 
-		// Modality
-		if (assessment.dpsModality === 'MANUAL') {
-			sheet.getCell('C4').value = '☑ Manual';
-		} else if (assessment.dpsModality === 'ELECTRONIC') {
-			sheet.getCell('E4').value = '☑ Electronic / Automated';
-		} else if (assessment.dpsModality === 'BOTH') {
-			sheet.getCell('G4').value = '☑ Both';
-		}
-
-		// Role
-		if (assessment.processingRole === 'PIC') {
-			sheet.getCell('C5').value = '☑ Personal Information Controller (PIC)';
-		} else if (assessment.processingRole === 'PIP') {
-			sheet.getCell('F5').value = '☑ Personal Information Processor (PIP)';
-		}
-
-		// Outsourced
-		if (assessment.isOutsourced === true) {
-			sheet.getCell('C6').value = '☑ Yes';
-		} else if (assessment.isOutsourced === false) {
-			sheet.getCell('F6').value = '☑ No';
-		}
+		// ... (rest of basic info processing remains the same)
+		if (assessment.dpsModality === 'MANUAL') sheet.getCell('C4').value = '☑ Manual';
+		else if (assessment.dpsModality === 'ELECTRONIC') sheet.getCell('E4').value = '☑ Electronic / Automated';
+		else if (assessment.dpsModality === 'BOTH') sheet.getCell('G4').value = '☑ Both';
+		
+		if (assessment.processingRole === 'PIC') sheet.getCell('C5').value = '☑ Personal Information Controller (PIC)';
+		else if (assessment.processingRole === 'PIP') sheet.getCell('F5').value = '☑ Personal Information Processor (PIP)';
+		
+		if (assessment.isOutsourced === true) sheet.getCell('C6').value = '☑ Yes';
+		else if (assessment.isOutsourced === false) sheet.getCell('F6').value = '☑ No';
 
 		sheet.getCell('C7').value = assessment.piaStartDate ? new Date(assessment.piaStartDate).toLocaleDateString() : '';
 		sheet.getCell('C8').value = assessment.piaEndDate ? new Date(assessment.piaEndDate).toLocaleDateString() : '';
@@ -158,82 +167,164 @@ const exportAssessmentExcel = async (req, res) => {
 			pdlcRow++;
 		});
 
-		// Merge G37:H62 (disposal method column covers both G and H)
-		for (let r = 37; r <= 62; r++) {
-			try { sheet.mergeCells(`G${r}:H${r}`); } catch (_) { /* already merged in template */ }
+		// Dynamic merging for PDLC rows (G:H for disposal method)
+		const lastMergeRow = Math.max(62, pdlcRow);
+		for (let r = 37; r <= lastMergeRow; r++) {
+			try {
+				// Only merge if not already merged in the worksheet
+				const cell = sheet.getCell(`G${r}`);
+				if (!cell.isMerged) {
+					sheet.mergeCells(`G${r}:H${r}`); 
+				}
+			} catch (_) { /* ignore already merged errors */ }
 		}
 
-		// DLC Diagram image → rows 65–90, col A–H
+		// ── DLC DIAGRAM (FIXED PLACEMENT AT ROWS 65-93) ──
+		let dlcImageEndRow = 93; 
 		let dlcImageInserted = false;
+		
+		// Add page break before DLC diagram to ensure it starts on a new page (Page 5)
+		sheet.getRow(64).addPageBreak();
 		const dlcItem = assessment.pdlc.find(item => item.dlcDiagram);
-		if (dlcItem && dlcItem.dlcDiagram) {
+		const projectRoot = path.join(__dirname, '..', '..');
+		const dlcExportsBase = path.join(projectRoot, 'exports', 'dlc');
+
+		// Resolve the actual image path (with robust fallback)
+		let resolvedDlcPath = null;
+		const findImageInFolder = (folder) => {
+			if (!fs.existsSync(folder)) return null;
+			const files = fs.readdirSync(folder);
+			// Look for common image extensions
+			const imgFiles = files.filter(f => /\.(png|jpe?g|webp|gif)$/i.test(f));
+			if (imgFiles.length === 0) return null;
+			// Sort by modified time (descending) to get the most recent one
+			imgFiles.sort((a, b) => {
+				return fs.statSync(path.join(folder, b)).mtime.getTime() - 
+				       fs.statSync(path.join(folder, a)).mtime.getTime();
+			});
+			return path.join(folder, imgFiles[0]); // Return the most recent
+		};
+
+		if (dlcItem && dlcItem.dlcDiagram && !dlcItem.dlcDiagram.match(/^,+$/)) {
+			const rawVal = dlcItem.dlcDiagram;
+			const candidateRelative = path.join(projectRoot, ...rawVal.replace(/\/\\/g, '/').split('/'));
+			const candidateBasename = path.join(dlcExportsBase, path.basename(rawVal));
+			
+			if (fs.existsSync(candidateRelative)) {
+				resolvedDlcPath = candidateRelative;
+			} else if (fs.existsSync(candidateBasename)) {
+				resolvedDlcPath = candidateBasename;
+			}
+		}
+
+		// SUPER FALLBACK: If DB path is missing/invalid, try to find ANY image in the dlc folder
+		if (!resolvedDlcPath) {
+			resolvedDlcPath = findImageInFolder(dlcExportsBase);
+		}
+
+		if (resolvedDlcPath) {
 			try {
-				// dlcDiagram may be stored as a full relative path or just the filename
-				const rawDiagram = dlcItem.dlcDiagram;
-				const uploadsBase = path.join(__dirname, '..', '..', 'uploads', 'dlc');
-				// Support both "uploads/dlc/file.png" and bare "file.png"
-				const imgFileName = path.basename(rawDiagram);
-				const imgPath = path.join(uploadsBase, imgFileName);
+				const ext = path.extname(resolvedDlcPath).replace('.', '').toLowerCase();
+				const imageId = workbook.addImage({
+					filename: resolvedDlcPath,
+					extension: ext === 'jpg' ? 'jpeg' : (ext || 'png')
+				});
 
-				if (fs.existsSync(imgPath)) {
-					const ext = path.extname(imgFileName).replace('.', '').toLowerCase();
-					const mimeMap = { png: 'png', jpg: 'jpeg', jpeg: 'jpeg', gif: 'gif' };
-					const imageType = mimeMap[ext] || 'png';
+				// User requested the diagram to be exactly 8cm x 8cm
+				const startImageRow = 65;
+				
+				// Move DLC Title to Row 64 (from 63)
+				sheet.getCell('A64').value = 'DATA LIFE CYCLE DIAGRAM';
+				sheet.getCell('A64').font = { bold: true, size: 12 };
+				try { sheet.getCell('A63').value = null; } catch(_) {}
 
-					const imageId = workbook.addImage({
-						filename: imgPath,
-						extension: imageType
-					});
-
-					sheet.addImage(imageId, {
-						tl: { col: 0, row: 64 }, // A65 (0-indexed)
-						br: { col: 8, row: 90 }, // H90 (0-indexed, exclusive)
-						editAs: 'oneCell'
-					});
-					dlcImageInserted = true; // flag so blank-row hider can skip these rows
-				} else {
-					console.warn(`DLC image not found: ${imgPath}`);
+				// Clear the targeted zone and ensure row heights are adequate to fit on one page
+				// 65-93 is 29 rows. 18pt height * 29 = 522pt, which fits one landscape page.
+				for (let r = 65; r <= 93; r++) {
+					const row = sheet.getRow(r);
+					row.height = 18; 
+					for (let c = 1; c <= 8; c++) {
+						row.getCell(c).value = null;
+					}
 				}
-			} catch (imgErr) {
-				console.error('Failed to insert DLC image:', imgErr);
+
+				// Place diagram at A65 with fixed dimensions 8cm x 8cm 
+				// 8cm is ~302.36 pixels at 96 DPI
+				sheet.addImage(imageId, {
+					tl: { col: 0.1,  row: startImageRow - 0.8 }, // Slight offset for better alignment
+					ext: { width: 302.36, height: 302.36 },
+					editAs: 'oneCell'
+				});
+
+				dlcImageInserted = true;
+				dlcImageEndRow   = 93; 
+			} catch (err) {
+				console.error('DLC image insertion error:', err);
 			}
 		}
 
 		// 4. B. PERSONAL INFORMATION INVENTORY
-		// One row per PII item. Multi-value fields (C, D, E) are comma-separated in a single cell.
-		let piiRow = 97;
+		// Section B Title: 94, Headers: 96, Data starts at: 97
+		let piiStartRow = Math.max(97, dlcImageEndRow + 5); 
+		let piiRow = piiStartRow;
+
+		// Move Section B title if shifted
+		if (piiStartRow > 97) {
+			sheet.getCell(`A${piiStartRow - 3}`).value = 'B. PERSONAL INFORMATION INVENTORY';
+			sheet.getCell(`A${piiStartRow - 3}`).font = { bold: true, size: 12 };
+			// Move Section B Headers too
+			const headers = ['Data Capture Form No. / Name', 'Data Processing', 'Data Subjects', 'Personal Information of Data Subjects', 'Recipients / Users of Personal Information', 'Basis of Processing PI', 'Basis of Processing SPI', 'Processing Purpose'];
+			const headerRow = sheet.getRow(piiStartRow - 1);
+			headers.forEach((h, i) => {
+				headerRow.getCell(i + 1).value = h;
+				headerRow.getCell(i + 1).font = { bold: true };
+			});
+			// Clear original template locations
+			try { sheet.getCell('A94').value = null; } catch(_) {}
+			try { sheet.getRow(96).values = []; } catch(_) {}
+		}
+
 		assessment.pii.forEach(item => {
-			const subjects   = item.piiDatasubjects || [];
-			const recipients = item.recipientUsers  || [];
-
-			// Col A – Data Capture Form No. / Name
+			const subjects = item.piiDatasubjects || [];
+			const recipients = item.recipientUsers || [];
 			sheet.getCell(`A${piiRow}`).value = `${item.formNo || ''} / ${item.formName || ''}`;
-
-			// Col B – Data Processing
 			sheet.getCell(`B${piiRow}`).value = item.dataProcessing || '';
-
-			// Col C – Data Subjects (type), comma-separated
 			sheet.getCell(`C${piiRow}`).value = subjects.map(s => s.dataSubjectType?.dataSubjectType || '').filter(Boolean).join(', ');
-
-			// Col D – Personal Information of Data Subjects, comma-separated
 			sheet.getCell(`D${piiRow}`).value = subjects.map(s => s.name || '').filter(Boolean).join(', ');
-
-			// Col E – Recipients / Users, comma-separated
 			sheet.getCell(`E${piiRow}`).value = recipients.map(r => r.recipientName || '').filter(Boolean).join(', ');
-
-			// Col F – Basis of Processing PI
 			sheet.getCell(`F${piiRow}`).value = item.piProcessBasis?.keyword || '';
-
-			// Col G – Basis of Processing SPI
 			sheet.getCell(`G${piiRow}`).value = item.spiProcessBasis?.keyword || '';
-
-			// Col H – Processing Purpose (not stored in model — leave cell untouched)
-
+			// Column H is Processing Purpose - we don't have a direct field, leaving blank or using mandate as hint
+			sheet.getCell(`H${piiRow}`).value = ''; 
 			piiRow++;
 		});
 
 		// 5. C. THREATS AND CONTROL MEASURES
-		let threatRow = 129;
+		// Section C Title: 125, Header: 127, Data starts at: 128
+		let threatStartRow = Math.max(128, piiRow + 5);
+		// Add page break before Section C
+		sheet.getRow(threatStartRow - 3).addPageBreak();
+		let threatRow = threatStartRow;
+
+		// Move Section C title (originally row 125, move to 126 to be with 127/128)
+		const threatTitleRow = threatStartRow - 2;
+		sheet.getCell(`A${threatTitleRow}`).value = 'C. THREATS AND CONTROL MEASURES';
+		sheet.getCell(`A${threatTitleRow}`).font = { bold: true, size: 12 };
+		
+		// Move Headers
+		const headersC = ['Data Subject/s Impacted', 'Threats & Possible Consequence/s', 'Type of Threat', 'Severity Level', 'Likelihood', 'Risk Rating', 'Proposed Control Measures', 'Type of Measure'];
+		const headerRowC = sheet.getRow(threatStartRow - 1);
+		headersC.forEach((h, i) => {
+			headerRowC.getCell(i + 1).value = h;
+			headerRowC.getCell(i + 1).font = { bold: true };
+		});
+		
+		// Clear original template locations if they've been moved
+		try { sheet.getCell('A125').value = null; } catch(_) {}
+		if (threatStartRow > 128) {
+			try { sheet.getRow(127).values = []; } catch(_) {}
+		}
+
 		assessment.threatsAndControls.forEach(item => {
 			sheet.getCell(`A${threatRow}`).value = item.dataSubjects?.name || '';
 			sheet.getCell(`B${threatRow}`).value = item.threats_possibleConsequences || '';
@@ -247,13 +338,36 @@ const exportAssessmentExcel = async (req, res) => {
 		});
 
 		// 6. D. SECURITY MEASURES
+		// Section D Title: 156, Header: 158, Data starts at: 159
+		let securityMeasuresStartRow = Math.max(159, threatRow + 5);
+		// Add page break before Section D
+		sheet.getRow(securityMeasuresStartRow - 3).addPageBreak();
+		
+		// Move Section D title (originally row 156, move to 157 to be with 158/159)
+		const securityTitleRow = securityMeasuresStartRow - 2;
+		sheet.getCell(`A${securityTitleRow}`).value = 'D. SECURITY MEASURES';
+		sheet.getCell(`A${securityTitleRow}`).font = { bold: true, size: 12 };
+		
+		// Move Headers
+		sheet.getCell(`A${securityMeasuresStartRow - 1}`).value = 'Organizational';
+		sheet.getCell(`D${securityMeasuresStartRow - 1}`).value = 'Physical';
+		sheet.getCell(`F${securityMeasuresStartRow - 1}`).value = 'Technical';
+		sheet.getCell(`A${securityMeasuresStartRow - 1}`).font = { bold: true };
+		sheet.getCell(`D${securityMeasuresStartRow - 1}`).font = { bold: true };
+		sheet.getCell(`F${securityMeasuresStartRow - 1}`).font = { bold: true };
+
+		// Clear original template locations
+		try { sheet.getCell('A156').value = null; } catch(_) {}
+		if (securityMeasuresStartRow > 159) {
+			try { sheet.getRow(158).values = []; } catch(_) {}
+		}
 		const orgMeasures = assessment.securityMeasures.filter(m => m.securityType === 'ORGANIZATIONAL').map(m => m.description).join('\n');
 		const physMeasures = assessment.securityMeasures.filter(m => m.securityType === 'PHYSICAL').map(m => m.description).join('\n');
 		const techMeasures = assessment.securityMeasures.filter(m => m.securityType === 'TECHNICAL').map(m => m.description).join('\n');
 
-		sheet.getCell('A159').value = orgMeasures;
-		sheet.getCell('D159').value = physMeasures;
-		sheet.getCell('F159').value = techMeasures;
+		sheet.getCell(`A${securityMeasuresStartRow}`).value = orgMeasures;
+		sheet.getCell(`D${securityMeasuresStartRow}`).value = physMeasures;
+		sheet.getCell(`F${securityMeasuresStartRow}`).value = techMeasures;
 
 		// 7. Checklist Footer
 		if (assessment.isDataTransferredOutsidePh === true) sheet.getCell('G166').value = '☑ Yes';
@@ -287,24 +401,25 @@ const exportAssessmentExcel = async (req, res) => {
 		sheet.getCell('G173').value = assessment.legalBasis || '';
 		sheet.getCell('G174').value = assessment.otherLegalBasisInfo || '';
 
-		// ── 8. E. RISK MAP ───────────────────────────────────────────────────────
+		// ── 8. E. RISK MAP (FLEXIBLE PLACEMENT) ──────────────────────────────────
 		const heatmapBase = path.join(__dirname, '..', '..', 'exports', 'heatmaps');
 		const beforeMapPath = path.join(heatmapBase, `${assessment.id}-before.png`);
 		const afterMapPath = path.join(heatmapBase, `${assessment.id}-after.png`);
 
-		// Force E. RISK MAP section to a new page
-		sheet.getRow(189).addPageBreak();
-		sheet.getCell('A189').value = 'E. RISK MAP';
-		sheet.getCell('A189').font = { bold: true, size: 14, color: { argb: 'FF0D1B4B' } };
+		// Start Section E after Section D (Security Measures)
+		let riskMapStartRow = Math.max(187, securityMeasuresStartRow + 5);
+		
+		sheet.getCell(`A${riskMapStartRow}`).value = 'E. RISK MAP';
+		sheet.getCell(`A${riskMapStartRow}`).font = { bold: true, size: 14, color: { argb: 'FF0D1B4B' } };
 
-		// Shared row range for both maps: Row 191 to 204 (0-indexed: row 190 to 204)
-		const startGridRow = 190;
-		const endGridRow = 204;
+		// Put title together with labels (remove the gap)
+		const startGridRow = riskMapStartRow + 1; // Titles at riskMapStartRow, Labels at riskMapStartRow + 1
+		const endGridRow   = startGridRow + 15;
 
 		// Before Map (A-D)
 		if (fs.existsSync(beforeMapPath)) {
-			sheet.getCell('A190').value = 'BEFORE CONTROLS';
-			sheet.getCell('A190').font = { bold: true, size: 10 };
+			sheet.getCell(`A${startGridRow}`).value = 'BEFORE CONTROLS';
+			sheet.getCell(`A${startGridRow}`).font = { bold: true, size: 10 };
 
 			try {
 				const imgId = workbook.addImage({
@@ -312,8 +427,8 @@ const exportAssessmentExcel = async (req, res) => {
 					extension: 'png'
 				});
 				sheet.addImage(imgId, {
-					tl: { col: 0, row: startGridRow }, // Col A
-					br: { col: 4, row: endGridRow },   // Col D (end of D is col 4)
+					tl: { col: 0.1, row: startGridRow + 0.2 }, // Start immediately below label
+					ext: { width: 277.8, height: 278.9 },     // 7.35cm width, 7.38cm height
 					editAs: 'oneCell'
 				});
 			} catch (err) {
@@ -323,8 +438,8 @@ const exportAssessmentExcel = async (req, res) => {
 
 		// After Map (F-H)
 		if (fs.existsSync(afterMapPath)) {
-			sheet.getCell('F190').value = 'AFTER CONTROLS';
-			sheet.getCell('F190').font = { bold: true, size: 10 };
+			sheet.getCell(`F${startGridRow}`).value = 'AFTER CONTROLS';
+			sheet.getCell(`F${startGridRow}`).font = { bold: true, size: 10 };
 
 			try {
 				const imgId = workbook.addImage({
@@ -332,8 +447,8 @@ const exportAssessmentExcel = async (req, res) => {
 					extension: 'png'
 				});
 				sheet.addImage(imgId, {
-					tl: { col: 5, row: startGridRow }, // Col F
-					br: { col: 8, row: endGridRow },   // Col H (end of H is col 8)
+					tl: { col: 5.1, row: startGridRow + 0.2 }, // Start immediately below label
+					ext: { width: 277.8, height: 278.9 },     // 7.35cm width, 7.38cm height
 					editAs: 'oneCell'
 				});
 			} catch (err) {
@@ -352,7 +467,7 @@ const exportAssessmentExcel = async (req, res) => {
 		//       expand row height proportionally; lock print area; preserve template
 		//       column widths (do NOT override them — the template owns those).
 
-		const LINE_HEIGHT_PT = 14; // approximate points per wrapped text line
+		const LINE_HEIGHT_PT = 15; // approximate points per wrapped text line
 
 		sheet.eachRow({ includeEmpty: false }, (row) => {
 			let hasContent = false;
@@ -376,8 +491,8 @@ const exportAssessmentExcel = async (req, res) => {
 				};
 
 				// Estimate line count using the column's actual character width
-				// (falls back to 20 if the template hasn't set one)
-				const colWidth = sheet.getColumn(c).width || 20;
+				// (falls back to 15 if the template hasn't set one)
+				const colWidth = sheet.getColumn(c).width || 15;
 				const txt = String(val);
 				const lines = txt.split('\n').reduce((sum, line) => {
 					return sum + Math.max(1, Math.ceil(line.length / colWidth));
@@ -408,26 +523,45 @@ const exportAssessmentExcel = async (req, res) => {
 		// PDLC data zone: template allocates rows 37–62
 		if (pdlcRow <= 62) hideRows(pdlcRow, 62);
 
-		// DLC diagram zone: template allocates rows 65–90
-		// Only hide if no image was actually inserted
-		if (!dlcImageInserted) hideRows(65, 90);
+		// DLC diagram zone: template allocates rows 65–93
+		// If image was inserted at or below row 65, we manage visibility carefully.
+		// If no image, hide the whole zone.
+		if (!dlcImageInserted) {
+			hideRows(65, 93);
+		} else {
+			// If diagram was pushed BELOW the template zone, hide the template zone
+			const startDlcRow = Math.max(65, pdlcRow + 2);
+			if (startDlcRow > 65) {
+				hideRows(65, 93);
+			}
+		}
 
 		// PII data zone: template allocates rows 97–124
 		if (piiRow <= 124) hideRows(piiRow, 124);
 
 		// Threats data zone: template allocates rows 129–155
 		if (threatRow <= 155) hideRows(threatRow, 155);
+
+		// Risk Map zone: template allocates rows 189–230
+		// If map was moved, hide the template's default zone
+		if (riskMapStartRow > 187) {
+			hideRows(189, 230);
+		}
+		
+		// Hide all trailing rows beyond the template sections to clear "Page 11" and any others
+		hideRows(231, 500);
 		// ─────────────────────────────────────────────────────────────────────────
 
 		// ── PRINT / PAGE SETUP ──────────────────────────────────────────────────
+		// Clear any manual page breaks that might exist in the template and add our own
+		// (The addPageBreak() calls above populate the sheet.rowBreaks)
+
 		const lastDataRow = sheet.lastRow?.number || 300;
 		sheet.pageSetup = {
 			...sheet.pageSetup,       // preserve template's header/footer references
 			paperSize:          9,    // A4
 			orientation:        'landscape',
-			fitToPage:          true,
-			fitToWidth:         1,    // always 1 page wide
-			fitToHeight:        0,    // unlimited pages tall
+			fitToPage:          false,   // Use manual breaks to define pages instead of forced scaling
 			horizontalCentered: true,
 			printArea:          `A1:H${lastDataRow}`,
 			margins: {

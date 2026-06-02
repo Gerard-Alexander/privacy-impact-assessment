@@ -1,0 +1,110 @@
+--- Row 32 ---
+C1: "A. PROCESS DATA LIFE CYCLE"
+C2: "A. PROCESS DATA LIFE CYCLE"
+C3: "A. PROCESS DATA LIFE CYCLE"
+C4: "A. PROCESS DATA LIFE CYCLE"
+C5: "A. PROCESS DATA LIFE CYCLE"
+C6: "A. PROCESS DATA LIFE CYCLE"
+C7: "A. PROCESS DATA LIFE CYCLE"
+C8: "A. PROCESS DATA LIFE CYCLE"
+
+--- Row 36 ---
+C1: "Who are the individuals involved\nin the processing of information?"
+C2: "Who are the individuals involved\nin the processing of information?"
+C3: "When is the data collected?\nWhat is the manner of collecring data?"
+C4: "What is the use of the personal \ndata being collected? \nHow is it processed?"
+C5: "What is the retention period\n(with reckoning date / time)?"
+C6: "How is the data being shared?\nTo whom is it shared?"
+C7: "What is the disposal / destruction / deletion procedure?"
+C8: "What is the disposal / destruction / deletion procedure?"
+
+--- Row 63 ---
+C1: "DATA LIFE CYCLE"
+C2: "DATA LIFE CYCLE"
+C3: "DATA LIFE CYCLE"
+C4: "DATA LIFE CYCLE"
+C5: "DATA LIFE CYCLE"
+C6: "DATA LIFE CYCLE"
+C7: "DATA LIFE CYCLE"
+C8: "DATA LIFE CYCLE"
+
+--- Row 64 ---
+C1: null
+C2: null
+C3: null
+C4: null
+C5: null
+C6: null
+C7: null
+C8: null
+
+--- Row 85 ---
+C1: "(insert diagram here)"
+C2: "(insert diagram here)"
+C3: "(insert diagram here)"
+C4: "(insert diagram here)"
+C5: "(insert diagram here)"
+C6: "(insert diagram here)"
+C7: "(insert diagram here)"
+C8: "(insert diagram here)"
+
+--- Row 94 ---
+C1: "B. PERSONAL INFORMATION INVENTORY"
+C2: "B. PERSONAL INFORMATION INVENTORY"
+C3: "B. PERSONAL INFORMATION INVENTORY"
+C4: "B. PERSONAL INFORMATION INVENTORY"
+C5: "B. PERSONAL INFORMATION INVENTORY"
+C6: "B. PERSONAL INFORMATION INVENTORY"
+C7: "B. PERSONAL INFORMATION INVENTORY"
+C8: "B. PERSONAL INFORMATION INVENTORY"
+
+--- Row 96 ---
+C1: "Data Capture Form No. / Name\n"
+C2: "Data Processing"
+C3: "Data Subjects"
+C4: "Personal Information \nof Data Subjects"
+C5: "Recipients / Users of Personal Information\n"
+C6: "Basis of Processing \nPI"
+C7: "Basis of Processing\nSPI "
+C8: "Processing Purpose"
+
+--- Row 125 ---
+C1: "C. THREATS AND CONTROL MEASURES"
+C2: "C. THREATS AND CONTROL MEASURES"
+C3: "C. THREATS AND CONTROL MEASURES"
+C4: "C. THREATS AND CONTROL MEASURES"
+C5: "C. THREATS AND CONTROL MEASURES"
+C6: "C. THREATS AND CONTROL MEASURES"
+C7: "C. THREATS AND CONTROL MEASURES"
+C8: "C. THREATS AND CONTROL MEASURES"
+
+--- Row 127 ---
+C1: "Data Subject/s Impacted by the Risks\n"
+C2: "Threats & Possible Consequence/s \nor Impact of the Privacy Risk to Data Subject/s"
+C3: "Type of Threat"
+C4: "Severity Level"
+C5: "Likelihood"
+C6: "Risk Rating"
+C7: "Proposed Control\nMeasures"
+C8: "Type of Measure"
+
+--- Row 156 ---
+C1: "D. SECURITY MEASURES"
+C2: "D. SECURITY MEASURES"
+C3: "D. SECURITY MEASURES"
+C4: "D. SECURITY MEASURES"
+C5: "D. SECURITY MEASURES"
+C6: "D. SECURITY MEASURES"
+C7: "D. SECURITY MEASURES"
+C8: "D. SECURITY MEASURES"
+
+--- Row 158 ---
+C1: "Organizational"
+C2: "Organizational"
+C3: "Organizational"
+C4: "Physical"
+C5: "Physical"
+C6: "Technical"
+C7: "Technical"
+C8: "Technical"
+
