@@ -1,5 +1,13 @@
 require('dotenv').config();
 
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+});
+
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
 const express = require('express');
 const session = require('express-session');
 const { PrismaSessionStore } = require('@quixo3/prisma-session-store');
@@ -20,11 +28,19 @@ const exportRoutes = require('./routes/export');
 
 
 const app = express();
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.url} ${res.statusCode} (${duration}ms)`);
+  });
+  next();
+});
 const PORT = process.env.PORT || 3100
 
 // ===== SECURITY MIDDLEWARE =====
 // Apply security headers first
-app.use(securityHeaders);
+// app.use(securityHeaders);
 
 // CORS protection
 app.use(corsProtection);
@@ -56,8 +72,8 @@ app.use(session({
   }),
   cookie: {
     httpOnly: true, // Prevent JS access to session cookie
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in production
-    sameSite: 'strict', // CSRF protection
+    secure: false, // Explicitly false for HTTP
+    sameSite: 'lax', // More compatible for local network usage
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
 }));
@@ -87,10 +103,11 @@ app.use((err, req, res, next) => {
 
 // 404 Handler
 app.use((req, res) => {
+  console.log(`404 detected for URL: ${req.url}`);
   res.status(404).render('403', {
-    title: 'Page Not Found',
+    title: '404 - Page Not Found',
     user: req.session?.user || null,
-    message: 'The page you are looking for does not exist.'
+    message: `The page you are looking for (${req.url}) could not be found. Please check the URL.`
   });
 });
 
@@ -99,7 +116,7 @@ app.use((req, res) => {
 // ===== START SERVER =====
 app.listen(PORT, () => {
   console.log(`
-  http://localhost:${PORT}${' '.repeat(PORT.toString().length > 4 ? 0 : PORT.toString().length - 3)}                   
-  ${process.env.NODE_ENV === 'production' ? ':) PRODUCTION MODE' : ':( DEVELOPMENT MODE'}                        
+  Server running at: ${process.env.APP_URL || `http://localhost:${PORT}`}
+  Mode: ${process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'DEVELOPMENT'}
   `);
 });
