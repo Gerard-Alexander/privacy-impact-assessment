@@ -80,6 +80,7 @@ app.use(session({
 
 
 // ===== ROUTES =====
+app.get('/dpsname', (req, res) => res.redirect('/assessment')); // Sidebar shortcut
 app.use('/', indexRoutes); // Main Index Page
 app.use('/login', loginRoutes); // Login Routes
 app.use('/user-profile', userProfileRoutes); // User Profile Routes

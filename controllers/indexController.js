@@ -36,9 +36,9 @@ const registerPage = (req, res) => {
 };
 
 const registerSubmit = async (req, res) => {
-  const { firstName, lastName, username, password, confirmPassword } = req.body;
+  const { firstName, lastName, username, emailAddress, password, confirmPassword } = req.body;
 
-  if (!firstName || !lastName || !username || !password || !confirmPassword) {
+  if (!firstName || !lastName || !username || !emailAddress || !password || !confirmPassword) {
     return res.redirect('/register-page?error=missing');
   }
 
@@ -51,12 +51,18 @@ const registerSubmit = async (req, res) => {
   }
 
   const normalizedUsername = username.trim();
+  const normalizedEmail = emailAddress.trim().toLowerCase();
   const normalizedFirstName = String(firstName).trim();
   const normalizedLastName = String(lastName).trim();
 
   try {
-    const existingUser = await prisma.user.findUnique({
-      where: { userName: normalizedUsername }
+    const existingUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { userName: normalizedUsername },
+          { emailAddress: normalizedEmail }
+        ]
+      }
     });
 
     if (existingUser) {
@@ -69,6 +75,7 @@ const registerSubmit = async (req, res) => {
         firstName: normalizedFirstName,
         lastName: normalizedLastName,
         userName: normalizedUsername,
+        emailAddress: normalizedEmail,
         password: hashedPassword
       }
     });
@@ -80,9 +87,13 @@ const registerSubmit = async (req, res) => {
       }
 
       req.session.user = {
+        id: newUser.id,
         username: newUser.userName,
+        firstName: newUser.firstName,
+        lastName: newUser.lastName,
         role: newUser.role,
-        fullName: `${newUser.firstName} ${newUser.lastName}`.trim()
+        fullName: `${newUser.firstName} ${newUser.lastName}`.trim(),
+        emailAddress: newUser.emailAddress
       };
 
       return res.redirect('/user-profile');
