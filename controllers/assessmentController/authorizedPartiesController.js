@@ -15,6 +15,7 @@ const authorizedParties = async (req, res) => {
   const rawPartyData = await prisma.authorizedParties.findMany({ where: { piaAssessment_id } });
   const partyDefinitions = [
     {
+      honorificsField: 'headHonorifics',
       firstNameField: 'headFirstName',
       lastNameField: 'headLastName',
       positionField: 'headPosition',
@@ -24,6 +25,7 @@ const authorizedParties = async (req, res) => {
       userType: 'HEAD_OFFICE'
     },
     {
+      honorificsField: 'compHonorifics',
       firstNameField: 'compName',
       lastNameField: 'compLastName',
       positionField: 'compPosition',
@@ -33,6 +35,7 @@ const authorizedParties = async (req, res) => {
       userType: 'COMPLIANCE_OFFICER'
     },
     {
+      honorificsField: 'reviewHonorifics',
       firstNameField: 'reviewFirstName',
       lastNameField: 'reviewLastName',
       positionField: 'reviewPosition',
@@ -42,6 +45,7 @@ const authorizedParties = async (req, res) => {
       userType: 'REVIEWER'
     },
     {
+      honorificsField: 'approveHonorifics',
       firstNameField: 'approveFirstName',
       lastNameField: 'approveLastName',
       positionField: 'approvePosition',
@@ -52,10 +56,32 @@ const authorizedParties = async (req, res) => {
     }
   ];
   const formData = {};
-  partyDefinitions.forEach(({userType, firstNameField, lastNameField, positionField, officeField, emailField, dateField}) => {
+  formData.reviewHonorifics = 'Dr.';
+  formData.reviewFirstName = 'Cecilia';
+  formData.reviewLastName = 'Mercado';
+  formData.reviewPosition = 'Data Protection Officer';
+  formData.approveHonorifics = 'Rev. Fr.';
+  formData.approveFirstName = 'Gilbert';
+  formData.approveLastName = 'Sales';
+
+  formData.headHonorifics = '';
+  formData.compHonorifics = '';
+
+  partyDefinitions.forEach(({userType, honorificsField, firstNameField, lastNameField, positionField, officeField, emailField, dateField}) => {
     const party = rawPartyData.find(p => p.userType === userType);
     if (party) {
-      const nameParts = party.name.trim().split(/\s+/);
+      let name = party.name.trim();
+      const honorificsOrder = ['Rev. Fr.', 'Dr.', 'Rev.', 'Fr.', 'Mr.', 'Ms.', 'Mrs.', 'Atty.', 'Engr.'];
+      let foundHonorific = '';
+      for (const h of honorificsOrder) {
+        if (name.startsWith(h + ' ')) {
+          foundHonorific = h;
+          name = name.substring(h.length).trim();
+          break;
+        }
+      }
+      const nameParts = name.split(/\s+/);
+      formData[honorificsField] = foundHonorific;
       formData[firstNameField] = nameParts[0] || '';
       formData[lastNameField] = nameParts.slice(1).join(' ') || '';
       formData[positionField] = party.position || '';
@@ -96,6 +122,7 @@ const saveAuthorizedParties = async (req, res) => {
 
     const partyDefinitions = [
       {
+        honorificsField: 'headHonorifics',
         firstNameField: 'headFirstName',
         lastNameField: 'headLastName',
         positionField: 'headPosition',
@@ -105,6 +132,7 @@ const saveAuthorizedParties = async (req, res) => {
         userType: 'HEAD_OFFICE'
       },
       {
+        honorificsField: 'compHonorifics',
         firstNameField: 'compName',
         lastNameField: 'compLastName',
         positionField: 'compPosition',
@@ -114,6 +142,7 @@ const saveAuthorizedParties = async (req, res) => {
         userType: 'COMPLIANCE_OFFICER'
       },
       {
+        honorificsField: 'reviewHonorifics',
         firstNameField: 'reviewFirstName',
         lastNameField: 'reviewLastName',
         positionField: 'reviewPosition',
@@ -123,6 +152,7 @@ const saveAuthorizedParties = async (req, res) => {
         userType: 'REVIEWER'
       },
       {
+        honorificsField: 'approveHonorifics',
         firstNameField: 'approveFirstName',
         lastNameField: 'approveLastName',
         positionField: 'approvePosition',
@@ -135,9 +165,9 @@ const saveAuthorizedParties = async (req, res) => {
 
     const partyData = partyDefinitions
       .filter(({ firstNameField, positionField }) => body[firstNameField] || body[positionField])
-      .map(({ firstNameField, lastNameField, positionField, officeField, emailField, dateField, userType }) => ({
+      .map(({ honorificsField, firstNameField, lastNameField, positionField, officeField, emailField, dateField, userType }) => ({
         piaAssessment_id,
-        name: `${getFieldValue(body[firstNameField])} ${getFieldValue(body[lastNameField])}`.replace(/\s+/g, ' ').trim(),
+        name: `${getFieldValue(body[honorificsField])} ${getFieldValue(body[firstNameField])} ${getFieldValue(body[lastNameField])}`.replace(/\s+/g, ' ').trim(),
         position: getFieldValue(body[positionField]),
         officeUnit: getFieldValue(body[officeField]),
         email: getFieldValue(body[emailField]),

@@ -165,7 +165,7 @@ model PDLC {
   
   stakeholderName  String        @db.VarChar(255)
   retentionPeriod  String        @db.VarChar(255) 
-  retentionDate    DateTime?
+  retentionRemarks String?       @db.VarChar(500)
   disposalMethod   String        @db.VarChar(255) 
   dlcDiagram       String?       @db.Text
   
@@ -187,7 +187,7 @@ model PDLCCollection {
   pdlc_id       Int
   pdlc          PDLC     @relation(fields: [pdlc_id], references: [id], onDelete: Cascade)
 
-  dateCollected DateTime?
+  collectionRemarks String?  @db.VarChar(500)
   collection    String   @db.VarChar(255)
 
   createdAt     DateTime @default(now())

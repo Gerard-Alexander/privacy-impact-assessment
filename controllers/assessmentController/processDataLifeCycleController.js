@@ -78,12 +78,12 @@ const saveProcessDataLifeCycle = async (req, res) => {
         const collections = (row.collections || [])
           .map((entry) => {
             const collection = normalizeText(entry.collection);
-            const dateCollected = normalizeDate(entry.dateCollected);
-            if (!collection && !dateCollected) return null;
-            return { collection, dateCollected };
+            const collectionRemarks = normalizeText(entry.collectionRemarks);
+            if (!collection && !collectionRemarks) return null;
+            return { collection, collectionRemarks };
           })
           .filter(Boolean)
-          .sort((a, b) => `${a.collection}:${a.dateCollected}`.localeCompare(`${b.collection}:${b.dateCollected}`));
+          .sort((a, b) => `${a.collection}:${a.collectionRemarks}`.localeCompare(`${b.collection}:${b.collectionRemarks}`));
 
         const uses = (row.uses || [])
           .map((entry) => {
@@ -108,7 +108,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
         return {
           stakeholderName: normalizeText(row.stakeholderName),
           retentionPeriod: normalizeText(row.retentionPeriod),
-          retentionDate: normalizeDate(row.retentionDate),
+          retentionRemarks: normalizeText(row.retentionRemarks),
           disposalMethod: normalizeText(row.disposalMethod),
           dlcDiagram: normalizeText(row.dlcDiagram),
           collections,
@@ -118,10 +118,10 @@ const saveProcessDataLifeCycle = async (req, res) => {
       });
 
       return normalized
-        .filter((row) => row.stakeholderName || row.retentionPeriod || row.retentionDate || row.disposalMethod || row.dlcDiagram || row.collections.length || row.uses.length || row.sharings.length)
+        .filter((row) => row.stakeholderName || row.retentionPeriod || row.retentionRemarks || row.disposalMethod || row.dlcDiagram || row.collections.length || row.uses.length || row.sharings.length)
         .sort((a, b) => {
-          const keyA = `${a.stakeholderName}:${a.retentionPeriod}:${a.retentionDate}:${a.disposalMethod}:${a.dlcDiagram}`;
-          const keyB = `${b.stakeholderName}:${b.retentionPeriod}:${b.retentionDate}:${b.disposalMethod}:${b.dlcDiagram}`;
+          const keyA = `${a.stakeholderName}:${a.retentionPeriod}:${a.retentionRemarks}:${a.disposalMethod}:${a.dlcDiagram}`;
+          const keyB = `${b.stakeholderName}:${b.retentionPeriod}:${b.retentionRemarks}:${b.disposalMethod}:${b.dlcDiagram}`;
           return keyA.localeCompare(keyB);
         });
     };
@@ -141,7 +141,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
 
     const stakeholderNames = normalizeIndexedArray(req.body.stakeholderName);
     const retentionPeriods = normalizeIndexedArray(req.body.retentionPeriod);
-    const retentionDates = normalizeIndexedArray(req.body.retentionDate);
+    const retentionRemarksList = normalizeIndexedArray(req.body.retentionRemarks);
     const disposalMethods = normalizeIndexedArray(req.body.disposalMethod);
     const dlcDiagramPaths = normalizeIndexedArray(req.body.dlcDiagramPath);
 
@@ -159,9 +159,9 @@ const saveProcessDataLifeCycle = async (req, res) => {
           .map((entry) => {
             if (!entry || typeof entry !== 'object') return null;
             const collection = String(entry.collection || '').trim();
-            const dateCollected = parseDateValue(entry.dateCollected);
-            if (!collection && !dateCollected) return null;
-            return { collection, dateCollected };
+            const collectionRemarks = String(entry.collectionRemarks || '').trim();
+            if (!collection && !collectionRemarks) return null;
+            return { collection, collectionRemarks };
           })
           .filter(Boolean);
 
@@ -188,7 +188,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
         const row = {
           stakeholderName: String(name || '').trim(),
           retentionPeriod: String(retentionPeriods[index] || '').trim(),
-          retentionDate: parseDateValue(retentionDates[index]),
+          retentionRemarks: String(retentionRemarksList[index] || '').trim(),
           disposalMethod: String(disposalMethods[index] || '').trim(),
           dlcDiagram: dlcDiagramByIndex.get(index) || String(dlcDiagramPaths[index] || '').trim() || null,
           collections,
@@ -196,7 +196,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
           sharings
         };
 
-        const hasData = row.stakeholderName || row.retentionPeriod || row.retentionDate || row.disposalMethod || row.dlcDiagram || collections.length || uses.length || sharings.length;
+        const hasData = row.stakeholderName || row.retentionPeriod || row.retentionRemarks || row.disposalMethod || row.dlcDiagram || collections.length || uses.length || sharings.length;
         return hasData ? row : null;
       })
       .filter(Boolean);
@@ -227,7 +227,7 @@ const saveProcessDataLifeCycle = async (req, res) => {
         piaAssessment_id: piaAssessmentId,
         stakeholderName: row.stakeholderName,
         retentionPeriod: row.retentionPeriod,
-        retentionDate: row.retentionDate,
+        retentionRemarks: row.retentionRemarks,
         disposalMethod: row.disposalMethod,
         dlcDiagram: row.dlcDiagram
       };

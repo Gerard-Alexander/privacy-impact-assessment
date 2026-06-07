@@ -260,8 +260,8 @@
 
 													<input type="text" name="retentionPeriod[<%= index %>]" data-top-field="retentionPeriod" class="form-control mb-3" placeholder="e.g. 2 years after collection" value="<%= pdlc.retentionPeriod || '' %>" required>
 												
-													<div class="inner-card-desc mb-2">Indicate Date</div>
-													<input type="date" name="retentionDate[<%= index %>]" data-top-field="retentionDate" class="form-control" value="<%= pdlc.retentionDate ? new Date(pdlc.retentionDate).toISOString().split('T')[0] : '' %>" required>
+													<div class="inner-card-desc mb-2">Remarks</div>
+													<input type="text" name="retentionRemarks[<%= index %>]" data-top-field="retentionRemarks" class="form-control" placeholder="e.g. Retained until project completion" value="<%= pdlc.retentionRemarks || '' %>" required>
 												</div>
 											</div>
 
@@ -312,8 +312,8 @@
 																		<textarea name="collections[<%= index %>][<%= entryIndex %>][collection]" data-field="collection" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required><%= entry.collection || '' %></textarea>
 																	</div>
 																	<div class="col-12 col-md-4">
-																		<div class="section-label mb-1">Indicate Date / Timing</div>
-																		<input type="date" name="collections[<%= index %>][<%= entryIndex %>][dateCollected]" data-field="dateCollected" class="form-control mb-2" value="<%= entry.dateCollected ? new Date(entry.dateCollected).toISOString().split('T')[0] : '' %>" required>
+																		<div class="section-label mb-1">Remarks</div>
+																		<input type="text" name="collections[<%= index %>][<%= entryIndex %>][collectionRemarks]" data-field="collectionRemarks" class="form-control mb-2" placeholder="e.g. Upon enrollment, annually..." value="<%= entry.collectionRemarks || '' %>" required>
 																		<button type="button" class="btn btn-outline-danger btn-sm w-100 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="collections">
 																			<i class="bi bi-trash3 me-1"></i> Remove
 																		</button>
@@ -475,8 +475,8 @@
 													<div class="section-label">Retention Period</div>
 													<input type="text" name="retentionPeriod[0]" data-top-field="retentionPeriod" class="form-control mb-3" placeholder="e.g. 2 years after collection" required>
 												
-													<div class="section-label">Indicate Date</div>
-													<input type="date" name="retentionDate[0]" data-top-field="retentionDate" class="form-control" required>
+													<div class="section-label">Remarks</div>
+													<input type="text" name="retentionRemarks[0]" data-top-field="retentionRemarks" class="form-control" placeholder="e.g. Retained until project completion" required>
 												</div>
 											</div>
 
@@ -525,8 +525,8 @@
 																		<textarea name="collections[0][0][collection]" data-field="collection" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required></textarea>
 																	</div>
 																	<div class="col-12 col-md-4">
-																		<div class="section-label mb-1">Indicate Date / Timing</div>
-																		<input type="date" name="collections[0][0][dateCollected]" data-field="dateCollected" class="form-control mb-2" required>
+																		<div class="section-label mb-1">Remarks</div>
+																		<input type="text" name="collections[0][0][collectionRemarks]" data-field="collectionRemarks" class="form-control mb-2" placeholder="e.g. Upon enrollment, annually..." required>
 																		<button type="button" class="btn btn-outline-danger btn-sm w-100 remove-subentry-btn d-none" data-section="collections">
 																			<i class="bi bi-trash3 me-1"></i> Remove
 																		</button>
