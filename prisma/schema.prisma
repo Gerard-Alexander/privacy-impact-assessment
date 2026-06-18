@@ -282,7 +282,6 @@ model DataSubjectTypes {
 
 enum datasubject {
   EMPLOYEES
-  CUSTOMERS
   CLIENTS
   SUPPLIERS
 }

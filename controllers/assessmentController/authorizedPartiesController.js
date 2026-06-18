@@ -15,7 +15,7 @@ const authorizedParties = async (req, res) => {
   const rawPartyData = await prisma.authorizedParties.findMany({ where: { piaAssessment_id } });
   const partyDefinitions = [
     {
-      honorificsField: 'headHonorifics',
+      honorificsField: null,
       firstNameField: 'headFirstName',
       lastNameField: 'headLastName',
       positionField: 'headPosition',
@@ -25,7 +25,7 @@ const authorizedParties = async (req, res) => {
       userType: 'HEAD_OFFICE'
     },
     {
-      honorificsField: 'compHonorifics',
+      honorificsField: null,
       firstNameField: 'compName',
       lastNameField: 'compLastName',
       positionField: 'compPosition',
@@ -64,24 +64,25 @@ const authorizedParties = async (req, res) => {
   formData.approveFirstName = 'Gilbert';
   formData.approveLastName = 'Sales';
 
-  formData.headHonorifics = '';
-  formData.compHonorifics = '';
-
   partyDefinitions.forEach(({userType, honorificsField, firstNameField, lastNameField, positionField, officeField, emailField, dateField}) => {
     const party = rawPartyData.find(p => p.userType === userType);
     if (party) {
       let name = party.name.trim();
-      const honorificsOrder = ['Rev. Fr.', 'Dr.', 'Rev.', 'Fr.', 'Mr.', 'Ms.', 'Mrs.', 'Atty.', 'Engr.'];
       let foundHonorific = '';
-      for (const h of honorificsOrder) {
-        if (name.startsWith(h + ' ')) {
-          foundHonorific = h;
-          name = name.substring(h.length).trim();
-          break;
+      
+      if (honorificsField) {
+        const honorificsOrder = ['Rev. Fr.', 'Dr.', 'Rev.', 'Fr.', 'Mr.', 'Ms.', 'Mrs.', 'Atty.', 'Engr.'];
+        for (const h of honorificsOrder) {
+          if (name.startsWith(h + ' ')) {
+            foundHonorific = h;
+            name = name.substring(h.length).trim();
+            break;
+          }
         }
       }
+      
       const nameParts = name.split(/\s+/);
-      formData[honorificsField] = foundHonorific;
+      if (honorificsField) formData[honorificsField] = foundHonorific;
       formData[firstNameField] = nameParts[0] || '';
       formData[lastNameField] = nameParts.slice(1).join(' ') || '';
       formData[positionField] = party.position || '';
@@ -122,7 +123,7 @@ const saveAuthorizedParties = async (req, res) => {
 
     const partyDefinitions = [
       {
-        honorificsField: 'headHonorifics',
+        honorificsField: null,
         firstNameField: 'headFirstName',
         lastNameField: 'headLastName',
         positionField: 'headPosition',
@@ -132,7 +133,7 @@ const saveAuthorizedParties = async (req, res) => {
         userType: 'HEAD_OFFICE'
       },
       {
-        honorificsField: 'compHonorifics',
+        honorificsField: null,
         firstNameField: 'compName',
         lastNameField: 'compLastName',
         positionField: 'compPosition',
@@ -165,15 +166,21 @@ const saveAuthorizedParties = async (req, res) => {
 
     const partyData = partyDefinitions
       .filter(({ firstNameField, positionField }) => body[firstNameField] || body[positionField])
-      .map(({ honorificsField, firstNameField, lastNameField, positionField, officeField, emailField, dateField, userType }) => ({
-        piaAssessment_id,
-        name: `${getFieldValue(body[honorificsField])} ${getFieldValue(body[firstNameField])} ${getFieldValue(body[lastNameField])}`.replace(/\s+/g, ' ').trim(),
-        position: getFieldValue(body[positionField]),
-        officeUnit: getFieldValue(body[officeField]),
-        email: getFieldValue(body[emailField]),
-        userType,
-        dateSigned: body[dateField] ? new Date(body[dateField]) : null
-      }));
+      .map(({ honorificsField, firstNameField, lastNameField, positionField, officeField, emailField, dateField, userType }) => {
+        const h = honorificsField ? getFieldValue(body[honorificsField]) : '';
+        const f = getFieldValue(body[firstNameField]);
+        const l = getFieldValue(body[lastNameField]);
+        
+        return {
+          piaAssessment_id,
+          name: `${h} ${f} ${l}`.replace(/\s+/g, ' ').trim(),
+          position: getFieldValue(body[positionField]),
+          officeUnit: getFieldValue(body[officeField]),
+          email: getFieldValue(body[emailField]),
+          userType,
+          dateSigned: body[dateField] ? new Date(body[dateField]) : null
+        };
+      });
 
     if (!partyData.length && !isPrevious) {
       return res.render('assessment/authorizedparties-page', {

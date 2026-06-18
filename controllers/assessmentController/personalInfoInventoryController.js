@@ -2,7 +2,7 @@ const path = require('path');
 const prisma = require('../../store/prisma');
 const { piiUpload } = require('../uploadController/uploadController');
 
-const DATA_SUBJECT_TYPE_VALUES = ['EMPLOYEES', 'CUSTOMERS', 'CLIENTS', 'SUPPLIERS'];
+const DATA_SUBJECT_TYPE_VALUES = ['EMPLOYEES', 'CLIENTS', 'SUPPLIERS'];
 
 const ensureDataSubjectTypes = async () => {
   const existingTypes = await prisma.dataSubjectTypes.findMany({
