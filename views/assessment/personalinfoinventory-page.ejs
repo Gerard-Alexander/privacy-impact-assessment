@@ -178,6 +178,7 @@
 						</style>
 						<form id="piiForm" action="/assessment/personalinfoinventory" method="POST" enctype="multipart/form-data">
 							<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
+							<input type="hidden" name="piaAssessmentId" value="<%= assessmentId %>">
 
 						<div id="pdlcRowsContainer">
 							<% if (piiRows.length > 0) { %>
@@ -237,10 +238,10 @@
 													<div class="pii-standard-fields">
 														<div class="pii-form-fields">
 															<div class="inner-card-desc">Name of Data Capture</div>
-															<input type="text" name="formName[<%= index %>]" data-top-field="formName" class="form-control mb-3" value="<%= pii.formName || '' %>" required>
+															<input type="text" name="formName[<%= index %>]" data-top-field="formName" class="form-control mb-3" value="<%= pii.formName || '' %>">
 					
 															<div class="inner-card-desc">Number of Data Capture</div>
-															<input type="text" name="formNo[<%= index %>]" data-top-field="formNo" class="form-control mb-3" value="<%= pii.formNo || '' %>" required>
+															<input type="text" name="formNo[<%= index %>]" data-top-field="formNo" class="form-control mb-3" value="<%= pii.formNo || '' %>">
 														</div>
 														<div class="pii-image-controls mt-3">
 															<div class="inner-card-desc">Upload Data Form Name and Number (Optional)</div>
@@ -265,7 +266,7 @@
 											<div class="col-12 col-md-6">
 												<div class="inner-card d-flex flex-column h-100">
 													<div class="inner-card-title">Data Processing</div>
-													<select name="dataProcessing[<%= index %>]" data-top-field="dataProcessing" class="form-select" required>
+													<select name="dataProcessing[<%= index %>]" data-top-field="dataProcessing" class="form-select">
 														<option value="" <%= !pii.dataProcessingValue ? 'selected' : '' %>>Select...</option>
 														<% dataProcessingOptions.forEach(function(option) { %>
 															<option value="<%= option %>" <%= pii.dataProcessingValue === option ? 'selected' : '' %>><%= option.replace('_', ' ') %></option>
@@ -275,7 +276,7 @@
 													<div class="inner-card-desc mb-2">Legal basis for processing.</div>
 													<div class="pii-standard-fields">
 														<div class="section-label">PI Processing Basis</div>
-														<select name="piProcessBasisId[<%= index %>]" data-top-field="piProcessBasisId" class="form-select mb-3" required>
+														<select name="piProcessBasisId[<%= index %>]" data-top-field="piProcessBasisId" class="form-select mb-3">
 															<option value="" <%= !pii.piProcessBasisId ? 'selected' : '' %>>Select...</option>
 															<% piBasisOptions.forEach(function(option) { %>
 																<option value="<%= option.id %>" <%= Number(pii.piProcessBasisId) === Number(option.id) ? 'selected' : '' %>>
@@ -285,7 +286,7 @@
 														</select>
 											
 														<div class="section-label">SPI Processing Basis</div>
-														<select name="spiProcessBasisId[<%= index %>]" data-top-field="spiProcessBasisId" class="form-select" required>
+														<select name="spiProcessBasisId[<%= index %>]" data-top-field="spiProcessBasisId" class="form-select">
 															<option value="" <%= !pii.spiProcessBasisId ? 'selected' : '' %>>Select...</option>
 															<% spiBasisOptions.forEach(function(option) { %>
 																<option value="<%= option.id %>" <%= Number(pii.spiProcessBasisId) === Number(option.id) ? 'selected' : '' %>>
@@ -311,7 +312,7 @@
 															<% recipients.forEach(function(entry, entryIndex) { %>
 															<div class="pii-recipient pdlc-subentry mb-2">
 																<div class="d-flex align-items-center gap-2">
-																	<input type="text" name="recipients[<%= index %>][<%= entryIndex %>][recipientName]" data-field="recipientName" class="form-control" placeholder="Recipient name" value="<%= entry.recipientName || '' %>" required>
+																	<input type="text" name="recipients[<%= index %>][<%= entryIndex %>][recipientName]" data-field="recipientName" class="form-control" placeholder="Recipient name" value="<%= entry.recipientName || '' %>">
 																	<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="recipients" title="Remove" style="padding: 0.6rem 0.8rem;">
 																		<i class="bi bi-trash3"></i>
 																	</button>
@@ -348,16 +349,16 @@
 																<div class="row g-2">
 																	<div class="col-12 col-md-6">
 																		<div class="section-label">Subject Type</div>
-																		<select id="dataSubjectType" name="dataSubjects[<%= index %>][<%= entryIndex %>][dataSubjectsTypeId]" data-field="dataSubjectsTypeId" class="form-select" required>
+																		<select id="dataSubjectType" name="dataSubjects[<%= index %>][<%= entryIndex %>][dataSubjectsTypeId]" data-field="dataSubjectsTypeId" class="form-select">
 																			<option value="" <%= !entry.dataSubjectsType_id ? 'selected' : '' %>>Select...</option>
 																			<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
-																				<option value="<%= typeOption.id %>" <%= Number(entry.dataSubjectsType_id) === Number(typeOption.id) ? 'selected' : '' %>><%= typeOption.dataSubjectType %></option>
+																				<option value="<%= typeOption.id %>" <%= Number(entry.dataSubjectsType_id) === Number(typeOption.id) ? 'selected' : '' %>><%= typeOption.dataSubjectType.charAt(0) + typeOption.dataSubjectType.slice(1).toLowerCase() %></option>
 																			<% }); %>
 																		</select>
 																	</div>
 																	<div class="col-12 col-md-6">
 																		<div class="section-label">Name</div>
-																		<input type="text" id="dataSubjectName" name="dataSubjects[<%= index %>][<%= entryIndex %>][name]" data-field="name" class="form-control" value="<%= entry.name || '' %>" placeholder="Subject name" required>
+																		<input type="text" id="dataSubjectName" name="dataSubjects[<%= index %>][<%= entryIndex %>][name]" data-field="name" class="form-control" value="<%= entry.name || '' %>" placeholder="Subject name">
 																	</div>
 																</div>
 															</div>
@@ -427,14 +428,14 @@
 													<div class="pii-standard-fields">
 														<div class="pii-form-fields">
 															<div class="section-label">Name of Data Capture</div>
-															<input type="text" name="formName[0]" data-top-field="formName" class="form-control mb-3" required>
+															<input type="text" name="formName[0]" data-top-field="formName" class="form-control mb-3">
 					
 															<div class="section-label">Number of Data Capture</div>
-															<input type="text" name="formNo[0]" data-top-field="formNo" class="form-control mb-3" required>
+															<input type="text" name="formNo[0]" data-top-field="formNo" class="form-control mb-3">
 														</div>
 					
 														<div class="section-label">Data Processing</div>
-														<select name="dataProcessing[0]" data-top-field="dataProcessing" class="form-select" required>
+														<select name="dataProcessing[0]" data-top-field="dataProcessing" class="form-select">
 															<option value="">Select...</option>
 															<% dataProcessingOptions.forEach(function(option) { %>
 																<option value="<%= option %>"><%= option.replace('_', ' ') %></option>
@@ -464,7 +465,7 @@
 											
 													<div class="pii-standard-fields">
 														<div class="section-label">PI Processing Basis</div>
-														<select name="piProcessBasisId[0]" data-top-field="piProcessBasisId" class="form-select mb-3" required>
+														<select name="piProcessBasisId[0]" data-top-field="piProcessBasisId" class="form-select mb-3">
 															<option value="">Select...</option>
 															<% piBasisOptions.forEach(function(option) { %>
 																<option value="<%= option.id %>"><%= option.basisNum %> - <%= option.keyword %></option>
@@ -472,7 +473,7 @@
 														</select>
 					
 														<div class="section-label">SPI Processing Basis</div>
-														<select name="spiProcessBasisId[0]" data-top-field="spiProcessBasisId" class="form-select" required>
+														<select name="spiProcessBasisId[0]" data-top-field="spiProcessBasisId" class="form-select">
 															<option value="">Select...</option>
 															<% spiBasisOptions.forEach(function(option) { %>
 																<option value="<%= option.id %>"><%= option.basisNum %> - <%= option.keyword %></option>
@@ -494,7 +495,7 @@
 														<div class="pii-recipients">
 															<div class="pii-recipient pdlc-subentry mb-2">
 																<div class="d-flex align-items-center gap-2">
-																	<input type="text" name="recipients[0][0][recipientName]" data-field="recipientName" class="form-control" placeholder="Recipient name" required>
+																	<input type="text" name="recipients[0][0][recipientName]" data-field="recipientName" class="form-control" placeholder="Recipient name">
 																	<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn d-none" data-section="recipients" title="Remove" style="padding: 0.6rem 0.8rem;">
 																		<i class="bi bi-trash3"></i>
 																	</button>
@@ -528,16 +529,16 @@
 																<div class="row g-2">
 																	<div class="col-12 col-md-6">
 																		<div class="section-label">Subject Type</div>
-																		<select id="dataSubjectType" name="dataSubjects[0][0][dataSubjectsTypeId]" data-field="dataSubjectsTypeId" class="form-select" required>
+																		<select id="dataSubjectType" name="dataSubjects[0][0][dataSubjectsTypeId]" data-field="dataSubjectsTypeId" class="form-select">
 																			<option value="">Select...</option>
 																			<% dataSubjectTypeOptions.forEach(function(typeOption) { %>
-																				<option value="<%= typeOption.id %>"><%= typeOption.dataSubjectType %></option>
+																				<option value="<%= typeOption.id %>"><%= typeOption.dataSubjectType.charAt(0) + typeOption.dataSubjectType.slice(1).toLowerCase() %></option>
 																			<% }); %>
 																		</select>
 																	</div>
 																	<div class="col-12 col-md-6">
 																		<div class="section-label">Name</div>
-																		<input type="text" id="dataSubjectName" name="dataSubjects[0][0][name]" data-field="name" class="form-control" placeholder="Subject name" required>
+																		<input type="text" id="dataSubjectName" name="dataSubjects[0][0][name]" data-field="name" class="form-control" placeholder="Subject name">
 																	</div>
 																</div>
 															</div>
@@ -553,19 +554,19 @@
 								</div>
 								<% } %>
 						</div>
+						<hr class="my-4 text-muted">
+						<div class="mx-auto d-flex justify-content-between align-items-center mt-2" style="max-width: 1000px;">
+							<button type="submit" name="redirectTo" value="previous" formnovalidate
+								class="btn btn-danger btn-modern shadow-sm">
+								<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
+							</button>
+							<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 4 of 7</span>
+							<button type="submit"
+								class="btn btn-primary btn-modern shadow-sm">
+								Next Page <i class="bi bi-arrow-right-short fs-5"></i>
+							</button>
+						</div>
 						</form>
-					</div>
-					<hr class="my-4 text-muted">
-					<div class="mx-auto d-flex justify-content-between align-items-center mt-2" style="max-width: 1000px;">
-						<button type="submit" form="piiForm" name="redirectTo" value="previous" formnovalidate
-							class="btn btn-danger btn-modern shadow-sm">
-							<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
-						</button>
-						<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 4 of 7</span>
-						<button type="submit" form="piiForm"
-							class="btn btn-primary btn-modern shadow-sm">
-							Next Page <i class="bi bi-arrow-right-short fs-5"></i>
-						</button>
 					</div>
 				</main>
 		</div>
@@ -885,25 +886,6 @@
 			}
 		});
 
-		const piiForm = document.getElementById('piiForm');
-		if (piiForm) {
-			piiForm.addEventListener('submit', function (e) {
-				// Bypass validation if "Previous Page" was clicked
-				const submitter = e.submitter || document.activeElement;
-				if (submitter && submitter.name === 'redirectTo' && submitter.value === 'previous') {
-					return;
-				}
-
-				const rows = container.querySelectorAll('.pdlc-row');
-				for (let i = 0; i < rows.length; i += 1) {
-					if (!validateRow(rows[i])) {
-						e.preventDefault();
-						alert('Please complete all fields in every row before submitting.');
-						return;
-					}
-				}
-			});
-		}
 
 		updateRowNumbers();
 		updateAllNames();

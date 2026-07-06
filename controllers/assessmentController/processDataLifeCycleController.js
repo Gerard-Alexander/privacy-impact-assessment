@@ -4,7 +4,7 @@ const path = require('path');
 const processDataLifeCycle = async (req, res) => {
   res.locals.processDataCycle = 'Process Data LifeCycle';
 
-  const piaAssessmentId = req.query.id || req.session.currentAssessmentId;
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
   if (!piaAssessmentId) {
     return res.redirect('/assessment');
@@ -36,7 +36,7 @@ const processDataLifeCycle = async (req, res) => {
 };
 
 const saveProcessDataLifeCycle = async (req, res) => {
-  const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessment_id || req.body?.piaAssessmentId || req.session.currentAssessmentId, 10);
 
   const isPrevious = req.body?.redirectTo === 'previous';
 

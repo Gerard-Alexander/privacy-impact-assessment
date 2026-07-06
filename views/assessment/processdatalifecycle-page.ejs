@@ -198,6 +198,7 @@
 					</style>
 				<form id="pdlcForm" action="/assessment/processdatalifecycle" method="POST" enctype="multipart/form-data">
 					<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
+					<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId %>">
 
 					<div id="pdlcRowsContainer">
 						<% if (typeof pdlcData !=='undefined' && pdlcData && pdlcData.length> 0) { %>
@@ -241,60 +242,31 @@
 
 									<div class="pdlc-row-body bg-white p-4">
 										<div class="row g-4">
-											<!-- Top Row -->
-											<!-- Left: Stakeholders + Retention -->
-											<div class="col-12 col-lg-6">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Stakeholders / Parties
-													</div>
-													<div class="inner-card-desc mb-2">Who is involved in this process?</div>
-													<textarea name="stakeholderName[<%= index %>]" data-top-field="stakeholderName" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required><%= pdlc.stakeholderName || '' %></textarea>
 
-													<hr class="my-3 text-muted border-light">
-
-													<div class="inner-card-title">
-														Retention Period
-													</div>
-													<div class="inner-card-desc mb-2">How long is the data retained?</div>
-
-													<input type="text" name="retentionPeriod[<%= index %>]" data-top-field="retentionPeriod" class="form-control mb-3" placeholder="e.g. 2 years after collection" value="<%= pdlc.retentionPeriod || '' %>" required>
-												
-													<div class="inner-card-desc mb-2">Remarks</div>
-													<input type="text" name="retentionRemarks[<%= index %>]" data-top-field="retentionRemarks" class="form-control" placeholder="e.g. Retained until project completion" value="<%= pdlc.retentionRemarks || '' %>" required>
-												</div>
-											</div>
-
-											<!-- Right: Disposal & Destruction -->
-											<div class="col-12 col-lg-6">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														<i class="bi bi-trash3 text-primary"></i> Disposal & Destruction
-													</div>
-													<div class="inner-card-desc mb-2">How and when is the data destroyed?</div>
-													<textarea name="disposalMethod[<%= index %>]" data-top-field="disposalMethod" class="form-control mb-3 flex-grow-1" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required><%= pdlc.disposalMethod || '' %></textarea>
-													
-														<div class="section-label mt-auto">Upload DLC Diagram</div>
-														<input type="hidden" name="dlcDiagramPath[<%= index %>]" value="<%= pdlc.dlcDiagram || '' %>">
-														<label class="upload-box p-3 text-center w-100 d-block mb-0">
-															<input type="file" class="d-none" name="dlcDiagram[<%= index %>]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-<%= index %>')">
-															<div class="text-muted">
-																<span class="fw-semibold text-dark">Click to upload</span><br>
-																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
-															</div>
-															<img id="dlc-preview-<%= index %>" class="img-fluid mt-2 rounded <%= pdlc.dlcDiagram ? '' : 'd-none' %> shadow-sm" <%= pdlc.dlcDiagram ? `src="/${pdlc.dlcDiagram}"` : '' %>>
-														</label>
-												</div>
-											</div>
-
-											<!-- Bottom Rows: Full Width -->
-											<!-- Collection & Creation -->
+											<!-- 1. Stakeholders / Parties -->
 											<div class="col-12">
 												<div class="inner-card">
 													<div class="d-flex justify-content-between align-items-center mb-3">
 														<div>
 															<div class="inner-card-title mb-0">
-																Collection & Creation
+																<i class="bi bi-people text-primary"></i> Stakeholders / Parties
+															</div>
+															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">Who is involved in this process?</div>
+														</div>
+													</div>
+													<div class="inner-card-body">
+														<textarea name="stakeholderName[<%= index %>]" data-top-field="stakeholderName" class="form-control" style="min-height: 80px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..."><%= pdlc.stakeholderName || '' %></textarea>
+													</div>
+												</div>
+											</div>
+
+											<!-- 2. Collection & Creation -->
+											<div class="col-12">
+												<div class="inner-card">
+													<div class="d-flex justify-content-between align-items-center mb-3">
+														<div>
+															<div class="inner-card-title mb-0">
+																Collection &amp; Creation
 															</div>
 															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">How is data collected or created?</div>
 														</div>
@@ -309,11 +281,11 @@
 															<div class="pdlc-collection pdlc-subentry">
 																<div class="row g-2">
 																	<div class="col-12 col-md-8">
-																		<textarea name="collections[<%= index %>][<%= entryIndex %>][collection]" data-field="collection" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required><%= entry.collection || '' %></textarea>
+																		<textarea name="collections[<%= index %>][<%= entryIndex %>][collection]" data-field="collection" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..."><%= entry.collection || '' %></textarea>
 																	</div>
 																	<div class="col-12 col-md-4">
 																		<div class="section-label mb-1">Remarks</div>
-																		<input type="text" name="collections[<%= index %>][<%= entryIndex %>][collectionRemarks]" data-field="collectionRemarks" class="form-control mb-2" placeholder="e.g. Upon enrollment, annually..." value="<%= entry.collectionRemarks || '' %>" required>
+																		<input type="text" name="collections[<%= index %>][<%= entryIndex %>][collectionRemarks]" data-field="collectionRemarks" class="form-control mb-2" placeholder="e.g. Upon enrollment, annually..." value="<%= entry.collectionRemarks || '' %>">
 																		<button type="button" class="btn btn-outline-danger btn-sm w-100 remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="collections">
 																			<i class="bi bi-trash3 me-1"></i> Remove
 																		</button>
@@ -329,7 +301,7 @@
 												</div>
 											</div>
 
-											<!-- Use / Processing -->
+											<!-- 3. Use / Processing -->
 											<div class="col-12">
 												<div class="inner-card">
 													<div class="d-flex justify-content-between align-items-center mb-3">
@@ -349,12 +321,10 @@
 															<% uses.forEach(function(entry, entryIndex) { %>
 															<div class="pdlc-use pdlc-subentry">
 																<div class="row g-2">
-																	<div class="col-12 col-md-6">
-																		<textarea name="uses[<%= index %>][<%= entryIndex %>][useOfData]" data-field="useOfData" class="form-control h-100" style="min-height: 50px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required><%= entry.useOfData || '' %></textarea>
+																	<div class="col-12">
+																		<textarea name="uses[<%= index %>][<%= entryIndex %>][useOfData]" data-field="useOfData" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..."><%= entry.useOfData || '' %></textarea>
 																	</div>
-																	<div class="col-12 col-md-6">
-																		<div class="section-label mb-1">Storage & Transmission</div>
-																		<textarea name="uses[<%= index %>][<%= entryIndex %>][process]" data-field="process" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required><%= entry.process || '' %></textarea>
+																	<div class="col-12">
 																		<div class="text-end">
 																			<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="uses">
 																				<i class="bi bi-trash3 me-1"></i> Remove
@@ -372,7 +342,48 @@
 												</div>
 											</div>
 
-											<!-- Sharing -->
+											<!-- 4. Storage & Transmission -->
+											<div class="col-12">
+												<div class="inner-card">
+													<div class="d-flex justify-content-between align-items-center mb-3">
+														<div>
+															<div class="inner-card-title mb-0">
+																<i class="bi bi-server text-primary"></i> Storage &amp; Transmission
+															</div>
+															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">Where and how is the data stored or transmitted?</div>
+														</div>
+														<button type="button" class="btn btn-sm btn-light text-secondary toggle-inner-collapse-btn py-0 px-2" title="Minimize/Maximize">
+															<i class="bi bi-chevron-up"></i>
+														</button>
+													</div>
+													<div class="inner-card-body">
+														<div class="pdlc-storages">
+															<% const storages = pdlc.uses && pdlc.uses.length ? pdlc.uses : [{}]; %>
+															<% storages.forEach(function(entry, entryIndex) { %>
+															<div class="pdlc-storage pdlc-subentry">
+																<div class="row g-2">
+																	<div class="col-12">
+																		<textarea name="uses[<%= index %>][<%= entryIndex %>][process]" data-field="process" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..."><%= entry.process || '' %></textarea>
+																	</div>
+																	<div class="col-12">
+																		<div class="text-end">
+																			<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="storages">
+																				<i class="bi bi-trash3 me-1"></i> Remove
+																			</button>
+																		</div>
+																	</div>
+																</div>
+															</div>
+															<% }); %>
+														</div>
+														<button type="button" class="btn btn-outline-primary btn-sm mt-1 add-subentry-btn" data-section="storages">
+															<i class="bi bi-plus-lg me-1"></i> Add Storage
+														</button>
+													</div>
+												</div>
+											</div>
+
+											<!-- 5. Sharing -->
 											<div class="col-12">
 												<div class="inner-card">
 													<div class="d-flex justify-content-between align-items-center mb-3">
@@ -393,11 +404,11 @@
 															<div class="pdlc-sharing pdlc-subentry">
 																<div class="row g-2">
 																	<div class="col-12 col-md-6">
-																		<textarea name="sharings[<%= index %>][<%= entryIndex %>][dataSharing]" data-field="dataSharing" class="form-control h-100" style="min-height: 50px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required><%= entry.dataSharing || '' %></textarea>
+																		<textarea name="sharings[<%= index %>][<%= entryIndex %>][dataSharing]" data-field="dataSharing" class="form-control h-100" style="min-height: 50px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..."><%= entry.dataSharing || '' %></textarea>
 																	</div>
 																	<div class="col-12 col-md-6">
 																		<div class="section-label mb-1">Who is it shared with?</div>
-																		<textarea name="sharings[<%= index %>][<%= entryIndex %>][sharedTo]" data-field="sharedTo" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Third-party vendor" required><%= entry.sharedTo || '' %></textarea>
+																		<textarea name="sharings[<%= index %>][<%= entryIndex %>][sharedTo]" data-field="sharedTo" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Third-party vendor"><%= entry.sharedTo || '' %></textarea>
 																		<div class="text-end">
 																			<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn <%= entryIndex === 0 ? 'd-none' : '' %>" data-section="sharings">
 																				<i class="bi bi-trash3 me-1"></i> Remove
@@ -414,6 +425,42 @@
 													</div>
 												</div>
 											</div>
+
+											<!-- 6. Disposal & Destruction (LAST) — includes Retention Period -->
+											<div class="col-12">
+												<div class="inner-card">
+													<div class="d-flex justify-content-between align-items-center mb-3">
+														<div>
+															<div class="inner-card-title mb-0">
+																<i class="bi bi-trash3 text-primary"></i> Disposal &amp; Destruction
+															</div>
+															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">How and when is the data destroyed?</div>
+														</div>
+														<button type="button" class="btn btn-sm btn-light text-secondary toggle-inner-collapse-btn py-0 px-2" title="Minimize/Maximize">
+															<i class="bi bi-chevron-up"></i>
+														</button>
+													</div>
+													<div class="inner-card-body">
+														<div class="section-label mb-1">How long is the data retained?</div>
+														<textarea name="retentionPeriod[<%= index %>]" data-top-field="retentionPeriod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. 2 years after collection"><%= pdlc.retentionPeriod || '' %></textarea>
+
+														<div class="section-label mb-1">Disposal Method</div>
+														<textarea name="disposalMethod[<%= index %>]" data-top-field="disposalMethod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..."><%= pdlc.disposalMethod || '' %></textarea>
+
+														<div class="section-label mt-2">Upload DLC Diagram</div>
+														<input type="hidden" name="dlcDiagramPath[<%= index %>]" value="<%= pdlc.dlcDiagram || '' %>">
+														<label class="upload-box p-3 text-center w-100 d-block mb-0">
+															<input type="file" class="d-none" name="dlcDiagram[<%= index %>]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-<%= index %>')">
+															<div class="text-muted">
+																<span class="fw-semibold text-dark">Click to upload</span><br>
+																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
+															</div>
+															<img id="dlc-preview-<%= index %>" class="img-fluid mt-2 rounded <%= pdlc.dlcDiagram ? '' : 'd-none' %> shadow-sm" <%= pdlc.dlcDiagram ? `src="/${pdlc.dlcDiagram}"` : '' %>>
+														</label>
+													</div>
+												</div>
+											</div>
+
 										</div>
 									</div>
 								</div>
@@ -456,60 +503,31 @@
 
 									<div class="pdlc-row-body bg-white p-4">
 										<div class="row g-4">
-											<!-- Top Row -->
-											<!-- Left: Stakeholders + Retention -->
-											<div class="col-12 col-lg-6">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														Stakeholders / Parties
-													</div>
-													<div class="inner-card-desc mb-2">Who is involved in this process?</div>
-													<textarea name="stakeholderName[0]" data-top-field="stakeholderName" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..." required></textarea>
 
-													<hr class="my-3 text-muted border-light">
-
-													<div class="inner-card-title">
-														Retention
-													</div>
-													<div class="inner-card-desc mb-2">How long is the data retained?</div>
-													<div class="section-label">Retention Period</div>
-													<input type="text" name="retentionPeriod[0]" data-top-field="retentionPeriod" class="form-control mb-3" placeholder="e.g. 2 years after collection" required>
-												
-													<div class="section-label">Remarks</div>
-													<input type="text" name="retentionRemarks[0]" data-top-field="retentionRemarks" class="form-control" placeholder="e.g. Retained until project completion" required>
-												</div>
-											</div>
-
-											<!-- Right: Disposal & Destruction -->
-											<div class="col-12 col-lg-6">
-												<div class="inner-card d-flex flex-column h-100">
-													<div class="inner-card-title">
-														<i class="bi bi-trash3 text-primary"></i> Disposal & Destruction
-													</div>
-													<div class="inner-card-desc mb-2">How and when is the data destroyed?</div>
-													<textarea name="disposalMethod[0]" data-top-field="disposalMethod" class="form-control mb-3 flex-grow-1" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..." required></textarea>
-													
-														<div class="section-label mt-auto">Upload DLC Diagram</div>
-														<input type="hidden" name="dlcDiagramPath[0]" value="">
-														<label class="upload-box p-3 text-center w-100 d-block mb-0">
-															<input type="file" class="d-none" name="dlcDiagram[0]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-empty')">
-															<div class="text-muted">
-																<span class="fw-semibold text-dark">Click to upload</span><br>
-																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
-															</div>
-															<img id="dlc-preview-empty" class="img-fluid mt-2 rounded d-none shadow-sm">
-														</label>
-												</div>
-											</div>
-
-											<!-- Bottom Rows: Full Width -->
-											<!-- Collection & Creation -->
+											<!-- 1. Stakeholders / Parties -->
 											<div class="col-12">
 												<div class="inner-card">
 													<div class="d-flex justify-content-between align-items-center mb-3">
 														<div>
 															<div class="inner-card-title mb-0">
-																Collection & Creation
+																<i class="bi bi-people text-primary"></i> Stakeholders / Parties
+															</div>
+															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">Who is involved in this process?</div>
+														</div>
+													</div>
+													<div class="inner-card-body">
+														<textarea name="stakeholderName[0]" data-top-field="stakeholderName" class="form-control" style="min-height: 80px; resize: vertical;" placeholder="e.g. HR Department, Third-party vendors..."></textarea>
+													</div>
+												</div>
+											</div>
+
+											<!-- 2. Collection & Creation -->
+											<div class="col-12">
+												<div class="inner-card">
+													<div class="d-flex justify-content-between align-items-center mb-3">
+														<div>
+															<div class="inner-card-title mb-0">
+																Collection &amp; Creation
 															</div>
 															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">How is data collected or created?</div>
 														</div>
@@ -522,11 +540,11 @@
 															<div class="pdlc-collection pdlc-subentry">
 																<div class="row g-2">
 																	<div class="col-12 col-md-8">
-																		<textarea name="collections[0][0][collection]" data-field="collection" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..." required></textarea>
+																		<textarea name="collections[0][0][collection]" data-field="collection" class="form-control" style="min-height: 50px; resize: vertical;" placeholder="e.g. Via online forms, paper documents..."></textarea>
 																	</div>
 																	<div class="col-12 col-md-4">
 																		<div class="section-label mb-1">Remarks</div>
-																		<input type="text" name="collections[0][0][collectionRemarks]" data-field="collectionRemarks" class="form-control mb-2" placeholder="e.g. Upon enrollment, annually..." required>
+																		<input type="text" name="collections[0][0][collectionRemarks]" data-field="collectionRemarks" class="form-control mb-2" placeholder="e.g. Upon enrollment, annually...">
 																		<button type="button" class="btn btn-outline-danger btn-sm w-100 remove-subentry-btn d-none" data-section="collections">
 																			<i class="bi bi-trash3 me-1"></i> Remove
 																		</button>
@@ -541,7 +559,7 @@
 												</div>
 											</div>
 
-											<!-- Use / Processing -->
+											<!-- 3. Use / Processing -->
 											<div class="col-12">
 												<div class="inner-card">
 													<div class="d-flex justify-content-between align-items-center mb-3">
@@ -559,12 +577,10 @@
 														<div class="pdlc-uses">
 															<div class="pdlc-use pdlc-subentry">
 																<div class="row g-2">
-																	<div class="col-12 col-md-6">
-																		<textarea name="uses[0][0][useOfData]" data-field="useOfData" class="form-control h-100" style="min-height: 50px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..." required></textarea>
+																	<div class="col-12">
+																		<textarea name="uses[0][0][useOfData]" data-field="useOfData" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Used for payroll processing, analytics..."></textarea>
 																	</div>
-																	<div class="col-12 col-md-6">
-																		<div class="section-label mb-1">Storage & Transmission</div>
-																		<textarea name="uses[0][0][process]" data-field="process" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..." required></textarea>
+																	<div class="col-12">
 																		<div class="text-end">
 																			<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn d-none" data-section="uses">
 																				<i class="bi bi-trash3 me-1"></i> Remove
@@ -581,7 +597,45 @@
 												</div>
 											</div>
 
-											<!-- Sharing -->
+											<!-- 4. Storage & Transmission -->
+											<div class="col-12">
+												<div class="inner-card">
+													<div class="d-flex justify-content-between align-items-center mb-3">
+														<div>
+															<div class="inner-card-title mb-0">
+																<i class="bi bi-server text-primary"></i> Storage &amp; Transmission
+															</div>
+															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">Where and how is the data stored or transmitted?</div>
+														</div>
+														<button type="button" class="btn btn-sm btn-light text-secondary toggle-inner-collapse-btn py-0 px-2" title="Minimize/Maximize">
+															<i class="bi bi-chevron-up"></i>
+														</button>
+													</div>
+													<div class="inner-card-body">
+														<div class="pdlc-storages">
+															<div class="pdlc-storage pdlc-subentry">
+																<div class="row g-2">
+																	<div class="col-12">
+																		<textarea name="uses[0][0][process]" data-field="process" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Stored in cloud DB, sent via encrypted email..."></textarea>
+																	</div>
+																	<div class="col-12">
+																		<div class="text-end">
+																			<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn d-none" data-section="storages">
+																				<i class="bi bi-trash3 me-1"></i> Remove
+																			</button>
+																		</div>
+																	</div>
+																</div>
+															</div>
+														</div>
+														<button type="button" class="btn btn-outline-primary btn-sm mt-1 add-subentry-btn" data-section="storages">
+															<i class="bi bi-plus-lg me-1"></i> Add Storage
+														</button>
+													</div>
+												</div>
+											</div>
+
+											<!-- 5. Sharing -->
 											<div class="col-12">
 												<div class="inner-card">
 													<div class="d-flex justify-content-between align-items-center mb-3">
@@ -600,11 +654,11 @@
 															<div class="pdlc-sharing pdlc-subentry">
 																<div class="row g-2">
 																	<div class="col-12 col-md-6">
-																		<textarea name="sharings[0][0][dataSharing]" data-field="dataSharing" class="form-control h-100" style="min-height: 50px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..." required></textarea>
+																		<textarea name="sharings[0][0][dataSharing]" data-field="dataSharing" class="form-control h-100" style="min-height: 50px; resize: vertical;" placeholder="e.g. Shared with external auditors, partners..."></textarea>
 																	</div>
 																	<div class="col-12 col-md-6">
 																		<div class="section-label mb-1">Who is it shared with?</div>
-																		<textarea name="sharings[0][0][sharedTo]" data-field="sharedTo" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Third-party vendor" required></textarea>
+																		<textarea name="sharings[0][0][sharedTo]" data-field="sharedTo" class="form-control mb-2" style="min-height: 50px; resize: vertical;" placeholder="e.g. Third-party vendor"></textarea>
 																		<div class="text-end">
 																			<button type="button" class="btn btn-outline-danger btn-sm remove-subentry-btn d-none" data-section="sharings">
 																				<i class="bi bi-trash3 me-1"></i> Remove
@@ -620,10 +674,58 @@
 													</div>
 												</div>
 											</div>
+
+											<!-- 6. Disposal & Destruction (LAST) — includes Retention Period -->
+											<div class="col-12">
+												<div class="inner-card">
+													<div class="d-flex justify-content-between align-items-center mb-3">
+														<div>
+															<div class="inner-card-title mb-0">
+																<i class="bi bi-trash3 text-primary"></i> Disposal &amp; Destruction
+															</div>
+															<div class="inner-card-desc mb-0" style="margin-bottom:0 !important">How and when is the data destroyed?</div>
+														</div>
+														<button type="button" class="btn btn-sm btn-light text-secondary toggle-inner-collapse-btn py-0 px-2" title="Minimize/Maximize">
+															<i class="bi bi-chevron-up"></i>
+														</button>
+													</div>
+													<div class="inner-card-body">
+														<div class="section-label mb-1">How long is the data retained?</div>
+														<textarea name="retentionPeriod[0]" data-top-field="retentionPeriod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. 2 years after collection"></textarea>
+
+														<div class="section-label mb-1">Disposal Method</div>
+														<textarea name="disposalMethod[0]" data-top-field="disposalMethod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..."></textarea>
+
+														<div class="section-label mt-2">Upload DLC Diagram</div>
+														<input type="hidden" name="dlcDiagramPath[0]" value="">
+														<label class="upload-box p-3 text-center w-100 d-block mb-0">
+															<input type="file" class="d-none" name="dlcDiagram[0]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-empty')">
+															<div class="text-muted">
+																<span class="fw-semibold text-dark">Click to upload</span><br>
+																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
+															</div>
+															<img id="dlc-preview-empty" class="img-fluid mt-2 rounded d-none shadow-sm">
+														</label>
+													</div>
+												</div>
+											</div>
+
 										</div>
 									</div>
 								</div>
 						<% } %>
+					</div>
+					<hr class="my-4 text-muted">
+					<div class="d-flex align-items-center justify-content-between mt-2">
+						<button type="submit" name="redirectTo" value="previous" formnovalidate
+							class="btn btn-danger btn-modern shadow-sm">
+							<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
+						</button>
+						<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 3 of 7</span>
+						<button type="submit"
+							class="btn btn-primary btn-modern shadow-sm">
+							Next Page <i class="bi bi-arrow-right-short fs-5"></i>
+						</button>
 					</div>
 				</form>
 
@@ -633,6 +735,7 @@
 						var sectionConfig = {
 							collections: { containerClass: 'pdlc-collections', entryClass: 'pdlc-collection' },
 							uses: { containerClass: 'pdlc-uses', entryClass: 'pdlc-use' },
+							storages: { containerClass: 'pdlc-storages', entryClass: 'pdlc-storage' },
 							sharings: { containerClass: 'pdlc-sharings', entryClass: 'pdlc-sharing' }
 						};
 
@@ -868,19 +971,6 @@
 						}
 					});
 				</script>
-
-				<hr class="my-4 text-muted">
-				<div class="d-flex align-items-center justify-content-between mt-2">
-					<button type="submit" form="pdlcForm" name="redirectTo" value="previous" formnovalidate
-						class="btn btn-danger btn-modern shadow-sm">
-						<i class="bi bi-arrow-left-short fs-5"></i> Previous Page
-					</button>
-					<span class="badge bg-secondary bg-opacity-10 text-secondary border px-3 py-2 rounded-pill fw-medium">Step 3 of 7</span>
-					<button type="submit" form="pdlcForm"
-						class="btn btn-primary btn-modern shadow-sm">
-						Next Page <i class="bi bi-arrow-right-short fs-5"></i>
-					</button>
-				</div>
 			</div>
 		</main>
 	</div>

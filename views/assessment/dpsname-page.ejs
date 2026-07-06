@@ -203,6 +203,7 @@
 						<div class="card-body form-section">
 							<form action="/assessment/dpsname" method="POST">
 								<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId || '' %>">
+								<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId || '' %>">
 								<% const selectedAssessment = assessment || {}; %>
 								<% if (error) { %>
 									<div class="alert alert-danger mb-4 rounded-3 shadow-sm" role="alert">
@@ -221,28 +222,28 @@
 										<!-- Name -->
 										<div class="form-floating mb-4">
 											<input type="text" id="systemName" name="systemName" class="form-control"
-											placeholder="e.g. Student Enrollment Management System" value="<%= selectedAssessment.dpsName || '' %>" required>
+											placeholder="e.g. Student Enrollment Management System" value="<%= selectedAssessment.dpsName || '' %>">
 											<label for="systemName">Name of Data Processing System (DPS) <span class="text-danger">*</span></label>
 										</div>
 
 										<!-- Mandate -->
 										<div class="form-floating mb-4">
 											<textarea id="mandate" name="mandate" class="form-control" style="height: 120px;"
-											placeholder="Describe the mandate or purpose..." required><%= selectedAssessment.mandate || '' %></textarea>
-											<label for="mandate">Mandate / Purpose <span class="text-danger">*</span></label>
+											placeholder="Describe the mandate or purpose..."><%= selectedAssessment.mandate || '' %></textarea>
+											<label for="mandate">Purpose of Processing <span class="text-danger">*</span></label>
 										</div>
 
 										<!-- Dates -->
 										<div class="row g-3 mb-4">
 											<div class="col-md-6">
 												<div class="form-floating">
-													<input type="date" id="piaStartDate" name="piaStartDate" class="form-control" value="<%= selectedAssessment.piaStartDate || '' %>" required>
+													<input type="date" id="piaStartDate" name="piaStartDate" class="form-control" value="<%= selectedAssessment.piaStartDate || '' %>">
 													<label for="piaStartDate">PIA Starting Date <span class="text-danger">*</span></label>
 												</div>
 											</div>
 											<div class="col-md-6">
 												<div class="form-floating">
-													<input type="date" id="piaEndDate" name="piaEndDate" class="form-control" value="<%= selectedAssessment.piaEndDate || '' %>" required>
+													<input type="date" id="piaEndDate" name="piaEndDate" class="form-control" value="<%= selectedAssessment.piaEndDate || '' %>">
 													<label for="piaEndDate">PIA Ending Date <span class="text-danger">*</span></label>
 												</div>
 											</div>

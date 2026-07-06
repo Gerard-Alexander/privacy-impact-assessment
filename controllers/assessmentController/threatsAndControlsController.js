@@ -22,7 +22,7 @@ const toArray = (value) => {
 
 const threatsAndControls = async (req, res) => {
   res.locals.threatsAndControls = 'Threats and Controls';
-  const piaAssessmentId = req.query.id || req.session.currentAssessmentId;
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
   if (!piaAssessmentId) {
     return res.redirect('/assessment');
@@ -88,7 +88,7 @@ const threatsAndControls = async (req, res) => {
 };
 
 const saveThreatsAndControls = async (req, res) => {
-  const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessment_id || req.body?.piaAssessmentId || req.session.currentAssessmentId, 10);
   const isPrevious = req.body?.redirectTo === 'previous';
   const redirectTarget = isPrevious
     ? `/assessment/personalinfoinventory?id=${piaAssessmentId}`
@@ -98,6 +98,7 @@ const saveThreatsAndControls = async (req, res) => {
   const currentSeverityLevels = toArray(req.body.currentSeverityLevel);
   const currentLikelihoodLevels = toArray(req.body.currentLikelihoodLevel);
   const currentRiskRatings = toArray(req.body.currentRiskRating);
+  const currentControls = toArray(req.body.currentControl);
   const proposedControls = toArray(req.body.proposedControl);
   const afterSeverityLevels = toArray(req.body.afterSeverityLevel);
   const afterLikelihoodLevels = toArray(req.body.afterLikelihoodLevel);
@@ -113,6 +114,7 @@ const saveThreatsAndControls = async (req, res) => {
     currentSeverityLevels: currentSeverityLevels.length,
     currentLikelihoodLevels: currentLikelihoodLevels.length,
     currentRiskRatings: currentRiskRatings.length,
+    currentControls: currentControls.length,
     proposedControls: proposedControls.length,
     afterSeverityLevels: afterSeverityLevels.length,
     afterLikelihoodLevels: afterLikelihoodLevels.length,
@@ -137,6 +139,7 @@ const saveThreatsAndControls = async (req, res) => {
     const currentSeverityLevels2 = toArray(req.body.currentSeverityLevel);
     const currentLikelihoodLevels2 = toArray(req.body.currentLikelihoodLevel);
     const currentRiskRatings2 = toArray(req.body.currentRiskRating);
+    const currentControls2 = toArray(req.body.currentControl);
     const proposedControls2 = toArray(req.body.proposedControl);
     const afterSeverityLevels2 = toArray(req.body.afterSeverityLevel);
     const afterLikelihoodLevels2 = toArray(req.body.afterLikelihoodLevel);
@@ -151,6 +154,7 @@ const saveThreatsAndControls = async (req, res) => {
       currentSeverityLevels2.length,
       currentLikelihoodLevels2.length,
       currentRiskRatings2.length,
+      currentControls2.length,
       proposedControls2.length,
       afterSeverityLevels2.length,
       afterLikelihoodLevels2.length,
@@ -179,6 +183,7 @@ const saveThreatsAndControls = async (req, res) => {
       const currentLikelihood = String(currentLikelihoodLevels[index] || '').trim();
       const currentRiskRatingStr = String(currentRiskRatings[index] || '').trim();
       const currentRiskRating = currentRiskRatingStr ? Number.parseInt(currentRiskRatingStr, 10) : 0;
+      const currentControl = String(currentControls[index] || '').trim();
       const proposedControl = String(proposedControls[index] || '').trim();
       const afterSeverity = String(afterSeverityLevels[index] || '').trim();
       const afterLikelihood = String(afterLikelihoodLevels[index] || '').trim();
@@ -191,7 +196,7 @@ const saveThreatsAndControls = async (req, res) => {
       const pdlcId = pdlcIdStr ? Number.parseInt(pdlcIdStr, 10) : 0;
 
       // Skip completely empty rows
-      if (!threatDesc && !threatType && !currentSeverity && !currentLikelihood && !proposedControl && !afterSeverity && !afterLikelihood && !measureType && dataSubjectId === 0) {
+      if (!threatDesc && !threatType && !currentControl && !currentSeverity && !currentLikelihood && !proposedControl && !afterSeverity && !afterLikelihood && !measureType && dataSubjectId === 0) {
         continue;
       }
 
@@ -199,6 +204,7 @@ const saveThreatsAndControls = async (req, res) => {
       validatedRows.push({
         threatDesc,
         threatType,
+        currentControl,
         currentSeverity: currentSeverity || null,
         currentLikelihood: currentLikelihood || null,
         currentRiskRating: currentRiskRating || 0,
@@ -236,6 +242,7 @@ const saveThreatsAndControls = async (req, res) => {
             pdlc_id: row.pdlcId && Number.isInteger(row.pdlcId) ? row.pdlcId : defaultPdlcId,
             threats_possibleConsequences: row.threatDesc || null,
             typeOfThreats: row.threatType || null,
+            currentControl: row.currentControl || null,
             currentSeverityLevel: row.currentSeverity,
             currentLikelihoodLevel: row.currentLikelihood,
             currentRiskRating: row.currentRiskRating,

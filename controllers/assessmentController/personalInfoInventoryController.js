@@ -2,7 +2,7 @@ const path = require('path');
 const prisma = require('../../store/prisma');
 const { piiUpload } = require('../uploadController/uploadController');
 
-const DATA_SUBJECT_TYPE_VALUES = ['EMPLOYEES', 'CLIENTS', 'SUPPLIERS'];
+const DATA_SUBJECT_TYPE_VALUES = ['STUDENTS', 'PATIENTS', 'PARENTS', 'EMPLOYEES', 'SUPPLIERS', 'OTHERS'];
 
 const ensureDataSubjectTypes = async () => {
   const existingTypes = await prisma.dataSubjectTypes.findMany({
@@ -60,9 +60,9 @@ const toArray = (value) => {
 const personalInfoInventory = async (req, res) => {
   res.locals.personalInfoInventory = 'Personal Information Inventory';
 
-  const piiAssessmentId = req.query.id || req.session.currentAssessmentId;
+  const piiAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
-  if (!piiAssessmentId) {
+  if (!piiAssessmentId || piiAssessmentId === 'NaN' || piiAssessmentId === 'null') {
     return res.redirect('/assessment');
   }
 
@@ -126,7 +126,7 @@ const savePersonalInfoInventory = async (req, res) => {
       });
     });
 
-    piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+    piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessment_id || req.body?.piaAssessmentId || req.session.currentAssessmentId, 10);
 
     const isPrevious = req.body?.redirectTo === 'previous';
 
@@ -265,44 +265,14 @@ const savePersonalInfoInventory = async (req, res) => {
       const hasImageInput = Boolean(dataFormImagePath);
       
       // Determine final values
-      const finalDataProcessing = dataProcessing || (hasImageInput ? 'BOTH' : 'BOTH'); // Default to BOTH if missing
-      const finalPiBasisId = Number.isInteger(piProcessBasisId)
-        ? piProcessBasisId
-        : (defaultPiBasis?.id || null);
-      const finalSpiBasisId = Number.isInteger(spiProcessBasisId)
-        ? spiProcessBasisId
-        : (defaultSpiBasis?.id || null);
+      // Determine final values - allow null if not provided
+      const finalDataProcessing = dataProcessing || (hasImageInput ? 'BOTH' : 'BOTH');
+      const finalPiBasisId = Number.isInteger(piProcessBasisId) ? piProcessBasisId : (defaultPiBasis?.id || null);
+      const finalSpiBasisId = Number.isInteger(spiProcessBasisId) ? spiProcessBasisId : (defaultSpiBasis?.id || null);
 
-      // A row is strictly complete if all mandatory fields are provided by user
-      const isStrictlyComplete = formName && dataProcessing && Number.isInteger(piProcessBasisId) && Number.isInteger(spiProcessBasisId);
-
-      if (!isStrictlyComplete && !isPrevious) {
-        // If mandatory fields are missing and we are moving forward, it's an error
-        const [dbDataSubjectTypes, dbProcessingBasis] = await Promise.all([
-          prisma.dataSubjectTypes.findMany({ orderBy: { id: 'asc' } }),
-          prisma.processingBasis.findMany({ orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }] })
-        ]);
-        const piOptions = dbProcessingBasis.filter(b => ['PI', 'BOTH'].includes(b.processingType));
-        const spiOptions = dbProcessingBasis.filter(b => ['SPI', 'BOTH'].includes(b.processingType));
-
-        return res.render('assessment/personalinfoinventory-page', {
-          title: res.locals.personalInfoInventory,
-          activePage: 'personalinfoinventory-page',
-          user: req.session.user,
-          piaAssessmentId,
-          piiData: null,
-          pdlcData: null,
-          dataSubjectTypes: dbDataSubjectTypes,
-          piProcessingBasisOptions: piOptions,
-          spiProcessingBasisOptions: spiOptions,
-          error: 'Please complete all required fields for row ' + (index + 1),
-          success: null
-        });
-      }
-
-      // We save if it's strictly complete OR if we are just going back (to preserve progress)
+      // We save if it has meaningful data OR if we are going back (to preserve progress)
       // Note: We still need a formName or image to avoid creating totally empty records
-      if (isStrictlyComplete || isPrevious) {
+      if (hasMeaningfulData || isPrevious) {
         validatedRows.push({
           formNo,
           formName: formName || 'Draft Form',
@@ -425,7 +395,12 @@ const savePersonalInfoInventory = async (req, res) => {
 
     return res.redirect(redirectTarget);
   } catch (error) {
-    console.error('Error saving PII:', error);
+    console.error('Error saving PII - Detailed:', {
+        message: error.message,
+        stack: error.stack,
+        piaAssessmentId,
+        body: req.body ? Object.keys(req.body) : 'No body'
+    });
     const dataSubjectTypes = await prisma.dataSubjectTypes.findMany({
       orderBy: { id: 'asc' }
     }).catch(() => []);

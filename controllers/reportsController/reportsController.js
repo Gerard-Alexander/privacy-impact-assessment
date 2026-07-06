@@ -36,9 +36,19 @@ const reportsMain = async (req, res) => {
       prisma.threatsAndControl.count({
         where: {
           piaAssessment: accessFilter,
-          AND: [
-            { proposedControl: { not: null } },
-            { proposedControl: { not: '' } }
+          OR: [
+            {
+              AND: [
+                { proposedControl: { not: null } },
+                { proposedControl: { not: '' } }
+              ]
+            },
+            {
+              AND: [
+                { currentControl: { not: null } },
+                { currentControl: { not: '' } }
+              ]
+            }
           ]
         }
       }),

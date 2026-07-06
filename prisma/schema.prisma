@@ -248,12 +248,12 @@ model PII {
   dataFormImageUploadedAt DateTime?
 
   // FK to ProcessingBasis (PI)
-  piProcessBasis_id   Int
-  piProcessBasis      ProcessingBasis  @relation("PiProcessBasis", fields: [piProcessBasis_id], references: [id])
+  piProcessBasis_id   Int?
+  piProcessBasis      ProcessingBasis? @relation("PiProcessBasis", fields: [piProcessBasis_id], references: [id])
 
   // FK to ProcessingBasis (SPI)
-  spiProcessBasis_id  Int
-  spiProcessBasis     ProcessingBasis  @relation("SpiProcessBasis", fields: [spiProcessBasis_id], references: [id])
+  spiProcessBasis_id  Int?
+  spiProcessBasis     ProcessingBasis? @relation("SpiProcessBasis", fields: [spiProcessBasis_id], references: [id])
   
   createdAt           DateTime         @default(now())
   updatedAt           DateTime         @updatedAt
@@ -281,9 +281,12 @@ model DataSubjectTypes {
 }
 
 enum datasubject {
+  STUDENTS
+  PATIENTS
+  PARENTS
   EMPLOYEES
-  CLIENTS
   SUPPLIERS
+  OTHERS
 }
 
 model PiiDatasubject {
@@ -359,6 +362,7 @@ model ThreatsAndControl {
   // String to allow multi-select (e.g., "CONFIDENTIALITY, INTEGRITY")
   typeOfThreats                String?          @db.VarChar(255) 
   
+  currentControl               String?          @db.VarChar(255)
   currentSeverityLevel         SeverityLevel?   
   currentLikelihoodLevel       LikelihoodLevel? 
   currentRiskRating            Int?             @db.Int

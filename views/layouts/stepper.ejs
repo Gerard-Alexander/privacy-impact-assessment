@@ -103,9 +103,8 @@
     const isActive = currentStep === stepNum;
     const cls = isDone ? 'done' : (isActive ? 'active' : '');
     
-    // Only make clickable if form is completed (done) and it's not the current step
-    const isFormCompleted = (typeof piaAssessmentStatus !== 'undefined' && piaAssessmentStatus === 'COMPLETED');
-    const canNavigate = assessmentIdForLink && isFormCompleted && !isActive;
+    // Allow navigation to any step if assessment ID exists and it's not the current step
+    const canNavigate = !!assessmentIdForLink && !isActive;
     const stepUrl = canNavigate ? `${stepRoutes[i]}?id=${assessmentIdForLink}` : 'javascript:void(0)';
     %>
     <div class="custom-step-item <%= cls %>">

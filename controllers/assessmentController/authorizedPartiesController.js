@@ -5,7 +5,7 @@ const formatDateForInput = (value) => (value ? value.toISOString().slice(0, 10) 
 const authorizedParties = async (req, res) => {
   res.locals.authParties = 'Authorized Parties';
   
-  const piaAssessmentId = req.query.id || req.session.currentAssessmentId;
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
   const success = req.query.saved === '1' ? 'Authorized parties saved successfully!' : null;
   
   if (!piaAssessmentId) {
@@ -106,7 +106,7 @@ const saveAuthorizedParties = async (req, res) => {
   try {
     const body = req.body || {};
     const getFieldValue = (value) => (Array.isArray(value) ? value[0] : value || '');
-    const piaAssessment_id = Number.parseInt(body.piaAssessment_id, 10);
+    const piaAssessment_id = Number.parseInt(body.piaAssessment_id || body.piaAssessmentId || req.session.currentAssessmentId, 10);
 
     const isPrevious = body.redirectTo === 'previous';
 

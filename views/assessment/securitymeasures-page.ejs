@@ -217,7 +217,8 @@
 					}
 				</style>
 				<form id="securityForm" action="/assessment/securitymeasures" method="POST">
-					<input type="hidden" name="piaAssessment_id" value="<%= assessmentId %>">
+					<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
+					<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId %>">
 
 					<div class="border-0 custom-card mb-5 overflow-hidden">
 						<div class="custom-header d-flex align-items-center">
@@ -559,26 +560,7 @@
 				if (submitter && submitter.name === 'redirectTo' && submitter.value === 'previous') {
 					return;
 				}
-
-				const checkedToggles = Array.from(toggles).filter(t => t.checked);
-				if (checkedToggles.length === 0) {
-					event.preventDefault();
-					alert('Please select at least one security type (Organizational, Physical, or Technical) and provide its description.');
-					return;
-				}
-
-				for (const toggle of checkedToggles) {
-					const targetId = toggle.getAttribute('data-target');
-					const panel = document.getElementById(targetId);
-					if (panel) {
-						const desc = panel.querySelector('.desc-input');
-						if (!desc || !desc.value.trim()) {
-							event.preventDefault();
-							alert('Please provide a description for the ' + toggle.id.replace('toggle-', '') + ' security measures.');
-							return;
-						}
-					}
-				}
+                // Removed mandatory validation to allow draft saving and navigation
 			});
 		}
 

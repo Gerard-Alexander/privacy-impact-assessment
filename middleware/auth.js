@@ -18,7 +18,7 @@ const requireAuth = (req, res, next) => {
 const requireAssessmentAccess = async (req, res, next) => {
   try {
     const piaAssessmentId = Number.parseInt(
-      req.query.id || req.body?.piaAssessmentId || req.session.currentAssessmentId,
+      req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId,
       10
     );
 

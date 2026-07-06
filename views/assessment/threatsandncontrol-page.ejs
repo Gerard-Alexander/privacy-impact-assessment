@@ -184,10 +184,9 @@
 															letter-spacing: 0.2px;
 														}
 													</style>
-													<form id="threatsForm" action="/assessment/threatsandcontrols"
-														method="POST">
-														<input type="hidden" name="piaAssessment_id"
-															value="<%= assessmentId %>">
+													<form id="threatsForm" action="/assessment/threatsandcontrols" method="POST">
+							<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
+							<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId %>">
 
 														<div id="threatsRowsContainer">
 															<% groupedThreats.forEach(function(group, groupIndex) { %>
@@ -254,8 +253,7 @@
 																								threat assessments.
 																							</div>
 																							<select
-																								class="form-select data-subject-select"
-																								required>
+																								class="form-select data-subject-select">
 																								<option value=""
 																									<%=!group.dataSubjectId
 																									? 'selected' : '' %>
@@ -334,8 +332,7 @@
 																									<textarea
 																										name="threatDescription[]"
 																										class="form-control mb-3"
-																										style="min-height: 120px; resize: vertical;"
-																										required><%= threat.threats_possibleConsequences || '' %></textarea>
+																										style="min-height: 120px; resize: vertical;"><%= threat.threats_possibleConsequences || '' %></textarea>
 
 																									<div
 																										class="section-label">
@@ -377,6 +374,15 @@
 																										value="">
 
 																									<div
+																										class="section-label mt-3">
+																										Current Control
+																										Measure</div>
+																									<textarea
+																										name="currentControl[]"
+																										class="form-control mb-3"
+																										style="min-height: 110px; resize: vertical;"><%= threat.currentControl || '' %></textarea>
+
+																									<div
 																										class="row g-3">
 																										<div
 																											class="col-12 col-md-6">
@@ -388,8 +394,7 @@
 																											</div>
 																											<select
 																												name="currentSeverityLevel[]"
-																												class="form-select"
-																												required>
+																												class="form-select">
 																												<option
 																													value=""
 																													<%=!threat.currentSeverityLevel
@@ -425,8 +430,7 @@
 																											</div>
 																											<select
 																												name="currentLikelihoodLevel[]"
-																												class="form-select"
-																												required>
+																												class="form-select">
 																												<option
 																													value=""
 																													<%=!threat.currentLikelihoodLevel
@@ -468,21 +472,6 @@
 																										</span>
 																										<input
 																											type="hidden"
-																											name="currentRiskRating[]"
-																											class="risk-rating-hidden current-risk-rating-hidden"
-																											value="<%= threat.currentRiskRating || '' %>">
-																									</div>
-
-																									<div
-																										class="section-label mt-3">
-																										Proposed Control
-																										Measure</div>
-																									<textarea
-																										name="proposedControl[]"
-																										class="form-control mb-3"
-																										style="min-height: 110px; resize: vertical;"
-																										required><%= threat.proposedControl || '' %></textarea>
-
 																									<div
 																										class="row g-3">
 																										<div
@@ -495,8 +484,7 @@
 																											</div>
 																											<select
 																												name="afterSeverityLevel[]"
-																												class="form-select"
-																												required>
+																												class="form-select">
 																												<option
 																													value=""
 																													<%=!threat.afterSeverityLevel
@@ -532,8 +520,7 @@
 																											</div>
 																											<select
 																												name="afterLikelihoodLevel[]"
-																												class="form-select"
-																												required>
+																												class="form-select">
 																												<option
 																													value=""
 																													<%=!threat.afterLikelihoodLevel

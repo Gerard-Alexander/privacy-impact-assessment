@@ -29,7 +29,7 @@ const dpsName = async (req, res) => {
     res.locals.dpsTitle = 'Data Processing System';
     res.locals.authParties = 'Authorized Parties';
 
-    const piaAssessmentId = Number.parseInt(req.query.id || req.session.currentAssessmentId, 10);
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
     const assessment = Number.isInteger(piaAssessmentId)
       ? await prisma.piaAssessment.findUnique({
           where: { id: piaAssessmentId },
@@ -78,12 +78,13 @@ const dpsName = async (req, res) => {
 
 const saveDpsName = async (req, res) => {
   try {
-    const { 
+    const {
+      systemPurpose, systemScope,
       systemName, mandate,
       dpsModality, processingRole, isOutsourced, 
-      piaStartDate, piaEndDate,
-      piaAssessmentId
+      piaStartDate, piaEndDate
     } = req.body;
+    const piaAssessmentId = req.body?.piaAssessmentId || req.body?.piaAssessment_id;
     const parsedAssessmentId = Number.parseInt(piaAssessmentId || req.session.currentAssessmentId, 10);
     const normalizedAssessmentId = Number.isInteger(parsedAssessmentId) ? parsedAssessmentId : null;
 

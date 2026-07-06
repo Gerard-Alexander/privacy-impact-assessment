@@ -12,7 +12,7 @@ const toArray = (value) => {
 
 const securityMeasures = async (req, res) => {
   res.locals.securityMeasuresTitle = 'Security Measures';
-  const piaAssessmentId = req.query.id || req.session.currentAssessmentId;
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessmentId || req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
 
   if (!piaAssessmentId) {
     return res.redirect('/assessment');
@@ -48,7 +48,7 @@ const securityMeasures = async (req, res) => {
 };
 
 const saveSecurityMeasures = async (req, res) => {
-  const piaAssessmentId = Number.parseInt(req.body?.piaAssessment_id || req.session.currentAssessmentId, 10);
+  const piaAssessmentId = Number.parseInt(req.query.id || req.body?.piaAssessment_id || req.body?.piaAssessmentId || req.session.currentAssessmentId, 10);
   const securityTypes = toArray(req.body.securityType);
   const descriptions = toArray(req.body.description);
   const isPrevious = req.body?.redirectTo === 'previous';
@@ -99,22 +99,6 @@ const saveSecurityMeasures = async (req, res) => {
       if (securityType && description) {
         validatedRows.push({ securityType, description });
       }
-    }
-
-    if (!validatedRows.length && !isPrevious) {
-      const dbAssessment = await prisma.piaAssessment.findUnique({ where: { id: piaAssessmentId } });
-      const securityTypeOptions = ['TECHNICAL', 'ORGANIZATIONAL', 'PHYSICAL'];
-      return res.render('assessment/securitymeasures-page', {
-        title: 'Security Measures',
-        activePage: 'securitymeasures-page',
-        user: req.session.user,
-        piaAssessmentId,
-        securityData: null,
-        assessment: dbAssessment,
-        securityTypeOptions,
-        error: 'Please select at least one security type and provide its description.',
-        success: null
-      });
     }
 
     if (!validatedRows.length && isPrevious) {

@@ -332,7 +332,16 @@ const exportAssessmentExcel = async (req, res) => {
 			sheet.getCell(`D${threatRow}`).value = item.currentSeverityLevel || '';
 			sheet.getCell(`E${threatRow}`).value = item.currentLikelihoodLevel || '';
 			sheet.getCell(`F${threatRow}`).value = item.currentRiskRating || '';
-			sheet.getCell(`G${threatRow}`).value = item.proposedControl || '';
+			
+			let controlValue = '';
+			if (item.currentControl && item.proposedControl) {
+				controlValue = `Current: ${item.currentControl}\nAfter: ${item.proposedControl}`;
+			} else if (item.currentControl) {
+				controlValue = `Current: ${item.currentControl}`;
+			} else if (item.proposedControl) {
+				controlValue = `After: ${item.proposedControl}`;
+			}
+			sheet.getCell(`G${threatRow}`).value = controlValue;
 			sheet.getCell(`H${threatRow}`).value = item.typeOfMeasure || '';
 			threatRow++;
 		});

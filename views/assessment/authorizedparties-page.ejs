@@ -156,8 +156,8 @@
 													</style>
 													<form id="authorizedForm" action="/assessment/authorizedparties"
 														method="POST">
-														<input type="hidden" name="piaAssessment_id"
-															value="<%= piaAssessmentId %>">
+														<input type="hidden" name="piaAssessment_id" value="<%= piaAssessmentId %>">
+														<input type="hidden" name="piaAssessmentId" value="<%= piaAssessmentId %>">
 														<div class="card border-0 custom-card mb-4">
 															<div class="custom-header d-flex align-items-center">
 																<div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3 shadow-sm"
@@ -200,7 +200,7 @@
 																					<input type="text" id="headLastName"
 																						name="headLastName"
 																						class="form-control"
-																						placeholder="Last Name" required
+																						placeholder="Last Name"
 																						value="<%= formData.headLastName || '' %>">
 																					<label for="headLastName">Last Name
 																						<span
@@ -211,7 +211,7 @@
 																		<div class="form-floating mb-4">
 																			<input type="text" id="headPosition"
 																				name="headPosition" class="form-control"
-																				placeholder="Position" required
+																				placeholder="Position"
 																				value="<%= formData.headPosition || '' %>">
 																			<label for="headPosition">Position <span
 																					class="text-danger">*</span></label>
@@ -220,7 +220,7 @@
 																			<input type="text" id="headOfficeUnit"
 																				name="headOfficeUnit"
 																				class="form-control"
-																				placeholder="Office / Unit" required
+																				placeholder="Office / Unit"
 																				value="<%= formData.headOfficeUnit || '' %>">
 																			<label for="headOfficeUnit">Office / Unit
 																				<span
@@ -263,7 +263,7 @@
 																					<input type="text" id="compLastName"
 																						name="compLastName"
 																						class="form-control"
-																						placeholder="Last Name" required
+																						placeholder="Last Name"
 																						value="<%= formData.compLastName || '' %>">
 																					<label for="compLastName">Last Name
 																						<span
@@ -274,7 +274,7 @@
 																		<div class="form-floating mb-4">
 																			<input type="text" id="compPosition"
 																				name="compPosition" class="form-control"
-																				placeholder="Position" required
+																				placeholder="Position"
 																				value="<%= formData.compPosition || '' %>">
 																			<label for="compPosition">Position <span
 																					class="text-danger">*</span></label>
@@ -282,7 +282,7 @@
 																		<div class="form-floating mb-4">
 																			<input type="email" id="compEmail"
 																				name="compEmail" class="form-control"
-																				placeholder="Email" required
+																				placeholder="Email"
 																				value="<%= formData.compEmail || '' %>">
 																			<label for="compEmail">Email <span
 																					class="text-danger">*</span></label>
@@ -355,7 +355,7 @@
 																						id="reviewLastName"
 																						name="reviewLastName"
 																						class="form-control"
-																						placeholder="Last Name" required
+																						placeholder="Last Name"
 																						value="<%= formData.reviewLastName || '' %>">
 																					<label for="reviewLastName">Last
 																						Name <span
@@ -367,7 +367,7 @@
 																			<input type="text" id="reviewPosition"
 																				name="reviewPosition"
 																				class="form-control"
-																				placeholder="Position" required
+																				placeholder="Position"
 																				value="<%= formData.reviewPosition || '' %>">
 																			<label for="reviewPosition">Position <span
 																					class="text-danger">*</span></label>
@@ -412,7 +412,6 @@
 																						name="approveFirstName"
 																						class="form-control"
 																						placeholder="First Name"
-																						required
 																						value="<%= formData.approveFirstName || '' %>">
 																					<label for="approveFirstName">First
 																						Name <span
@@ -425,7 +424,7 @@
 																						id="approveLastName"
 																						name="approveLastName"
 																						class="form-control"
-																						placeholder="Last Name" required
+																						placeholder="Last Name"
 																						value="<%= formData.approveLastName || '' %>">
 																					<label for="approveLastName">Last
 																						Name <span
@@ -437,7 +436,7 @@
 																			<input type="text" id="approvePosition"
 																				name="approvePosition"
 																				class="form-control"
-																				placeholder="Position" required
+																				placeholder="Position"
 																				value="<%= formData.approvePosition || '' %>">
 																			<label for="approvePosition">Position <span
 																					class="text-danger">*</span></label>
