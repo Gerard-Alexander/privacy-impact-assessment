@@ -446,11 +446,6 @@
 											</div>
 										</div>
 
-										<div class="mb-4">
-											<div class="section-label">What is the legal basis of processing personal data?</div>
-											<input type="text" name="legalBasis" class="form-control mt-2" value="<%= typeof assessment !== 'undefined' && assessment && assessment.legalBasis ? assessment.legalBasis : '' %>" placeholder="E.g., Legitimate Interest, Contract...">
-										</div>
-
 										<div class="mb-2 mt-auto">
 											<div class="section-label">What are other relevant information pertaining to the specified lawful basis?</div>
 											<textarea name="otherLegalBasisInfo" class="form-control mt-2" style="min-height: 80px; resize: vertical;" placeholder="Enter details..."><%= typeof assessment !== 'undefined' && assessment && assessment.otherLegalBasisInfo ? assessment.otherLegalBasisInfo : '' %></textarea>

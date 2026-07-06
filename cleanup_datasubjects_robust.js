@@ -3,12 +3,12 @@ const prisma = require('./store/prisma');
 async function main() {
   try {
     console.log('Running robust database cleanup of DataSubjectTypes...');
-    
+
     // 1. Ensure 'OTHERS' exists in DataSubjectTypes
     const othersRows = await prisma.$queryRaw`
       SELECT id FROM DataSubjectTypes WHERE dataSubjectType = 'OTHERS'
     `;
-    
+
     let othersId;
     if (othersRows.length > 0) {
       othersId = othersRows[0].id;
@@ -30,14 +30,14 @@ async function main() {
       SELECT id, dataSubjectType FROM DataSubjectTypes
       WHERE dataSubjectType = '' OR dataSubjectType NOT IN ('STUDENTS', 'PATIENTS', 'PARENTS', 'EMPLOYEES', 'SUPPLIERS', 'OTHERS')
     `;
-    
+
     console.log('Found invalid DataSubjectTypes rows:', invalidRows);
 
     for (const row of invalidRows) {
       if (row.id === othersId) continue;
-      
+
       console.log(`Migrating references pointing to invalid DataSubjectType ID: ${row.id} to ID: ${othersId}...`);
-      
+
       // Update PiiDatasubject references
       const updatedRefs = await prisma.$executeRaw`
         UPDATE PiiDatasubject
@@ -45,7 +45,7 @@ async function main() {
         WHERE dataSubjectsType_id = ${row.id}
       `;
       console.log(`Updated ${updatedRefs} rows in PiiDatasubject.`);
-      
+
       // Delete the invalid DataSubjectType row
       const deleted = await prisma.$executeRaw`
         DELETE FROM DataSubjectTypes
@@ -55,7 +55,7 @@ async function main() {
     }
 
     console.log('Database cleanup completed successfully!');
-    
+
     // Now verify we can fetch using Prisma client
     const currentTypes = await prisma.dataSubjectTypes.findMany();
     console.log('Current verified DataSubjectTypes:', currentTypes);

@@ -470,8 +470,37 @@
 																												|| 'None'
 																												%>
 																										</span>
-																										<input
-																											type="hidden"
+																										<input type="hidden"
+																											name="currentRiskRating[]"
+																											class="risk-rating-hidden current-risk-rating-hidden"
+																											value="<%= threat.currentRiskRating || '' %>">
+																									</div>
+
+																									<div
+																										class="section-label mt-3">
+																										Type of Measure
+																										(select all that
+																										apply)</div>
+																									<div
+																										class="d-flex flex-column gap-2 mb-3">
+																										<% measureTypeOpts.forEach(function(measureType) { %>
+																											<div class="form-check custom-check">
+																												<input
+																													class="form-check-input current-measure-type-checkbox"
+																													type="checkbox"
+																													value="<%= measureType %>"
+																													data-kind="currentMeasureType"
+																													data-value="<%= measureType %>"
+																													<% if (threat.currentTypeOfMeasureArray && threat.currentTypeOfMeasureArray.includes(measureType)) { %>checked<% } %>>
+																													<label class="form-check-label"><%= measureType.replace(/_/g, ' ') %></label>
+																											</div>
+																										<% }); %>
+																									</div>
+																									<input type="hidden"
+																										name="currentMeasureType[]"
+																										class="current-measure-type-hidden"
+																										value="<%= (threat.currentTypeOfMeasureArray || []).join(', ') %>">
+
 																									<div
 																										class="row g-3">
 																										<div
@@ -573,37 +602,23 @@
 																										apply)</div>
 																									<div
 																										class="d-flex flex-column gap-2">
-																										<% measureTypeOpts.forEach(function(measureType)
-																											{ %>
-																											<div
-																												class="form-check custom-check">
+																										<% measureTypeOpts.forEach(function(measureType) { %>
+																											<div class="form-check custom-check">
 																												<input
-																													class="form-check-input measure-type-checkbox"
+																													class="form-check-input after-measure-type-checkbox"
 																													type="checkbox"
 																													value="<%= measureType %>"
-																													data-kind="measureType"
+																													data-kind="afterMeasureType"
 																													data-value="<%= measureType %>"
-																													<%
-																													if
-																													(threat.typeOfMeasureArray
-																													&&
-																													threat.typeOfMeasureArray.includes(measureType))
-																													{
-																													%>checked
-																												<% } %>>
-																													<label
-																														class="form-check-label">
-																														<%= measureType.replace(/_/g, ' '
-																															)
-																															%>
-																													</label>
+																													<% if (threat.typeOfMeasureArray && threat.typeOfMeasureArray.includes(measureType)) { %>checked<% } %>>
+																													<label class="form-check-label"><%= measureType.replace(/_/g, ' ') %></label>
 																											</div>
-																											<% }); %>
+																										<% }); %>
 																									</div>
 																									<input type="hidden"
 																										name="measureType[]"
-																										class="measure-type-hidden"
-																										value="">
+																										class="measure-type-hidden after-measure-type-hidden"
+																										value="<%= (threat.typeOfMeasureArray || []).join(', ') %>">
 																									<input type="hidden"
 																										name="dataSubjectId[]"
 																										class="data-subject-hidden"
@@ -740,14 +755,24 @@
 					threatHidden.value = selectedThreats;
 				}
 
-				const measureCheckboxes = item.querySelectorAll('.measure-type-checkbox');
-				const measureHidden = item.querySelector('.measure-type-hidden');
-				const selectedMeasures = Array.from(measureCheckboxes)
+				const currentMeasureCheckboxes = item.querySelectorAll('.current-measure-type-checkbox');
+				const currentMeasureHidden = item.querySelector('.current-measure-type-hidden');
+				const selectedCurrentMeasures = Array.from(currentMeasureCheckboxes)
 					.filter(cb => cb.checked)
 					.map(cb => cb.value)
 					.join(', ');
-				if (measureHidden) {
-					measureHidden.value = selectedMeasures;
+				if (currentMeasureHidden) {
+					currentMeasureHidden.value = selectedCurrentMeasures;
+				}
+
+				const afterMeasureCheckboxes = item.querySelectorAll('.after-measure-type-checkbox');
+				const afterMeasureHidden = item.querySelector('.after-measure-type-hidden');
+				const selectedAfterMeasures = Array.from(afterMeasureCheckboxes)
+					.filter(cb => cb.checked)
+					.map(cb => cb.value)
+					.join(', ');
+				if (afterMeasureHidden) {
+					afterMeasureHidden.value = selectedAfterMeasures;
 				}
 			};
 
@@ -833,7 +858,7 @@
 					}
 				}
 
-				if (event.target.classList.contains('threat-type-checkbox') || event.target.classList.contains('measure-type-checkbox')) {
+				if (event.target.classList.contains('threat-type-checkbox') || event.target.classList.contains('current-measure-type-checkbox') || event.target.classList.contains('after-measure-type-checkbox')) {
 					const item = event.target.closest('.threat-item');
 					if (item) {
 						syncCheckboxes(item);
