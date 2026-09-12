@@ -14,7 +14,25 @@ const securityHeaders = helmet({
     }
   },
   hsts: false, // Disable HSTS (force HTTPS)
+  noSniff: true,
+  frameguard: { action: 'deny' },
+  referrerPolicy: { policy: 'no-referrer' },
 });
+
+const preventInspection = (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  next();
+};
+
+const denyDirectoryListings = (req, res, next) => {
+  if (req.path !== '/' && req.path.endsWith('/')) {
+    return res.status(403).send('Forbidden');
+  }
+  next();
+};
 
 const corsProtection = (req, res, next) => {
   const origin = req.headers.origin;
@@ -32,4 +50,4 @@ const corsProtection = (req, res, next) => {
   }
 };
 
-module.exports = { securityHeaders, corsProtection };
+module.exports = { securityHeaders, corsProtection, preventInspection, denyDirectoryListings };
