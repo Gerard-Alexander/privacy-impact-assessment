@@ -23,6 +23,7 @@ router.post('/dpsname', requireAuth, requireAssessmentAccess, dpsNameController.
 // Routes for Assessment Step 2 (Authorized Parties) - Step 2
 router.get('/authorizedparties', requireAuth, requireAssessmentAccess, authorizedPartiesController.authorizedParties);
 router.post('/authorizedparties', requireAuth, requireAssessmentAccess, authorizedPartiesController.saveAuthorizedParties);
+router.post('/authorizedparties/units', requireAuth, requireAssessmentAccess, authorizedPartiesController.createUnit);
 
 // Routes for Assessment Step 3 (Process Data Cycle) - Step 3
 router.get('/processdatalifecycle', requireAuth, requireAssessmentAccess, processDataLifeCycleController.processDataLifeCycle);

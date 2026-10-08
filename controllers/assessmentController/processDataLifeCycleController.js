@@ -147,12 +147,14 @@ const saveProcessDataLifeCycle = async (req, res) => {
 
     const collectionsByRow = normalizeIndexedArray(req.body.collections);
     const usesByRow = normalizeIndexedArray(req.body.uses);
+    const storagesByRow = normalizeIndexedArray(req.body.storages);
     const sharingsByRow = normalizeIndexedArray(req.body.sharings);
 
     const incomingRows = stakeholderNames
       .map((name, index) => {
         const collectionsRaw = normalizeIndexedArray(collectionsByRow[index]);
         const usesRaw = normalizeIndexedArray(usesByRow[index]);
+        const storagesRaw = normalizeIndexedArray(storagesByRow[index]);
         const sharingsRaw = normalizeIndexedArray(sharingsByRow[index]);
 
         const collections = collectionsRaw
@@ -165,11 +167,11 @@ const saveProcessDataLifeCycle = async (req, res) => {
           })
           .filter(Boolean);
 
-        const uses = usesRaw
-          .map((entry) => {
-            if (!entry || typeof entry !== 'object') return null;
-            const useOfData = String(entry.useOfData || '').trim();
-            const process = String(entry.process || '').trim();
+        const uses = Array.from({ length: Math.max(usesRaw.length, storagesRaw.length) }, (_, entryIndex) => {
+            const useEntry = usesRaw[entryIndex];
+            const storageEntry = storagesRaw[entryIndex];
+            const useOfData = String(useEntry?.useOfData || '').trim();
+            const process = String(storageEntry?.process || useEntry?.process || '').trim();
             if (!useOfData && !process) return null;
             return { useOfData, process };
           })

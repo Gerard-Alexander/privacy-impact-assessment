@@ -28,6 +28,8 @@
                     Username is already taken.
                   <% } else if (error === 'email') { %>
                     Email address is already in use.
+                  <% } else if (error === 'unit') { %>
+                    Please select a valid unit.
                   <% } else { %>
                     Unable to create account right now. Please try again.
                   <% } %>
@@ -62,6 +64,17 @@
                       <option value="USER" selected>USER</option>
                       <option value="REVIEWER">REVIEWER</option>
                       <option value="ADMIN">ADMIN</option>
+                    </select>
+                  </div>
+
+                  <div class="col-12 col-md-6">
+                    <label class="form-label">Unit</label>
+                    <select name="units" class="form-select" required>
+                      <option value="" disabled selected>Select a unit</option>
+                      <option value="n/a">n/a</option>
+                      <% units.forEach(unit => { %>
+                        <option value="<%= unit %>"><%= unit %></option>
+                      <% }) %>
                     </select>
                   </div>
 

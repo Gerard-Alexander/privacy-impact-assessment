@@ -4,7 +4,8 @@ const formatThreatForForm = (threat) => {
   return {
     ...threat,
     typeOfThreatsArray: threat.typeOfThreats ? threat.typeOfThreats.split(',').map(s => s.trim()) : [],
-    typeOfMeasureArray: threat.typeOfMeasure ? threat.typeOfMeasure.split(',').map(s => s.trim()) : []
+    typeOfMeasureArray: threat.typeOfMeasure ? threat.typeOfMeasure.split(',').map(s => s.trim()) : [],
+    proposedTypeOfMeasureArray: threat.proposedTypeOfMeasure ? threat.proposedTypeOfMeasure.split(',').map(s => s.trim()) : []
   };
 };
 
@@ -100,6 +101,10 @@ const saveThreatsAndControls = async (req, res) => {
   const currentRiskRatings = toArray(req.body.currentRiskRating);
   const currentControls = toArray(req.body.currentControl);
   const proposedControls = toArray(req.body.proposedControl);
+  const proposedSeverityLevels = toArray(req.body.proposedSeverityLevel);
+  const proposedLikelihoodLevels = toArray(req.body.proposedLikelihoodLevel);
+  const proposedRiskRatings = toArray(req.body.proposedRiskRating);
+  const proposedMeasureTypes = toArray(req.body.proposedMeasureType);
   const afterSeverityLevels = toArray(req.body.afterSeverityLevel);
   const afterLikelihoodLevels = toArray(req.body.afterLikelihoodLevel);
   const afterRiskRatings = toArray(req.body.afterRiskRating);
@@ -116,6 +121,10 @@ const saveThreatsAndControls = async (req, res) => {
     currentRiskRatings: currentRiskRatings.length,
     currentControls: currentControls.length,
     proposedControls: proposedControls.length,
+    proposedSeverityLevels: proposedSeverityLevels.length,
+    proposedLikelihoodLevels: proposedLikelihoodLevels.length,
+    proposedRiskRatings: proposedRiskRatings.length,
+    proposedMeasureTypes: proposedMeasureTypes.length,
     afterSeverityLevels: afterSeverityLevels.length,
     afterLikelihoodLevels: afterLikelihoodLevels.length,
     afterRiskRatings: afterRiskRatings.length,
@@ -141,6 +150,10 @@ const saveThreatsAndControls = async (req, res) => {
     const currentRiskRatings2 = toArray(req.body.currentRiskRating);
     const currentControls2 = toArray(req.body.currentControl);
     const proposedControls2 = toArray(req.body.proposedControl);
+    const proposedSeverityLevels2 = toArray(req.body.proposedSeverityLevel);
+    const proposedLikelihoodLevels2 = toArray(req.body.proposedLikelihoodLevel);
+    const proposedRiskRatings2 = toArray(req.body.proposedRiskRating);
+    const proposedMeasureTypes2 = toArray(req.body.proposedMeasureType);
     const afterSeverityLevels2 = toArray(req.body.afterSeverityLevel);
     const afterLikelihoodLevels2 = toArray(req.body.afterLikelihoodLevel);
     const afterRiskRatings2 = toArray(req.body.afterRiskRating);
@@ -156,6 +169,10 @@ const saveThreatsAndControls = async (req, res) => {
       currentRiskRatings2.length,
       currentControls2.length,
       proposedControls2.length,
+      proposedSeverityLevels2.length,
+      proposedLikelihoodLevels2.length,
+      proposedRiskRatings2.length,
+      proposedMeasureTypes2.length,
       afterSeverityLevels2.length,
       afterLikelihoodLevels2.length,
       afterRiskRatings2.length,
@@ -185,6 +202,11 @@ const saveThreatsAndControls = async (req, res) => {
       const currentRiskRating = currentRiskRatingStr ? Number.parseInt(currentRiskRatingStr, 10) : 0;
       const currentControl = String(currentControls[index] || '').trim();
       const proposedControl = String(proposedControls[index] || '').trim();
+      const proposedSeverity = String(proposedSeverityLevels[index] || '').trim();
+      const proposedLikelihood = String(proposedLikelihoodLevels[index] || '').trim();
+      const proposedRiskRatingStr = String(proposedRiskRatings[index] || '').trim();
+      const proposedRiskRating = proposedRiskRatingStr ? Number.parseInt(proposedRiskRatingStr, 10) : 0;
+      const proposedMeasureType = String(proposedMeasureTypes[index] || '').trim();
       const afterSeverity = String(afterSeverityLevels[index] || '').trim();
       const afterLikelihood = String(afterLikelihoodLevels[index] || '').trim();
       const afterRiskRatingStr = String(afterRiskRatings[index] || '').trim();
@@ -196,7 +218,7 @@ const saveThreatsAndControls = async (req, res) => {
       const pdlcId = pdlcIdStr ? Number.parseInt(pdlcIdStr, 10) : 0;
 
       // Skip completely empty rows
-      if (!threatDesc && !threatType && !currentControl && !currentSeverity && !currentLikelihood && !proposedControl && !afterSeverity && !afterLikelihood && !measureType && dataSubjectId === 0) {
+      if (!threatDesc && !threatType && !currentControl && !currentSeverity && !currentLikelihood && !proposedControl && !proposedSeverity && !proposedLikelihood && !proposedMeasureType && !afterSeverity && !afterLikelihood && !measureType) {
         continue;
       }
 
@@ -209,6 +231,10 @@ const saveThreatsAndControls = async (req, res) => {
         currentLikelihood: currentLikelihood || null,
         currentRiskRating: currentRiskRating || 0,
         proposedControl,
+        proposedSeverity: proposedSeverity || null,
+        proposedLikelihood: proposedLikelihood || null,
+        proposedRiskRating: proposedRiskRating || 0,
+        proposedMeasureType,
         afterSeverity: afterSeverity || null,
         afterLikelihood: afterLikelihood || null,
         afterRiskRating: afterRiskRating || 0,
@@ -247,6 +273,10 @@ const saveThreatsAndControls = async (req, res) => {
             currentLikelihoodLevel: row.currentLikelihood,
             currentRiskRating: row.currentRiskRating,
             proposedControl: row.proposedControl || null,
+            proposedSeverityLevel: row.proposedSeverity,
+            proposedLikelihoodLevel: row.proposedLikelihood,
+            proposedRiskRating: row.proposedRiskRating,
+            proposedTypeOfMeasure: row.proposedMeasureType || null,
             afterSeverityLevel: row.afterSeverity,
             afterLikelihoodLevel: row.afterLikelihood,
             afterRiskRating: row.afterRiskRating,

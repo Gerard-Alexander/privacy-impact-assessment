@@ -1,5 +1,10 @@
 const bcrypt = require('bcrypt');
 const prisma = require('../../store/prisma');
+const listUserUnits = async () => (await prisma.unit.findMany({
+  where: { name: { not: 'n/a' } },
+  orderBy: { name: 'asc' },
+  select: { name: true }
+})).map(unit => unit.name);
 
 const requireAdmin = (req, res) => {
   // route middleware already enforces auth, but keep this guard for safety
@@ -109,16 +114,22 @@ const manageUsers = async (req, res) => {
   }
 };
 
-const renderCreateUserPage = (req, res) => {
+const renderCreateUserPage = async (req, res) => {
   const redirectResp = requireAdmin(req, res);
   if (redirectResp) return;
 
-  return res.render('users/create-user-page', {
-    title: 'Add Account',
-    activePage: 'create-user',
-    user: req.session.user,
-    error: req.query.error || null
-  });
+  try {
+    return res.render('users/create-user-page', {
+      title: 'Add Account',
+      activePage: 'create-user',
+      user: req.session.user,
+      units: await listUserUnits(),
+      error: req.query.error || null
+    });
+  } catch (error) {
+    console.error('Create user page error:', error);
+    return res.redirect('/user-profile/manage-users?error=server');
+  }
 };
 
 const createUserSubmit = async (req, res) => {
@@ -131,6 +142,7 @@ const createUserSubmit = async (req, res) => {
     userName,
     emailAddress,
     role,
+    units,
     password,
     confirmPassword
   } = req.body || {};
@@ -149,8 +161,13 @@ const createUserSubmit = async (req, res) => {
 
   const normalizedUsername = String(userName).trim();
   const normalizedEmail = String(emailAddress).trim().toLowerCase();
+  const normalizedUnit = String(units || 'n/a').trim();
 
   try {
+    if (normalizedUnit !== 'n/a' && !await prisma.unit.findUnique({ where: { name: normalizedUnit } })) {
+      return res.redirect('/user-profile/create-user?error=unit');
+    }
+
     const [existingUserByUsername, existingUserByEmail] = await Promise.all([
       prisma.user.findUnique({ where: { userName: normalizedUsername } }),
       prisma.user.findUnique({ where: { emailAddress: normalizedEmail } })
@@ -167,6 +184,7 @@ const createUserSubmit = async (req, res) => {
         lastName: String(lastName).trim(),
         userName: normalizedUsername,
         emailAddress: normalizedEmail,
+        units: normalizedUnit,
         password: hashedPassword,
         role
       }
@@ -185,5 +203,6 @@ module.exports = {
   updateProfileSubmit,
   manageUsers,
   renderCreateUserPage,
-  createUserSubmit
+  createUserSubmit,
+  listUserUnits
 };

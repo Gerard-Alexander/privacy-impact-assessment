@@ -48,6 +48,15 @@
                                         <option value="REVIEWER" <%= targetUser.role === 'REVIEWER' ? 'selected' : '' %>>REVIEWER</option>
                                     </select>
                                 </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-muted text-uppercase">Unit</label>
+                                    <select name="units" class="form-select rounded-3" required>
+                                        <option value="n/a" <%= targetUser.units === 'n/a' ? 'selected' : '' %>>n/a</option>
+                                        <% units.forEach(unit => { %>
+                                            <option value="<%= unit %>" <%= targetUser.units === unit ? 'selected' : '' %>><%= unit %></option>
+                                        <% }) %>
+                                    </select>
+                                </div>
                                 <div class="col-12">
                                     <hr class="my-4 border-light">
                                     <h6 class="fw-bold text-dark mb-3">Security</h6>

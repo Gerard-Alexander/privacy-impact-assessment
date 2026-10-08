@@ -115,7 +115,8 @@ app.use((req, res) => {
 
 
 // ===== START SERVER =====
-app.listen(PORT, () => {
+// app.listen(PORT, () => { //uncomment this for network access
+app.listen(PORT, '127.0.0.1', () => { //uncomment this for local access only
   console.log(`
   Server running at: ${process.env.APP_URL || `http://localhost:${PORT}`}
   Mode: ${process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'DEVELOPMENT'}

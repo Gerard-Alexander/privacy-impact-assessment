@@ -19,28 +19,59 @@
                         <!-- Header with Tabs -->
 						<div class="p-3 px-4" style="background-color: #0d1b4b; border-radius: 0.375rem 0.375rem 0 0 !important;">
 							<div class="nav nav-pills d-inline-flex gap-1">
-								<a href="/dashboard/all?status=ALL" class="nav-link tab-item <%= currentStatus === 'ALL' ? 'active' : '' %>">
+								<a href="/dashboard/all?status=ALL<%= preservedFilters ? '&' + preservedFilters : '' %>" class="nav-link tab-item <%= currentStatus === 'ALL' ? 'active' : '' %>">
 									All
 								</a>
-								<a href="/dashboard/all?status=COMPLETED" class="nav-link tab-item <%= currentStatus === 'COMPLETED' ? 'active' : '' %>">
+								<a href="/dashboard/all?status=COMPLETED<%= preservedFilters ? '&' + preservedFilters : '' %>" class="nav-link tab-item <%= currentStatus === 'COMPLETED' ? 'active' : '' %>">
 									Completed
 								</a>
-								<a href="/dashboard/all?status=DRAFT" class="nav-link tab-item <%= currentStatus === 'DRAFT' ? 'active' : '' %>">
+								<a href="/dashboard/all?status=DRAFT<%= preservedFilters ? '&' + preservedFilters : '' %>" class="nav-link tab-item <%= currentStatus === 'DRAFT' ? 'active' : '' %>">
 									Drafts
 								</a>
-								<a href="/dashboard/all?status=ARCHIVED" class="nav-link tab-item <%= currentStatus === 'ARCHIVED' ? 'active' : '' %>">
+								<a href="/dashboard/all?status=ARCHIVED<%= preservedFilters ? '&' + preservedFilters : '' %>" class="nav-link tab-item <%= currentStatus === 'ARCHIVED' ? 'active' : '' %>">
 									Archive
 								</a>
 							</div>
 						</div>
+						<form id="assessmentFilters" class="row g-2 align-items-end px-3 px-lg-4 py-3 border-bottom">
+							<input type="hidden" name="status" value="<%= currentStatus %>">
+							<div class="col-12 col-lg-4">
+								<label for="assessmentSearch" class="form-label small fw-semibold mb-1">Search assessments</label>
+								<input type="search" id="assessmentSearch" name="search" class="form-control form-control-sm" maxlength="100" value="<%= currentSearch || '' %>" placeholder="DPS name, PIA ID, owner, unit">
+							</div>
+							<div class="col-12 col-sm-6 col-lg-3">
+								<label for="assessmentUnit" class="form-label small fw-semibold mb-1">Office / Unit</label>
+								<select id="assessmentUnit" name="unit" class="form-select form-select-sm">
+									<option value="" <%= !currentUnit ? 'selected' : '' %>>All units</option>
+									<option value="__unspecified__" <%= currentUnit === '__unspecified__' ? 'selected' : '' %>>Not specified</option>
+									<% (units || []).forEach(unit => { %>
+										<option value="<%= unit.name %>" <%= currentUnit === unit.name ? 'selected' : '' %>><%= unit.name %></option>
+									<% }) %>
+								</select>
+							</div>
+							<div class="col-12 col-sm-6 col-lg-3">
+								<label for="assessmentSort" class="form-label small fw-semibold mb-1">Sort by</label>
+								<select id="assessmentSort" name="sort" class="form-select form-select-sm">
+									<option value="updated" <%= currentSort === 'updated' ? 'selected' : '' %>>Last updated</option>
+									<option value="alphabetical" <%= currentSort === 'alphabetical' ? 'selected' : '' %>>Alphabetical by DPS name</option>
+								</select>
+							</div>
+							<div class="col-12 col-lg-2 d-flex gap-2">
+								<button type="button" id="clearAssessmentFilters" class="btn btn-outline-secondary btn-sm ms-auto">Clear</button>
+							</div>
+						</form>
 
+						<div class="assessment-table-scroll">
 						<!-- Table Header -->
 						<div class="row g-0 p-3 px-lg-4" style="background-color: #d6e4f0;">
-							<div class="col-3 col-lg-3">
+							<div class="col-2 col-lg-2">
 							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">DPS Name</small>
 							</div>
 							<div class="col-2 col-lg-2">
-							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Office / Owner</small>
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Owner</small>
+							</div>
+							<div class="col-2 col-lg-2">
+							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Office / Unit</small>
 							</div>
 							<div class="col-2 col-lg-2">
 							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Shared With</small>
@@ -48,7 +79,7 @@
 							<div class="col-2 col-lg-2">
 							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Last Updated</small>
 							</div>
-							<div class="col-2 col-lg-2 text-center">
+							<div class="col-1 col-lg-1 text-center">
 							  <small class="fw-bold text-primary text-uppercase d-block lh-1" style="letter-spacing: 0.06em; font-size: 0.6875rem;">Status</small>
 							</div>
 							<div class="col-1 col-lg-1 text-end">
@@ -57,23 +88,34 @@
 						</div>
 
 						<% if (typeof assessments !== 'undefined' && assessments.length > 0) { %>
-							<div class="list-group list-group-flush">
+							<div class="list-group list-group-flush" id="assessmentList">
 								<% assessments.forEach(assessment => { 
 									let headOffice = assessment.authorizedParties ? assessment.authorizedParties.find(p => p.userType === 'HEAD_OFFICE') : null;
-									let ownerName = headOffice ? headOffice.name : 'Not Specified';
+									let officeUnit = headOffice ? headOffice.officeUnit : '';
+									let creatorName = assessment.creator
+										? [assessment.creator.firstName, assessment.creator.lastName].filter(Boolean).join(' ').trim() || assessment.creator.userName
+										: '';
+									let ownerName = creatorName || (headOffice ? headOffice.name : 'Not Specified');
 									let statusColor = assessment.status === 'COMPLETED' ? 'success' : (assessment.status === 'ARCHIVED' ? 'secondary' : 'warning');
 									let isOwner = assessment.creatorId === (user && user.id);
 									let isSharedToMe = !isOwner && assessment.sharedWith && assessment.sharedWith.some(s => s.user_id === (user && user.id));
 									let sharedUsers = assessment.sharedWith || [];
 								%>
 								<div class="list-group-item px-3 px-lg-4 py-3 border-bottom assessment-row" data-id="<%= assessment.id %>"
+									data-search="<%= [assessment.piaName, assessment.dpsName, ownerName, officeUnit].filter(Boolean).join(' ').toLowerCase() %>"
+									data-office-unit="<%= (officeUnit || '').trim().toLowerCase() %>"
+									data-dps-name="<%= (assessment.dpsName || '').toLowerCase() %>"
+									data-updated="<%= new Date(assessment.updatedAt).getTime() %>"
 									style="transition: background-color 0.2s;"
 									onmouseover="this.style.backgroundColor='#f8f9fa'"
 									onmouseout="this.style.backgroundColor='white'">
 									<div class="row g-0 align-items-center">
 
 										<!-- DPS Name + access badge -->
-										<div class="col-3 col-lg-3 pe-2">
+										<div class="col-2 col-lg-2 pe-2">
+											<% if (assessment.piaName) { %>
+											<div class="small text-primary fw-semibold"><%= assessment.piaName %></div>
+											<% } %>
 											<div class="fw-bold text-dark text-truncate" style="font-size: 0.875rem;">
 												<%= assessment.dpsName || 'Untitled Assessment' %>
 											</div>
@@ -93,6 +135,11 @@
 										<!-- Owner -->
 										<div class="col-2 col-lg-2 text-muted text-truncate pe-2 small">
 											<%= ownerName %>
+										</div>
+
+										<!-- Office / Unit -->
+										<div class="col-2 col-lg-2 text-muted text-truncate pe-2 small" title="<%= officeUnit || 'Not Specified' %>">
+											<%= officeUnit || 'Not Specified' %>
 										</div>
 
 										<!-- Shared-with avatars -->
@@ -125,7 +172,7 @@
 										</div>
 
 										<!-- Status -->
-										<div class="col-2 col-lg-2 text-center">
+										<div class="col-1 col-lg-1 text-center">
 											<span class="badge bg-<%= statusColor %> bg-opacity-10 text-<%= statusColor %> border border-<%= statusColor %> border-opacity-25 rounded-pill px-2 py-1" style="font-size: 0.65rem;">
 												<%= assessment.status %>
 											</span>
@@ -164,6 +211,9 @@
 								</div>
 								<% }) %>
 							</div>
+							<div id="filteredEmptyState" class="d-flex flex-column align-items-center justify-content-center py-5 px-3 text-center text-muted" hidden>
+								<span style="font-size: 0.875rem;">No assessments match these filters.</span>
+							</div>
 						<% } else { %>
 							<div class="d-flex flex-column align-items-center justify-content-center py-5 px-3 px-md-4 text-center text-muted">
 								<svg style="width: 40px; height: 50px; opacity: 0.75;" viewBox="0 0 40 50" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -179,6 +229,7 @@
 								<span style="font-size: 0.875rem;" class="mt-3">No assessments found in this category.</span>
 							</div>
 						<% } %>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -187,6 +238,20 @@
 </div>
 
 <style>
+.main-content-offset {
+	min-width: 0;
+}
+.assessment-table-scroll {
+	overflow-x: auto;
+	max-width: 100%;
+	width: 100%;
+}
+@media (max-width: 991.98px) {
+	.assessment-table-scroll > .row,
+	.assessment-table-scroll > .list-group {
+		min-width: 1100px;
+	}
+}
 .tab-item {
     color: rgba(255, 255, 255, 0.7);
     font-weight: 600;
@@ -210,10 +275,71 @@
     border-radius: 6px !important;
     margin: 0 2px;
 }
+.assessment-row[hidden],
+#filteredEmptyState[hidden] {
+	display: none !important;
+}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+	const filterForm = document.getElementById('assessmentFilters');
+	const searchInput = document.getElementById('assessmentSearch');
+	const unitSelect = document.getElementById('assessmentUnit');
+	const sortSelect = document.getElementById('assessmentSort');
+	const assessmentList = document.getElementById('assessmentList');
+	const assessmentRows = assessmentList ? Array.from(assessmentList.querySelectorAll('.assessment-row')) : [];
+	const filteredEmptyState = document.getElementById('filteredEmptyState');
+	const clearFiltersButton = document.getElementById('clearAssessmentFilters');
+
+	const applyAssessmentFilters = () => {
+		const search = searchInput.value.trim().toLocaleLowerCase();
+		const unit = unitSelect.value.toLocaleLowerCase();
+		const sort = sortSelect.value;
+		const sortedRows = assessmentRows.slice().sort((left, right) => sort === 'alphabetical'
+			? left.dataset.dpsName.localeCompare(right.dataset.dpsName)
+			: Number(right.dataset.updated) - Number(left.dataset.updated));
+		let visibleCount = 0;
+
+		sortedRows.forEach(row => {
+			const matchesSearch = !search || row.dataset.search.includes(search);
+			const matchesUnit = !unit
+				|| (unit === '__unspecified__' ? !row.dataset.officeUnit : row.dataset.officeUnit === unit);
+			row.hidden = !matchesSearch || !matchesUnit;
+			if (!row.hidden) visibleCount += 1;
+			assessmentList.appendChild(row);
+		});
+
+		if (filteredEmptyState) filteredEmptyState.hidden = visibleCount > 0;
+
+		const url = new URL(window.location.href);
+		url.searchParams.set('search', searchInput.value.trim());
+		url.searchParams.set('unit', unitSelect.value);
+		url.searchParams.set('sort', sort);
+		window.history.replaceState(null, '', url);
+
+		document.querySelectorAll('.tab-item').forEach(link => {
+			const tabUrl = new URL(link.href, window.location.origin);
+			tabUrl.searchParams.set('search', searchInput.value.trim());
+			tabUrl.searchParams.set('unit', unitSelect.value);
+			tabUrl.searchParams.set('sort', sort);
+			link.href = `${tabUrl.pathname}?${tabUrl.searchParams.toString()}`;
+		});
+	};
+
+	filterForm.addEventListener('submit', event => event.preventDefault());
+	searchInput.addEventListener('input', applyAssessmentFilters);
+	unitSelect.addEventListener('change', applyAssessmentFilters);
+	sortSelect.addEventListener('change', applyAssessmentFilters);
+	clearFiltersButton.addEventListener('click', () => {
+		searchInput.value = '';
+		unitSelect.value = '';
+		sortSelect.value = 'updated';
+		applyAssessmentFilters();
+		searchInput.focus();
+	});
+	applyAssessmentFilters();
+
 	const archiveButtons = document.querySelectorAll('.archive-btn');
 	const restoreButtons = document.querySelectorAll('.restore-btn');
 	const deletePermanentButtons = document.querySelectorAll('.delete-permanent-btn');

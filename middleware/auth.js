@@ -7,6 +7,17 @@ const requireAuth = (req, res, next) => {
   return res.redirect('/');
 };
 
+const requireAdmin = (req, res, next) => {
+  if (req.session?.user?.role === 'ADMIN') {
+    return next();
+  }
+  return res.status(403).render('403', {
+    title: 'Access Denied',
+    user: req.session?.user || null,
+    message: 'Only administrators can manage user accounts.'
+  });
+};
+
 /**
  * Middleware: ensure the logged-in user is allowed to access the assessment
  * identified by req.query.id or req.body.piaAssessmentId or req.session.currentAssessmentId.
@@ -89,5 +100,6 @@ const requireAssessmentAccess = async (req, res, next) => {
 
 module.exports = {
   requireAuth,
+  requireAdmin,
   requireAssessmentAccess
 };

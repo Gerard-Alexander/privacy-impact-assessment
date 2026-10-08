@@ -219,6 +219,12 @@
 								<div class="row g-4">
 									<!-- LEFT COLUMN -->
 									<div class="col-lg-7">
+										<% if (selectedAssessment.piaName) { %>
+										<div class="mb-4">
+											<label class="form-label fw-semibold text-dark" for="piaName">PIA Name</label>
+											<input type="text" id="piaName" class="form-control" value="<%= selectedAssessment.piaName %>" readonly>
+										</div>
+										<% } %>
 										<!-- Name -->
 										<div class="form-floating mb-4">
 											<input type="text" id="systemName" name="systemName" class="form-control"

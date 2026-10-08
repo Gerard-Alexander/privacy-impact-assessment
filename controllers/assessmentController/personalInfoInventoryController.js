@@ -19,21 +19,42 @@ const ensureDataSubjectTypes = async () => {
   }
 };
 
+const formatDataSubjectTypeLabel = (value) => {
+  if (DATA_SUBJECT_TYPE_VALUES.includes(value)) {
+    return value.charAt(0) + value.slice(1).toLowerCase();
+  }
+
+  return value;
+};
+
 const formatPiiForForm = (pii) => {
   const dataSubjects = Array.isArray(pii.piiDatasubjects) ? pii.piiDatasubjects : [];
   const recipients = Array.isArray(pii.recipientUsers) ? pii.recipientUsers : [];
+  const piiBasisSelections = Array.isArray(pii.piiProcessingBasis) ? pii.piiProcessingBasis : [];
+  const piProcessBasisIds = piiBasisSelections
+    .filter((entry) => !entry.processingType || entry.processingType === 'PI' || entry.processingType === 'BOTH')
+    .map((entry) => Number(entry.processingBasis_id || entry.processingBasis?.id || 0))
+    .filter((id) => Number.isInteger(id) && id > 0);
+  const spiProcessBasisIds = piiBasisSelections
+    .filter((entry) => !entry.processingType || entry.processingType === 'SPI' || entry.processingType === 'BOTH')
+    .map((entry) => Number(entry.processingBasis_id || entry.processingBasis?.id || 0))
+    .filter((id) => Number.isInteger(id) && id > 0);
 
   return {
     ...pii,
     dataProcessingValue: pii.dataProcessing || '',
-    piProcessBasisId: pii.piProcessBasis_id || '',
-    spiProcessBasisId: pii.spiProcessBasis_id || '',
+    piProcessBasisIds,
+    spiProcessBasisIds,
+    piProcessBasisId: pii.piProcessBasis_id || piProcessBasisIds[0] || '',
+    spiProcessBasisId: pii.spiProcessBasis_id || spiProcessBasisIds[0] || '',
     dataFormImagePath: pii.dataFormImagePath || '',
     dataFormImageUploadedAt: pii.dataFormImageUploadedAt || null,
     dataSubjects: dataSubjects.map((subject) => ({
       dataSubjectsType_id: subject.dataSubjectsType_id,
       dataSubjectTypeLabel: subject.dataSubjectType?.dataSubjectType || '',
-      name: subject.name || ''
+      name: subject.name || '',
+      personalInformation: subject.personalInformation || subject.name || '',
+      sensitiveInformation: subject.sensitiveInformation || ''
     })),
     recipients: recipients.map((recipient) => ({
       recipientName: recipient.recipientName || ''
@@ -75,6 +96,11 @@ const personalInfoInventory = async (req, res) => {
         include: {
           piProcessBasis: true,
           spiProcessBasis: true,
+          piiProcessingBasis: {
+            include: {
+              processingBasis: true
+            }
+          },
           piiDatasubjects: {
             include: {
               dataSubjectType: true
@@ -84,12 +110,19 @@ const personalInfoInventory = async (req, res) => {
         }
       }),
       prisma.dataSubjectTypes.findMany({
-        orderBy: { id: 'asc' }
+        orderBy: { dataSubjectType: 'asc' }
       }),
       prisma.processingBasis.findMany({
         orderBy: [{ processingType: 'asc' }, { basisNum: 'asc' }]
       })
     ]);
+
+    dataSubjectTypes.sort((left, right) => {
+      const leftIsOthers = left.dataSubjectType === 'OTHERS';
+      const rightIsOthers = right.dataSubjectType === 'OTHERS';
+      if (leftIsOthers === rightIsOthers) return 0;
+      return leftIsOthers ? 1 : -1;
+    });
 
     const mappedPii = existingPii.map(formatPiiForForm);
     const piProcessingBasisOptions = processingBasis.filter((basis) => ['PI', 'BOTH'].includes(basis.processingType));
@@ -159,6 +192,17 @@ const savePersonalInfoInventory = async (req, res) => {
     const dataFormImagePaths = normalizeIndexedArray(req.body.dataFormImagePath);
     const dataFormImageUploadedAtValues = normalizeIndexedArray(req.body.dataFormImageUploadedAt);
 
+    const flattenBasisValues = (value) => {
+      if (!value) return [];
+      if (Array.isArray(value)) {
+        return value.flatMap((entry) => flattenBasisValues(entry));
+      }
+      if (typeof value === 'object') {
+        return Object.values(value).flatMap((entry) => flattenBasisValues(entry));
+      }
+      return [String(value).trim()];
+    };
+
     const dataFormImageByIndex = new Map();
     if (Array.isArray(req.files)) {
       req.files.forEach((file) => {
@@ -176,6 +220,13 @@ const savePersonalInfoInventory = async (req, res) => {
       orderBy: { id: 'asc' },
       select: { id: true }
     });
+    const dataSubjectTypesById = new Map((await prisma.dataSubjectTypes.findMany({
+      select: { id: true, dataSubjectType: true }
+    })).map((type) => [type.id, type.dataSubjectType]));
+    const dataSubjectTypeLabels = new Map([...dataSubjectTypesById.entries()].map(([id, value]) => [id, formatDataSubjectTypeLabel(value)]));
+    const otherDataSubjectTypeIds = new Set([...dataSubjectTypesById.entries()]
+      .filter(([, value]) => value === 'OTHERS')
+      .map(([id]) => id));
 
     const [defaultPiBasis, defaultSpiBasis] = await Promise.all([
       prisma.processingBasis.findFirst({
@@ -219,8 +270,10 @@ const savePersonalInfoInventory = async (req, res) => {
       let formNo = Number.parseInt(formNos[index] || '', 10);
       if (Number.isNaN(formNo)) formNo = 0;
       const dataProcessing = dataProcessingValues[index] || '';
-      const piProcessBasisId = Number.parseInt(piProcessBasisIds[index] || '', 10);
-      const spiProcessBasisId = Number.parseInt(spiProcessBasisIds[index] || '', 10);
+      const selectedPiBasisValues = flattenBasisValues(piProcessBasisIds[index]).filter((value) => value && value !== 'undefined' && value !== 'null');
+      const selectedSpiBasisValues = flattenBasisValues(spiProcessBasisIds[index]).filter((value) => value && value !== 'undefined' && value !== 'null');
+      const piProcessBasisId = Number.parseInt(selectedPiBasisValues[0] || '', 10);
+      const spiProcessBasisId = Number.parseInt(selectedSpiBasisValues[0] || '', 10);
       const uploadedImagePath = dataFormImageByIndex.get(index) || '';
       const existingImagePath = dataFormImagePaths[index] || '';
       const dataFormImagePath = uploadedImagePath || existingImagePath || '';
@@ -245,21 +298,40 @@ const savePersonalInfoInventory = async (req, res) => {
         })
         .filter(Boolean);
 
-      const dataSubjects = dataSubjectsRaw
-        .map((entry) => {
-          if (!entry || typeof entry !== 'object') return null;
-          const name = String(entry.name || '').trim();
-          const dataSubjectsTypeId = Number.parseInt(entry.dataSubjectsTypeId || '', 10);
-          if (!name) return null;
-          return {
-            name,
-            dataSubjectsType_id: Number.isInteger(dataSubjectsTypeId) ? dataSubjectsTypeId : defaultDataSubjectTypeId
-          };
-        })
-        .filter(Boolean);
+      const dataSubjects = [];
+      for (const entry of dataSubjectsRaw) {
+        if (!entry || typeof entry !== 'object') continue;
+        const legacyName = String(entry.name || '').trim();
+        const personalInformation = String(entry.personalInformation || '').trim();
+        const sensitiveInformation = String(entry.sensitiveInformation || '').trim();
+        const otherDataSubjectType = String(entry.otherDataSubjectType || '').trim().slice(0, 255);
+        let dataSubjectsTypeId = Number.parseInt(entry.dataSubjectsTypeId || '', 10);
+
+        if (otherDataSubjectType && otherDataSubjectTypeIds.has(dataSubjectsTypeId)) {
+          let customType = await prisma.dataSubjectTypes.findFirst({
+            where: { dataSubjectType: otherDataSubjectType }
+          });
+          if (!customType) {
+            customType = await prisma.dataSubjectTypes.create({
+              data: { dataSubjectType: otherDataSubjectType }
+            });
+          }
+          dataSubjectsTypeId = customType.id;
+          dataSubjectTypeLabels.set(customType.id, formatDataSubjectTypeLabel(customType.dataSubjectType));
+        }
+
+        if (!legacyName && !personalInformation && !sensitiveInformation && !Number.isInteger(dataSubjectsTypeId)) continue;
+        dataSubjects.push({
+          name: legacyName || dataSubjectTypeLabels.get(dataSubjectsTypeId) || 'Data Subject',
+          personalInformation,
+          sensitiveInformation,
+          dataSubjectsType_id: Number.isInteger(dataSubjectsTypeId) ? dataSubjectsTypeId : defaultDataSubjectTypeId
+        });
+      }
 
       // Check if row has any meaningful data to deserve saving
-      const hasMeaningfulData = formName || formNo > 0 || dataProcessing || dataFormImagePath || recipients.length > 0 || dataSubjects.length > 0;
+      const hasBasisSelection = selectedPiBasisValues.length > 0 || selectedSpiBasisValues.length > 0;
+      const hasMeaningfulData = formName || formNo > 0 || dataProcessing || dataFormImagePath || recipients.length > 0 || dataSubjects.length > 0 || hasBasisSelection;
       if (!hasMeaningfulData) continue;
 
       const hasImageInput = Boolean(dataFormImagePath);
@@ -282,7 +354,9 @@ const savePersonalInfoInventory = async (req, res) => {
           dataSubjects,
           recipients,
           piProcessBasisId: finalPiBasisId,
-          spiProcessBasisId: finalSpiBasisId
+          spiProcessBasisId: finalSpiBasisId,
+          piProcessBasisIds: selectedPiBasisValues.map((value) => Number.parseInt(value, 10)).filter((value) => Number.isInteger(value) && value > 0),
+          spiProcessBasisIds: selectedSpiBasisValues.map((value) => Number.parseInt(value, 10)).filter((value) => Number.isInteger(value) && value > 0)
         });
       }
 
@@ -294,6 +368,8 @@ const savePersonalInfoInventory = async (req, res) => {
         dataProcessingValue: dataProcessing,
         piProcessBasisId: piProcessBasisId || '',
         spiProcessBasisId: spiProcessBasisId || '',
+        piProcessBasisIds: selectedPiBasisValues.map((value) => Number.parseInt(value, 10)).filter((value) => Number.isInteger(value) && value > 0),
+        spiProcessBasisIds: selectedSpiBasisValues.map((value) => Number.parseInt(value, 10)).filter((value) => Number.isInteger(value) && value > 0),
         dataFormImagePath,
         dataFormImageUploadedAt,
         dataSubjects,
@@ -306,10 +382,12 @@ const savePersonalInfoInventory = async (req, res) => {
         const dataSubjects = (row.dataSubjects || row.piiDatasubjects || [])
           .map((subject) => ({
             name: String(subject.name || '').trim(),
+            personalInformation: String(subject.personalInformation || '').trim(),
+            sensitiveInformation: String(subject.sensitiveInformation || '').trim(),
             dataSubjectsType_id: Number.parseInt(subject.dataSubjectsType_id || subject.dataSubjectsType?.id || '', 10) || null
           }))
-          .filter((subject) => subject.name)
-          .sort((a, b) => `${a.dataSubjectsType_id || 0}:${a.name}`.localeCompare(`${b.dataSubjectsType_id || 0}:${b.name}`));
+          .filter((subject) => subject.name || subject.personalInformation || subject.sensitiveInformation)
+          .sort((a, b) => `${a.dataSubjectsType_id || 0}:${a.name}:${a.personalInformation}:${a.sensitiveInformation}`.localeCompare(`${b.dataSubjectsType_id || 0}:${b.name}:${b.personalInformation}:${b.sensitiveInformation}`));
 
         const recipients = (row.recipients || row.recipientUsers || [])
           .map((recipient) => ({
@@ -324,6 +402,8 @@ const savePersonalInfoInventory = async (req, res) => {
           dataProcessing: row.dataProcessing || '',
           piProcessBasisId: Number.parseInt(row.piProcessBasisId || row.piProcessBasis_id || '', 10) || null,
           spiProcessBasisId: Number.parseInt(row.spiProcessBasisId || row.spiProcessBasis_id || '', 10) || null,
+          piProcessBasisIds: (row.piProcessBasisIds || []).map(Number).filter((id) => Number.isInteger(id) && id > 0).sort((a, b) => a - b),
+          spiProcessBasisIds: (row.spiProcessBasisIds || []).map(Number).filter((id) => Number.isInteger(id) && id > 0).sort((a, b) => a - b),
           dataFormImagePath: row.dataFormImagePath || null,
           dataSubjects,
           recipients
@@ -341,7 +421,8 @@ const savePersonalInfoInventory = async (req, res) => {
       where: { piaAssessment_id: piaAssessmentId },
       include: {
         piiDatasubjects: true,
-        recipientUsers: true
+        recipientUsers: true,
+        piiProcessingBasis: true
       }
     });
 
@@ -352,46 +433,87 @@ const savePersonalInfoInventory = async (req, res) => {
       return res.redirect(redirectTarget);
     }
 
-    // Delete dependent ThreatsAndControl records first to avoid FK violations
-    await prisma.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } }).catch(() => {});
-
-    await prisma.pII.deleteMany({
-      where: { piaAssessment_id: piaAssessmentId }
-    });
-
-    for (const row of validatedRows) {
-      const createdPii = await prisma.pII.create({
-        data: {
-          piaAssessment_id: piaAssessmentId,
-          formNo: row.formNo,
-          formName: row.formName,
-          dataProcessing: row.dataProcessing,
-          piProcessBasis_id: row.piProcessBasisId,
-          spiProcessBasis_id: row.spiProcessBasisId,
-          dataFormImagePath: row.dataFormImagePath,
-          dataFormImageUploadedAt: row.dataFormImageUploadedAt
-        }
-      });
-
-      if (row.dataSubjects.length > 0) {
-        await prisma.piiDatasubject.createMany({
-          data: row.dataSubjects.map((subject) => ({
-            pii_id: createdPii.id,
-            dataSubjectsType_id: subject.dataSubjectsType_id,
-            name: subject.name
-          }))
-        });
-      }
-
-      if (row.recipients.length > 0) {
-        await prisma.recipientUser.createMany({
-          data: row.recipients.map((recipient) => ({
-            pii_id: createdPii.id,
-            recipientName: recipient.recipientName
-          }))
-        });
+    const selectedBasisIds = [...new Set(validatedRows.flatMap((row) => [
+      ...row.piProcessBasisIds,
+      ...row.spiProcessBasisIds
+    ]))];
+    if (selectedBasisIds.length > 0) {
+      const validBasisIds = new Set((await prisma.processingBasis.findMany({
+        where: { id: { in: selectedBasisIds } },
+        select: { id: true }
+      })).map((basis) => basis.id));
+      const invalidBasisIds = selectedBasisIds.filter((id) => !validBasisIds.has(id));
+      if (invalidBasisIds.length > 0) {
+        throw new Error(`Invalid processing basis IDs: ${invalidBasisIds.join(', ')}`);
       }
     }
+
+    await prisma.$transaction(async (transaction) => {
+      // Delete dependent ThreatsAndControl records first to avoid FK violations.
+      await transaction.threatsAndControl.deleteMany({ where: { piaAssessment_id: piaAssessmentId } });
+      await transaction.pII.deleteMany({ where: { piaAssessment_id: piaAssessmentId } });
+
+      for (const row of validatedRows) {
+        const createdPii = await transaction.pII.create({
+          data: {
+            piaAssessment_id: piaAssessmentId,
+            formNo: row.formNo,
+            formName: row.formName,
+            dataProcessing: row.dataProcessing,
+            piProcessBasis_id: row.piProcessBasisId,
+            spiProcessBasis_id: row.spiProcessBasisId,
+            dataFormImagePath: row.dataFormImagePath,
+            dataFormImageUploadedAt: row.dataFormImageUploadedAt
+          }
+        });
+
+        const rowPiBasisIds = Array.isArray(row.piProcessBasisIds) ? row.piProcessBasisIds : [];
+        const rowSpiBasisIds = Array.isArray(row.spiProcessBasisIds) ? row.spiProcessBasisIds : [];
+
+        if (rowPiBasisIds.length > 0) {
+          await transaction.piiProcessingBasis.createMany({
+            data: rowPiBasisIds.map((basisId) => ({
+              pii_id: createdPii.id,
+              processingBasis_id: basisId,
+              processingType: 'PI'
+            })),
+            skipDuplicates: true
+          });
+        }
+
+        if (rowSpiBasisIds.length > 0) {
+          await transaction.piiProcessingBasis.createMany({
+            data: rowSpiBasisIds.map((basisId) => ({
+              pii_id: createdPii.id,
+              processingBasis_id: basisId,
+              processingType: 'SPI'
+            })),
+            skipDuplicates: true
+          });
+        }
+
+        if (row.dataSubjects.length > 0) {
+          await transaction.piiDatasubject.createMany({
+            data: row.dataSubjects.map((subject) => ({
+              pii_id: createdPii.id,
+              dataSubjectsType_id: subject.dataSubjectsType_id,
+              name: subject.name,
+              personalInformation: subject.personalInformation,
+              sensitiveInformation: subject.sensitiveInformation
+            }))
+          });
+        }
+
+        if (row.recipients.length > 0) {
+          await transaction.recipientUser.createMany({
+            data: row.recipients.map((recipient) => ({
+              pii_id: createdPii.id,
+              recipientName: recipient.recipientName
+            }))
+          });
+        }
+      }
+    });
 
     return res.redirect(redirectTarget);
   } catch (error) {

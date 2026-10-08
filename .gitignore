@@ -3,7 +3,6 @@ node_modules
 .env
 .env.*
 /generated/prisma
-node_modules
 
 # Logs
 logs/
@@ -14,3 +13,14 @@ yarn-error.log*
 
 # Uploaded files
 uploads/
+/exports/dlc/
+/exports/heatmaps/
+
+# Local temporary files
+/tmp/
+
+# Private TLS keys
+/ssl/*.key
+/ssl/*.pem
+/ssl/*.p12
+/ssl/*.pfx

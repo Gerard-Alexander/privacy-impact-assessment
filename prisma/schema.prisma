@@ -20,6 +20,7 @@ model User {
   lastName        String            @db.VarChar(255)
   userName        String            @unique @db.VarChar(255)
   emailAddress    String            @unique @db.VarChar(255)
+  units           String            @default("n/a") @map("Units") @db.VarChar(255)
   password        String
   role            Role              @default(USER)
   rememberToken   String?           @db.Text
@@ -32,10 +33,17 @@ model User {
   sharedAssessments  AssessmentShare[]
 }
 
+model Unit {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique @db.VarChar(255)
+  createdAt DateTime @default(now())
+}
+
 // --- ROOT TABLE: PIA ASSESSMENT --- //
 // This acts as the umbrella for a single submitted PIA form
 model PiaAssessment {
   id                          Int      @id @default(autoincrement())
+  piaName                     String?  @unique @db.VarChar(300)
   dpsName                     String   @db.VarChar(255)
   mandate                     String   @db.Text
   dpsModality                 Modality 
@@ -247,11 +255,10 @@ model PII {
   dataFormImagePath   String?          @db.Text
   dataFormImageUploadedAt DateTime?
 
-  // FK to ProcessingBasis (PI)
+  // Legacy single-basis fields kept for compatibility with older records.
   piProcessBasis_id   Int?
   piProcessBasis      ProcessingBasis? @relation("PiProcessBasis", fields: [piProcessBasis_id], references: [id])
 
-  // FK to ProcessingBasis (SPI)
   spiProcessBasis_id  Int?
   spiProcessBasis     ProcessingBasis? @relation("SpiProcessBasis", fields: [spiProcessBasis_id], references: [id])
   
@@ -260,10 +267,29 @@ model PII {
 
   piiDatasubjects     PiiDatasubject[]
   recipientUsers      RecipientUser[]
+  piiProcessingBasis  PiiProcessingBasis[]
 
   @@index([piaAssessment_id])
   @@index([piProcessBasis_id])
   @@index([spiProcessBasis_id])
+}
+
+model PiiProcessingBasis {
+  id                Int              @id @default(autoincrement())
+  pii_id            Int
+  pii               PII              @relation(fields: [pii_id], references: [id], onDelete: Cascade)
+
+  processingBasis_id Int             @db.Int
+  processingBasis    ProcessingBasis  @relation(fields: [processingBasis_id], references: [id], onDelete: Cascade)
+
+  processingType    String?          @db.VarChar(255)
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@unique([pii_id, processingBasis_id, processingType])
+  @@index([pii_id])
+  @@index([processingBasis_id])
 }
 
 enum DataProcessing {
@@ -274,19 +300,10 @@ enum DataProcessing {
 
 model DataSubjectTypes {
   id              Int         @id @default(autoincrement())
-  dataSubjectType datasubject
+  dataSubjectType String      @db.VarChar(255)
   piiDatasubjects PiiDatasubject[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
-}
-
-enum datasubject {
-  STUDENTS
-  PATIENTS
-  PARENTS
-  EMPLOYEES
-  SUPPLIERS
-  OTHERS
 }
 
 model PiiDatasubject {
@@ -301,6 +318,8 @@ model PiiDatasubject {
   dataSubjectType     DataSubjectTypes   @relation(fields: [dataSubjectsType_id], references: [id])
 
   name               String              @db.VarChar(255)
+  personalInformation String?             @db.Text
+  sensitiveInformation String?            @db.Text
 
   threatsAndControls ThreatsAndControl[]
 
@@ -327,17 +346,18 @@ model RecipientUser {
 }
 
 model ProcessingBasis {
-  id             Int            @id @default(autoincrement())
-  processingType String         @db.VarChar(255)
-  basisNum       String         @db.VarChar(255)
-  keyword        String         @db.VarChar(255)
-  description    String         @db.Text
+  id             Int                  @id @default(autoincrement())
+  processingType String               @db.VarChar(255)
+  basisNum       String               @db.VarChar(255)
+  keyword        String               @db.VarChar(255)
+  description    String               @db.Text
 
-  piPii          PII[]          @relation("PiProcessBasis")
-  spiPii         PII[]          @relation("SpiProcessBasis")
+  piPii          PII[]                @relation("PiProcessBasis")
+  spiPii         PII[]                @relation("SpiProcessBasis")
+  piiProcessingBasis PiiProcessingBasis[]
 
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
 }
 
 //**********************************************//
@@ -367,6 +387,10 @@ model ThreatsAndControl {
   currentLikelihoodLevel       LikelihoodLevel? 
   currentRiskRating            Int?             @db.Int
   proposedControl              String?          @db.VarChar(255)
+  proposedSeverityLevel        SeverityLevel?
+  proposedLikelihoodLevel      LikelihoodLevel?
+  proposedRiskRating            Int?             @db.Int
+  proposedTypeOfMeasure         String?          @db.VarChar(255)
 
   afterSeverityLevel            SeverityLevel?
   afterLikelihoodLevel          LikelihoodLevel?

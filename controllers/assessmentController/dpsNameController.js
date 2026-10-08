@@ -1,4 +1,5 @@
 const prisma = require('../../store/prisma');
+const { assignPiaName } = require('../../services/piaNameService');
 
 const formatDateForInput = (value) => {
   if (!value) return '';
@@ -159,19 +160,28 @@ const saveDpsName = async (req, res) => {
       return renderWithError('An assessment with this DPS name already exists.');
     }
 
-    const currentUserId = req.session.user?.id || null;
+    const sessionUser = req.session.user || {};
 
-    const newAssessment = await prisma.piaAssessment.create({
-      data: {
-        dpsName: systemName,
-        mandate,
-        dpsModality,
-        processingRole,
-        isOutsourced: isOutsourced === '1',
-        piaStartDate: new Date(piaStartDate),
-        piaEndDate: new Date(piaEndDate),
-        creatorId: currentUserId
-      }
+    const newAssessment = await prisma.$transaction(async (transaction) => {
+      const creator = sessionUser.id
+        ? await transaction.user.findUnique({ where: { id: sessionUser.id }, select: { id: true, units: true } })
+        : sessionUser.username
+          ? await transaction.user.findUnique({ where: { userName: sessionUser.username }, select: { id: true, units: true } })
+          : null;
+      const createdAssessment = await transaction.piaAssessment.create({
+        data: {
+          dpsName: systemName,
+          mandate,
+          dpsModality,
+          processingRole,
+          isOutsourced: isOutsourced === '1',
+          piaStartDate: new Date(piaStartDate),
+          piaEndDate: new Date(piaEndDate),
+          creatorId: creator?.id || null
+        }
+      });
+
+      return assignPiaName(transaction, createdAssessment.id, creator?.units || 'n/a');
     });
 
     // Save ID in session so further steps know which assessment is active

@@ -12,6 +12,18 @@ const allAssessments = async (req, res) => {
         status = 'ALL';
     }
 
+    const units = await prisma.unit.findMany({
+      where: { name: { not: 'n/a' } },
+      select: { name: true },
+      orderBy: { name: 'asc' }
+    });
+    const requestedUnit = String(req.query.unit || '').trim();
+    const currentUnit = requestedUnit === '__unspecified__' || units.some(unit => unit.name === requestedUnit)
+      ? requestedUnit
+      : '';
+    const currentSearch = String(req.query.search || '').trim().slice(0, 100);
+    const currentSort = req.query.sort === 'alphabetical' ? 'alphabetical' : 'updated';
+
     // Build the WHERE filter based on role
     const accessFilter = isAdmin
       ? {}
@@ -22,10 +34,12 @@ const allAssessments = async (req, res) => {
           ]
         };
 
-    let whereClause = { ...accessFilter };
+    const filters = [];
+    if (accessFilter.OR) filters.push(accessFilter);
     if (status !== 'ALL') {
-      whereClause.status = status;
+      filters.push({ status });
     }
+    const whereClause = filters.length ? { AND: filters } : {};
 
     const assessments = await prisma.piaAssessment.findMany({
       where: whereClause,
@@ -42,15 +56,28 @@ const allAssessments = async (req, res) => {
           }
         }
       },
-      orderBy: { updatedAt: 'desc' }
+      orderBy: currentSort === 'alphabetical'
+        ? [{ dpsName: 'asc' }, { updatedAt: 'desc' }]
+        : { updatedAt: 'desc' }
     });
+
+    const preservedFilters = new URLSearchParams({
+      unit: currentUnit,
+      sort: currentSort,
+      search: currentSearch
+    }).toString();
 
     return res.render('assessment/all-assessments', {
       title: 'All Assessments',
       activePage: 'all-assessments',
       user: req.session.user,
       assessments,
-      currentStatus: status
+      currentStatus: status,
+      units,
+      currentUnit,
+      currentSort,
+      currentSearch,
+      preservedFilters
     });
   } catch (error) {
     console.error('Error fetching all assessments:', error);
@@ -59,7 +86,12 @@ const allAssessments = async (req, res) => {
       activePage: 'all-assessments',
       user: req.session.user,
       assessments: [],
-      currentStatus: 'ALL'
+      currentStatus: 'ALL',
+      units: [],
+      currentUnit: '',
+      currentSort: 'updated',
+      currentSearch: '',
+      preservedFilters: ''
     });
   }
 };

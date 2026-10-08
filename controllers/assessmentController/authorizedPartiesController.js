@@ -1,6 +1,11 @@
 const prisma = require('../../store/prisma');
+const { assignPiaName } = require('../../services/piaNameService');
 
 const formatDateForInput = (value) => (value ? value.toISOString().slice(0, 10) : '');
+const listUnits = () => prisma.unit.findMany({
+  where: { name: { not: 'n/a' } },
+  orderBy: { name: 'asc' }
+});
 
 const authorizedParties = async (req, res) => {
   res.locals.authParties = 'Authorized Parties';
@@ -12,7 +17,17 @@ const authorizedParties = async (req, res) => {
     return res.redirect('/assessment');
   }
   const piaAssessment_id = Number.parseInt(piaAssessmentId, 10);
-  const rawPartyData = await prisma.authorizedParties.findMany({ where: { piaAssessment_id } });
+  const sessionUserId = Number.parseInt(req.session.user?.id, 10);
+  const currentUserQuery = Number.isInteger(sessionUserId)
+    ? prisma.user.findUnique({ where: { id: sessionUserId }, select: { units: true } })
+    : req.session.user?.username
+      ? prisma.user.findUnique({ where: { userName: req.session.user.username }, select: { units: true } })
+      : Promise.resolve(null);
+  const [rawPartyData, units, currentUser] = await Promise.all([
+    prisma.authorizedParties.findMany({ where: { piaAssessment_id } }),
+    listUnits(),
+    currentUserQuery
+  ]);
   const partyDefinitions = [
     {
       honorificsField: null,
@@ -91,11 +106,16 @@ const authorizedParties = async (req, res) => {
       formData[dateField] = formatDateForInput(party.dateSigned);
     }
   });
+  if (!formData.headOfficeUnit && currentUser?.units && currentUser.units !== 'n/a') {
+    formData.headOfficeUnit = currentUser.units;
+  }
+
   return res.render('assessment/authorizedparties-page', {
     title: res.locals.authParties,
     activePage: 'authorizedparties-page',
     user: req.session.user,
     piaAssessmentId,
+    units,
     authorizedPartiesData: formData,
     error: null,
     success
@@ -116,6 +136,7 @@ const saveAuthorizedParties = async (req, res) => {
         piaAssessmentId: req.session.currentAssessmentId,
         activePage: 'authorizedparties-page',
         user: req.session.user,
+        units: await listUnits(),
         error: 'Assessment ID is required.',
         success: null
       });
@@ -182,12 +203,33 @@ const saveAuthorizedParties = async (req, res) => {
         };
       });
 
+    const selectedOfficeUnit = String(getFieldValue(body.headOfficeUnit)).trim();
+    const initialOfficeUnit = String(getFieldValue(body.initialHeadOfficeUnit)).trim();
+    const officeUnitChanged = selectedOfficeUnit && selectedOfficeUnit !== initialOfficeUnit;
+    const hasHeadOfficeParty = partyData.some(party => party.userType === 'HEAD_OFFICE');
+    if (selectedOfficeUnit) {
+      const availableUnit = await prisma.unit.findUnique({ where: { name: selectedOfficeUnit } });
+      if (!availableUnit) {
+        return res.render('assessment/authorizedparties-page', {
+          title: 'Authorized Parties',
+          piaAssessmentId: piaAssessment_id,
+          activePage: 'authorizedparties-page',
+          user: req.session.user,
+          units: await listUnits(),
+          error: 'Select an available unit or add it first.',
+          success: null,
+          authorizedPartiesData: body
+        });
+      }
+    }
+
     if (!partyData.length && !isPrevious) {
       return res.render('assessment/authorizedparties-page', {
         title: 'Authorized Parties',
         piaAssessmentId: body.piaAssessment_id,
         activePage: 'authorizedparties-page',
         user: req.session.user,
+        units: await listUnits(),
         error: 'Please complete at least one authorized party section.',
         success: null,
         authorizedPartiesData: {}
@@ -195,10 +237,33 @@ const saveAuthorizedParties = async (req, res) => {
     }
 
     if (partyData.length > 0) {
-      await prisma.$transaction([
-        prisma.authorizedParties.deleteMany({ where: { piaAssessment_id } }),
-        ...partyData.map((data) => prisma.authorizedParties.create({ data }))
-      ]);
+      const sessionUser = req.session.user || {};
+      const sessionUserId = Number.parseInt(sessionUser.id, 10);
+      const userWhere = Number.isInteger(sessionUserId)
+        ? { id: sessionUserId }
+        : sessionUser.username
+          ? { userName: sessionUser.username }
+          : null;
+
+      const shouldSyncAccountUnit = officeUnitChanged && hasHeadOfficeParty && userWhere;
+      const shouldReassignPiaName = officeUnitChanged && hasHeadOfficeParty;
+
+      await prisma.$transaction(async (transaction) => {
+        await transaction.authorizedParties.deleteMany({ where: { piaAssessment_id } });
+        for (const data of partyData) {
+          await transaction.authorizedParties.create({ data });
+        }
+        if (shouldSyncAccountUnit) {
+          await transaction.user.update({ where: userWhere, data: { units: selectedOfficeUnit } });
+        }
+        if (shouldReassignPiaName) {
+          await assignPiaName(transaction, piaAssessment_id, selectedOfficeUnit);
+        }
+      });
+
+      if (shouldSyncAccountUnit && req.session.user) {
+        req.session.user.units = selectedOfficeUnit;
+      }
     }
 
     req.session.currentAssessmentId = piaAssessment_id;
@@ -213,13 +278,34 @@ const saveAuthorizedParties = async (req, res) => {
       piaAssessmentId: req.body?.piaAssessment_id || req.session.currentAssessmentId,
       activePage: 'authorizedparties-page',
       user: req.session.user,
+      units: await listUnits().catch(() => []),
       error: 'Failed to save authorized parties.',
       success: null
     });
   }
 };
 
+const createUnit = async (req, res) => {
+  const name = String(req.body?.name || '').trim();
+  if (!name || name.length > 255) {
+    return res.status(400).json({ error: 'Enter a unit name of 1 to 255 characters.' });
+  }
+
+  try {
+    const unit = await prisma.unit.upsert({
+      where: { name },
+      update: {},
+      create: { name }
+    });
+    return res.status(200).json({ unit: { name: unit.name } });
+  } catch (error) {
+    console.error('Error creating unit:', error);
+    return res.status(500).json({ error: 'Unable to save this unit right now.' });
+  }
+};
+
 module.exports = {
   authorizedParties,
-	saveAuthorizedParties
+	saveAuthorizedParties,
+  createUnit
 };

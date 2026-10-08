@@ -441,21 +441,21 @@
 														</button>
 													</div>
 													<div class="inner-card-body">
-														<div class="section-label mb-1">How long is the data retained?</div>
+														<div class="section-label mb-1">Retention Period with Reckoning date/time (How long is the data retained?)</div>
 														<textarea name="retentionPeriod[<%= index %>]" data-top-field="retentionPeriod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. 2 years after collection"><%= pdlc.retentionPeriod || '' %></textarea>
 
 														<div class="section-label mb-1">Disposal Method</div>
 														<textarea name="disposalMethod[<%= index %>]" data-top-field="disposalMethod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..."><%= pdlc.disposalMethod || '' %></textarea>
 
 														<div class="section-label mt-2">Upload DLC Diagram</div>
-														<input type="hidden" name="dlcDiagramPath[<%= index %>]" value="<%= pdlc.dlcDiagram || '' %>">
+														<input type="hidden" name="dlcDiagramPath[<%= index %>]" data-top-field="dlcDiagramPath" value="<%= pdlc.dlcDiagram || '' %>">
 														<label class="upload-box p-3 text-center w-100 d-block mb-0">
-															<input type="file" class="d-none" name="dlcDiagram[<%= index %>]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-<%= index %>')">
+															<input type="file" class="d-none" name="dlcDiagram[<%= index %>]" data-top-field="dlcDiagram" accept="image/jpeg,image/png,image/gif,image/webp" onchange="previewDlcDiagram(this)">
 															<div class="text-muted">
 																<span class="fw-semibold text-dark">Click to upload</span><br>
 																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
 															</div>
-															<img id="dlc-preview-<%= index %>" class="img-fluid mt-2 rounded <%= pdlc.dlcDiagram ? '' : 'd-none' %> shadow-sm" <%= pdlc.dlcDiagram ? `src="/${pdlc.dlcDiagram}"` : '' %>>
+															<img class="dlc-preview img-fluid mt-2 rounded <%= pdlc.dlcDiagram ? '' : 'd-none' %> shadow-sm" src="<%= pdlc.dlcDiagram ? `/${pdlc.dlcDiagram}` : '' %>">
 														</label>
 													</div>
 												</div>
@@ -690,21 +690,21 @@
 														</button>
 													</div>
 													<div class="inner-card-body">
-														<div class="section-label mb-1">How long is the data retained?</div>
+														<div class="section-label mb-1">Retention Period with Reckoning date/time (How long is the data retained?)</div>
 														<textarea name="retentionPeriod[0]" data-top-field="retentionPeriod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. 2 years after collection"></textarea>
 
 														<div class="section-label mb-1">Disposal Method</div>
 														<textarea name="disposalMethod[0]" data-top-field="disposalMethod" class="form-control mb-3" style="min-height: 80px; resize: vertical;" placeholder="e.g. Secure wiping after 5 years, physical shredding..."></textarea>
 
 														<div class="section-label mt-2">Upload DLC Diagram</div>
-														<input type="hidden" name="dlcDiagramPath[0]" value="">
+														<input type="hidden" name="dlcDiagramPath[0]" data-top-field="dlcDiagramPath" value="">
 														<label class="upload-box p-3 text-center w-100 d-block mb-0">
-															<input type="file" class="d-none" name="dlcDiagram[0]" data-top-field="dlcDiagram" accept="image/*" onchange="previewSig(this,'dlc-preview-empty')">
+															<input type="file" class="d-none" name="dlcDiagram[0]" data-top-field="dlcDiagram" accept="image/jpeg,image/png,image/gif,image/webp" onchange="previewDlcDiagram(this)">
 															<div class="text-muted">
 																<span class="fw-semibold text-dark">Click to upload</span><br>
 																<small style="font-size: 0.75rem;">PNG, JPG, GIF</small>
 															</div>
-															<img id="dlc-preview-empty" class="img-fluid mt-2 rounded d-none shadow-sm">
+															<img class="dlc-preview img-fluid mt-2 rounded d-none shadow-sm">
 														</label>
 													</div>
 												</div>
@@ -730,6 +730,30 @@
 				</form>
 
 				<script>
+					function previewDlcDiagram(input) {
+						const file = input.files && input.files[0];
+						if (!file) return;
+
+						const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+						if (!allowedTypes.includes(file.type) || file.size > 5 * 1024 * 1024) {
+							input.value = '';
+							alert(file.size > 5 * 1024 * 1024
+								? 'DLC diagrams must be 5 MB or smaller.'
+								: 'Choose a JPG, PNG, GIF, or WebP image.');
+							return;
+						}
+
+						const row = input.closest('.pdlc-row');
+						const preview = row && row.querySelector('.dlc-preview');
+						if (!preview) return;
+
+						if (preview.dataset.objectUrl) URL.revokeObjectURL(preview.dataset.objectUrl);
+						const objectUrl = URL.createObjectURL(file);
+						preview.dataset.objectUrl = objectUrl;
+						preview.src = objectUrl;
+						preview.classList.remove('d-none');
+					}
+
 					document.addEventListener('DOMContentLoaded', function () {
 						var container = document.getElementById('pdlcRowsContainer');
 						var sectionConfig = {
@@ -748,6 +772,18 @@
 							var inputs = entry.querySelectorAll('input[type="text"], input[type="date"], input[type="file"]');
 							for (var j = 0; j < inputs.length; j++) {
 								inputs[j].value = '';
+							}
+
+							var diagramPaths = entry.querySelectorAll('[data-top-field="dlcDiagramPath"]');
+							for (var k = 0; k < diagramPaths.length; k++) {
+								diagramPaths[k].value = '';
+							}
+
+							var previews = entry.querySelectorAll('.dlc-preview');
+							for (var p = 0; p < previews.length; p++) {
+								if (previews[p].dataset.objectUrl) URL.revokeObjectURL(previews[p].dataset.objectUrl);
+								previews[p].removeAttribute('src');
+								previews[p].classList.add('d-none');
 							}
 						}
 
