@@ -1,0 +1,103 @@
+<%- include('../layouts/head', { title: title }) %>
+
+<div class="d-flex">
+  <%- include('../layouts/sidebar', { activePage: activePage }) %>
+
+  <div class="flex-grow-1 main-content-offset">
+    <%- include('../layouts/topbar', { title: title, user: user }) %>
+
+    <main class="container-fluid py-4">
+      <div class="row g-4">
+        <div class="col-12 col-lg-5">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3 border-bottom border-light">
+              <h5 class="fw-bold mb-0 text-primary">Create a Unit</h5>
+            </div>
+            <div class="card-body p-4">
+              <% if (error) { %>
+                <div class="alert alert-warning" role="alert">
+                  <% if (error === 'invalid') { %>
+                    Enter a unit name of 1 to 255 characters. The reserved value "n/a" cannot be used.
+                  <% } else if (error === 'exists') { %>
+                    That unit already exists. Choose a different name.
+                  <% } else if (error === 'notfound') { %>
+                    The unit could not be found. Refresh the page and try again.
+                  <% } else { %>
+                    Unable to save the unit right now. Please try again.
+                  <% } %>
+                </div>
+              <% } %>
+              <% if (successMessage) { %>
+                <div class="alert alert-success" role="status"><%= successMessage %></div>
+              <% } %>
+
+              <form method="POST" action="/user-profile/manage-units">
+                <label for="unitName" class="form-label fw-semibold">Unit name</label>
+                <input type="text" id="unitName" name="name" class="form-control" maxlength="255" autocomplete="off" required>
+                <div class="form-text">New units become available for user accounts and PIA records.</div>
+                <button type="submit" class="btn btn-primary mt-3">Create Unit</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 col-lg-7">
+          <div class="card border-0 shadow-sm rounded-3">
+            <div class="card-header bg-white py-3 border-bottom border-light">
+              <h5 class="fw-bold mb-0 text-primary">Available Units</h5>
+            </div>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                  <tr>
+                    <th class="ps-4 py-3 small text-uppercase text-muted">Unit</th>
+                    <th class="py-3 small text-uppercase text-muted">Created</th>
+                    <th class="py-3 small text-uppercase text-muted text-end pe-4">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (units.length) { %>
+                    <% units.forEach(unit => { %>
+                      <tr>
+                        <td class="ps-4">
+                          <form id="editUnit<%= unit.id %>" method="POST" action="/user-profile/manage-units/<%= unit.id %>/edit">
+                            <label for="unitName<%= unit.id %>" class="visually-hidden">Unit name</label>
+                            <input type="text" id="unitName<%= unit.id %>" name="name" class="form-control form-control-sm" value="<%= unit.name %>" maxlength="255" required>
+                          </form>
+                        </td>
+                        <td class="text-muted small"><%= new Date(unit.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) %></td>
+                        <td class="text-end pe-4">
+                          <div class="d-flex justify-content-end gap-2">
+                            <button type="submit" form="editUnit<%= unit.id %>" class="btn btn-outline-primary btn-sm">Save</button>
+                            <form method="POST" action="/user-profile/manage-units/<%= unit.id %>/delete" onsubmit="return confirm('Delete this unit? Accounts assigned to it will be set to n/a. Existing PIA records will not change.')">
+                              <button type="submit" class="btn btn-outline-danger btn-sm" aria-label="Delete <%= unit.name %>">Delete</button>
+                            </form>
+                          </div>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr>
+                      <td colspan="3" class="text-center py-5 text-muted">No units have been added yet.</td>
+                    </tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<style>
+  .main-content-offset {
+    background-color: #f1f5f9;
+    min-height: 100vh;
+  }
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

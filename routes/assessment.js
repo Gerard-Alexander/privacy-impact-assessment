@@ -8,7 +8,7 @@ const threatsAndControlsController = require('../controllers/assessmentControlle
 const securityMeasuresController = require('../controllers/assessmentController/securityMeasuresController');
 const { finishAssessment } = require('../controllers/assessmentController/finishAssessmentController');
 const { shareAssessment, getShareUsers } = require('../controllers/assessmentController/shareAssessmentController');
-const { requireAuth, requireAssessmentAccess } = require('../middleware/auth');
+const { requireAuth, requireAdmin, requireAssessmentAccess } = require('../middleware/auth');
 const { dlcUpload } = require('../controllers/uploadController/uploadController');
 
 // Routes for Assessment Step 1 (DPS Information)
@@ -23,7 +23,7 @@ router.post('/dpsname', requireAuth, requireAssessmentAccess, dpsNameController.
 // Routes for Assessment Step 2 (Authorized Parties) - Step 2
 router.get('/authorizedparties', requireAuth, requireAssessmentAccess, authorizedPartiesController.authorizedParties);
 router.post('/authorizedparties', requireAuth, requireAssessmentAccess, authorizedPartiesController.saveAuthorizedParties);
-router.post('/authorizedparties/units', requireAuth, requireAssessmentAccess, authorizedPartiesController.createUnit);
+router.post('/authorizedparties/units', requireAuth, requireAdmin, requireAssessmentAccess, authorizedPartiesController.createUnit);
 
 // Routes for Assessment Step 3 (Process Data Cycle) - Step 3
 router.get('/processdatalifecycle', requireAuth, requireAssessmentAccess, processDataLifeCycleController.processDataLifeCycle);

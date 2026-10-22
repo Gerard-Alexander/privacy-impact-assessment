@@ -114,6 +114,128 @@ const manageUsers = async (req, res) => {
   }
 };
 
+const manageUnits = async (req, res) => {
+  const redirectResp = requireAdmin(req, res);
+  if (redirectResp) return;
+
+  try {
+    const units = await prisma.unit.findMany({
+      where: { name: { not: 'n/a' } },
+      orderBy: { name: 'asc' }
+    });
+
+    return res.render('users/manage-units-page', {
+      title: 'Manage Units',
+      activePage: 'manage-units',
+      user: req.session.user,
+      units,
+      error: req.query.error || null,
+      successMessage: req.query.created === '1'
+        ? 'Unit created successfully.'
+        : req.query.updated === '1'
+          ? 'Unit updated successfully. Current user account assignments were updated.'
+          : req.query.deleted === '1'
+            ? 'Unit deleted. Assigned accounts were set to n/a; existing PIA records were unchanged.'
+            : null
+    });
+  } catch (error) {
+    console.error('List units error:', error);
+    return res.redirect('/user-profile/manage-users?error=server');
+  }
+};
+
+const createUnitSubmit = async (req, res) => {
+  const redirectResp = requireAdmin(req, res);
+  if (redirectResp) return;
+
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  if (!name || name.length > 255 || name.toLowerCase() === 'n/a') {
+    return res.redirect('/user-profile/manage-units?error=invalid');
+  }
+
+  try {
+    await prisma.unit.create({ data: { name } });
+    return res.redirect('/user-profile/manage-units?created=1');
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.redirect('/user-profile/manage-units?error=exists');
+    }
+    console.error('Create unit error:', error);
+    return res.redirect('/user-profile/manage-units?error=server');
+  }
+};
+
+const updateUnitSubmit = async (req, res) => {
+  const redirectResp = requireAdmin(req, res);
+  if (redirectResp) return;
+
+  const unitId = Number(req.params.id);
+  const name = typeof req.body?.name === 'string' ? req.body.name.trim() : '';
+  if (!Number.isInteger(unitId) || unitId < 1) {
+    return res.redirect('/user-profile/manage-units?error=notfound');
+  }
+  if (!name || name.length > 255 || name.toLowerCase() === 'n/a') {
+    return res.redirect('/user-profile/manage-units?error=invalid');
+  }
+
+  try {
+    const updated = await prisma.$transaction(async (tx) => {
+      const existingUnit = await tx.unit.findUnique({ where: { id: unitId } });
+      if (!existingUnit) return false;
+
+      await tx.unit.update({
+        where: { id: unitId },
+        data: { name }
+      });
+
+      if (existingUnit.name !== name) {
+        await tx.user.updateMany({
+          where: { units: existingUnit.name },
+          data: { units: name }
+        });
+      }
+      return true;
+    });
+
+    return res.redirect(`/user-profile/manage-units?${updated ? 'updated=1' : 'error=notfound'}`);
+  } catch (error) {
+    if (error.code === 'P2002') {
+      return res.redirect('/user-profile/manage-units?error=exists');
+    }
+    console.error('Update unit error:', error);
+    return res.redirect('/user-profile/manage-units?error=server');
+  }
+};
+
+const deleteUnitSubmit = async (req, res) => {
+  const redirectResp = requireAdmin(req, res);
+  if (redirectResp) return;
+
+  const unitId = Number(req.params.id);
+  if (!Number.isInteger(unitId) || unitId < 1) {
+    return res.redirect('/user-profile/manage-units?error=notfound');
+  }
+
+  try {
+    const deleted = await prisma.$transaction(async (tx) => {
+      const unit = await tx.unit.findUnique({ where: { id: unitId } });
+      if (!unit) return false;
+
+      await tx.user.updateMany({
+        where: { units: unit.name },
+        data: { units: 'n/a' }
+      });
+      await tx.unit.delete({ where: { id: unitId } });
+      return true;
+    });
+
+    return res.redirect(`/user-profile/manage-units?${deleted ? 'deleted=1' : 'error=notfound'}`);
+  } catch (error) {
+    console.error('Delete unit error:', error);
+    return res.redirect('/user-profile/manage-units?error=server');
+  }
+};
+
 const renderCreateUserPage = async (req, res) => {
   const redirectResp = requireAdmin(req, res);
   if (redirectResp) return;
@@ -202,6 +324,10 @@ module.exports = {
   editProfile,
   updateProfileSubmit,
   manageUsers,
+  manageUnits,
+  createUnitSubmit,
+  updateUnitSubmit,
+  deleteUnitSubmit,
   renderCreateUserPage,
   createUserSubmit,
   listUserUnits

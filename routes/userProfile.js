@@ -11,6 +11,10 @@ router.post('/edit', requireAuth, userProfileController.updateProfileSubmit);
 
 // Admin-only: manage and create accounts (Other Users)
 router.get('/manage-users', requireAuth, requireAdmin, userProfileController.manageUsers);
+router.get('/manage-units', requireAuth, requireAdmin, userProfileController.manageUnits);
+router.post('/manage-units', requireAuth, requireAdmin, userProfileController.createUnitSubmit);
+router.post('/manage-units/:id/edit', requireAuth, requireAdmin, userProfileController.updateUnitSubmit);
+router.post('/manage-units/:id/delete', requireAuth, requireAdmin, userProfileController.deleteUnitSubmit);
 router.get('/create-user', requireAuth, requireAdmin, userProfileController.renderCreateUserPage);
 router.post('/create-user', requireAuth, requireAdmin, userProfileController.createUserSubmit);
 

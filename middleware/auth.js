@@ -14,7 +14,7 @@ const requireAdmin = (req, res, next) => {
   return res.status(403).render('403', {
     title: 'Access Denied',
     user: req.session?.user || null,
-    message: 'Only administrators can manage user accounts.'
+    message: 'Only administrators can manage user accounts and units.'
   });
 };
 

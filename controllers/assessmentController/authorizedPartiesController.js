@@ -1,6 +1,4 @@
 const prisma = require('../../store/prisma');
-const { assignPiaName } = require('../../services/piaNameService');
-
 const formatDateForInput = (value) => (value ? value.toISOString().slice(0, 10) : '');
 const listUnits = () => prisma.unit.findMany({
   where: { name: { not: 'n/a' } },
@@ -204,9 +202,6 @@ const saveAuthorizedParties = async (req, res) => {
       });
 
     const selectedOfficeUnit = String(getFieldValue(body.headOfficeUnit)).trim();
-    const initialOfficeUnit = String(getFieldValue(body.initialHeadOfficeUnit)).trim();
-    const officeUnitChanged = selectedOfficeUnit && selectedOfficeUnit !== initialOfficeUnit;
-    const hasHeadOfficeParty = partyData.some(party => party.userType === 'HEAD_OFFICE');
     if (selectedOfficeUnit) {
       const availableUnit = await prisma.unit.findUnique({ where: { name: selectedOfficeUnit } });
       if (!availableUnit) {
@@ -237,33 +232,12 @@ const saveAuthorizedParties = async (req, res) => {
     }
 
     if (partyData.length > 0) {
-      const sessionUser = req.session.user || {};
-      const sessionUserId = Number.parseInt(sessionUser.id, 10);
-      const userWhere = Number.isInteger(sessionUserId)
-        ? { id: sessionUserId }
-        : sessionUser.username
-          ? { userName: sessionUser.username }
-          : null;
-
-      const shouldSyncAccountUnit = officeUnitChanged && hasHeadOfficeParty && userWhere;
-      const shouldReassignPiaName = officeUnitChanged && hasHeadOfficeParty;
-
       await prisma.$transaction(async (transaction) => {
         await transaction.authorizedParties.deleteMany({ where: { piaAssessment_id } });
         for (const data of partyData) {
           await transaction.authorizedParties.create({ data });
         }
-        if (shouldSyncAccountUnit) {
-          await transaction.user.update({ where: userWhere, data: { units: selectedOfficeUnit } });
-        }
-        if (shouldReassignPiaName) {
-          await assignPiaName(transaction, piaAssessment_id, selectedOfficeUnit);
-        }
       });
-
-      if (shouldSyncAccountUnit && req.session.user) {
-        req.session.user.units = selectedOfficeUnit;
-      }
     }
 
     req.session.currentAssessmentId = piaAssessment_id;
@@ -287,8 +261,8 @@ const saveAuthorizedParties = async (req, res) => {
 
 const createUnit = async (req, res) => {
   const name = String(req.body?.name || '').trim();
-  if (!name || name.length > 255) {
-    return res.status(400).json({ error: 'Enter a unit name of 1 to 255 characters.' });
+  if (!name || name.length > 255 || name.toLowerCase() === 'n/a') {
+    return res.status(400).json({ error: 'Enter a valid unit name of 1 to 255 characters other than n/a.' });
   }
 
   try {

@@ -43,9 +43,9 @@
         </a>
 
         <% if (user && user.role === 'ADMIN') { %>
-					<div class="mt-2 nav-link rounded-3  text-white-50 hover-bg <%= (activePage === 'create-user' || activePage === 'users-create') ? 'active bg-primary text-white shadow-sm' : '' %>">
+					<div class="mt-2 nav-link rounded-3 text-white-50 hover-bg <%= (activePage === 'create-user' || activePage === 'users-create' || activePage === 'manage-units') ? 'active bg-primary text-white shadow-sm' : '' %>">
 						<div class="dropdown w-100">
-							<button class="nav-link d-flex align-items-center justify-content-between w-100 rounded-3 <%= (activePage === 'create-user' || activePage === 'users-create') ? 'active text-white' : 'text-white-50' %>" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 500;">
+							<button class="nav-link d-flex align-items-center justify-content-between w-100 rounded-3 <%= (activePage === 'create-user' || activePage === 'users-create' || activePage === 'manage-units') ? 'active text-white' : 'text-white-50' %>" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="font-weight: 500;">
 								<span class="d-flex align-items-center">
 									<i class="bi bi-three-dots me-2"></i>Settings
 								</span>
@@ -60,6 +60,11 @@
 								<li>
 									<a class="dropdown-item rounded-3" href="/user-profile/create-user">
 										<i class="bi bi-person-plus me-2"></i>Add Account
+									</a>
+								</li>
+								<li>
+									<a class="dropdown-item rounded-3" href="/user-profile/manage-units">
+										<i class="bi bi-building me-2"></i>Manage Units
 									</a>
 								</li>
 							</ul>
@@ -90,4 +95,3 @@
   box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4);
 }
 </style>
-
